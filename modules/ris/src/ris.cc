@@ -23,6 +23,7 @@
 
 #include "motis/core/common/logging.h"
 #include "motis/core/common/unixtime.h"
+#include "motis/core/common/zip_reader.h"
 #include "motis/core/access/time_access.h"
 #include "motis/core/conv/trip_conv.h"
 #include "motis/core/journey/print_trip.h"
@@ -33,7 +34,6 @@
 #include "motis/ris/ris_message.h"
 #include "motis/ris/risml/risml_parser.h"
 #include "motis/ris/string_view_reader.h"
-#include "motis/ris/zip_reader.h"
 
 #ifdef GetMessage
 #undef GetMessage

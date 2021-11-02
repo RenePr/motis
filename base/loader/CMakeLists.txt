@@ -26,6 +26,7 @@ target_link_libraries(motis-loader
   boost-filesystem
   flatbuffers64
   motis-core
+  pugixml
   date
   geo
   date-tz

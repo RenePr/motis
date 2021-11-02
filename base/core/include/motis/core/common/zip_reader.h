@@ -8,7 +8,7 @@
 
 #include "utl/parser/buffer.h"
 
-namespace motis::ris {
+namespace motis {
 
 struct zip_reader {
   zip_reader(char const* ptr, size_t size);
@@ -30,4 +30,4 @@ struct zip_reader {
   std::unique_ptr<impl> impl_;
 };
 
-}  // namespace motis::ris
+}  // namespace motis

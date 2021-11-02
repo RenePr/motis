@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "motis/ris/zip_reader.h"
+#include "motis/core/common/zip_reader.h"
 
 #include "./sha1.hpp"
 

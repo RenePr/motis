@@ -1,4 +1,4 @@
-#include "motis/ris/zip_reader.h"
+#include "motis/core/common/zip_reader.h"
 
 #include "miniz.h"
 
@@ -9,7 +9,7 @@
 using namespace utl;
 using tar::mmap_reader;
 
-namespace motis::ris {
+namespace motis {
 
 struct zip_reader::impl {
   explicit impl(char const* path)
@@ -103,4 +103,4 @@ std::string_view zip_reader::current_file_name() const {
   return impl_->current_file_name();
 }
 
-}  // namespace motis::ris
+}  // namespace motis

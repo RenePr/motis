@@ -12,7 +12,6 @@ target_link_libraries(motis-ris
   protobuf
   motis-module
   motis-core
-  miniz
   pugixml
   lmdb
   tar

@@ -10,6 +10,8 @@ target_compile_options(motis-core PUBLIC ${MOTIS_CXX_FLAGS})
 target_link_libraries(motis-core
   utl
   date
+  miniz
+  tar
   motis-data
   motis-loader
   motis-module

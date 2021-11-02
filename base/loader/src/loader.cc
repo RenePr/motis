@@ -29,6 +29,7 @@
 #include "motis/loader/build_graph.h"
 #include "motis/loader/gtfs/gtfs_parser.h"
 #include "motis/loader/hrd/hrd_parser.h"
+#include "motis/loader/netex/netex_parser.h"
 
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -41,6 +42,7 @@ std::vector<std::unique_ptr<format_parser>> parsers() {
   std::vector<std::unique_ptr<format_parser>> p;
   p.emplace_back(std::make_unique<gtfs::gtfs_parser>());
   p.emplace_back(std::make_unique<hrd::hrd_parser>());
+  p.emplace_back(std::make_unique<netex::netex_parser>());
   return p;
 }
 
