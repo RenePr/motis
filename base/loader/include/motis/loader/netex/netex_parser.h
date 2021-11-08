@@ -13,4 +13,6 @@ struct netex_parser : public format_parser {
              flatbuffers64::FlatBufferBuilder&) override;
 };
 
+
+
 }  // namespace motis::loader::netex

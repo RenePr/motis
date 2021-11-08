@@ -13,16 +13,17 @@
 
 #include "motis/loader/loaded_file.h"
 
+
 namespace xml = pugi;
 
 namespace motis::loader::netex {
 
-struct stop {
+struct station_netex {
 
   std::string id_;
   std::string name_;
 };
+//using station_map = std::map<std::string, std::unique_ptr<station_netex>>;
 
-std::map<std::string, stop> parse_xml_stops(xml::xpath_node_set stop_nodes);
-
+std::map<std::string, station_netex> parse_xml_station(xml::xpath_node_set const& station_nodes);
 } // namespace motis::loader::netex

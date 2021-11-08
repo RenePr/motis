@@ -1,6 +1,7 @@
 #include "motis/loader/netex/netex_parser.h"
 
 #include "motis/loader/netex/station_netex_parser.h"
+#include "motis/loader/netex/station_netex_builder.h"
 
 #include <iostream>
 
@@ -57,25 +58,16 @@ void netex_parser::parse(fs::path const& p,
       auto r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                              file->size());
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      xml::xpath_node_set stop_node = d.select_nodes("//StopPlace");
-      //std::cout << "Here? size: " << stop_node.size() <<  " First_node: " << stop_node.first().node().text() << std::endl;
-      std::map<std::string, stop> stops =  parse_xml_stops(stop_node);
-      /*for (auto const& stop : d.select_nodes("//StopPlace")) {
-        //std::cout << "     " << stop.node().child("Name").child_value() << "\n";
-        //Stoplace id
-        std::cout << "     " << stop.node().attribute("id").value() << "\n";
-        auto get_or_create_stop = [&](stop const* s) {
-          return utl::get_or_create(fbs_stations, s, [&]() {
-            return CreateStation(
-                fbb, fbb.CreateString(s->id_), fbb.CreateString(s->name_);
-                //s->coord_.lat_, s->coord_.lng_, 2,
-                //fbb.CreateVector(std::vector<Offset<String>>()), 0,
-                //s->timezone_.empty() ? 0 : fbb.CreateString(s->timezone_));
-          });
-        };*/
+      //Parse alle Stations und erstelle sie.
+      xml::xpath_node_set const& stop_node = d.select_nodes("//StopPlace");
+      //eine zeile sparen, aber erst wenns geht
+      std::map<std::string, station_netex> stations = parse_xml_station(stop_node);
+      //netex_station_builder stb(stations);
+      //fbs64::Offset<station_netex> test =  stb.get_or_create_station(stations.begin()->first, fbb);
+      //TODO get_or_greate  here..
 
-        //utl::get_or_create();
-     // }
+      //parse ..
+
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
