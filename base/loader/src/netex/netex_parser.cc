@@ -1,8 +1,5 @@
 #include "motis/loader/netex/netex_parser.h"
 
-#include "motis/loader/netex/station_netex_parser.h"
-#include "motis/loader/netex/station_netex_builder.h"
-
 #include <iostream>
 
 #include "boost/filesystem.hpp"
@@ -14,9 +11,7 @@
 
 #include "motis/core/common/logging.h"
 #include "motis/core/common/zip_reader.h"
-
 #include "motis/loader/util.h"
-
 #include "motis/schedule-format/Schedule_generated.h"
 
 namespace fbs64 = flatbuffers64;
@@ -58,11 +53,64 @@ void netex_parser::parse(fs::path const& p,
       auto r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                              file->size());
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      //Parse alle Stations und erstelle sie.
-      xml::xpath_node_set const& stop_node = d.select_nodes("//StopPlace");
-      //eine zeile sparen, aber erst wenns geht
-      std::map<std::string, station_netex> stations = parse_xml_station(stop_node);
-      //netex_station_builder stb(stations);
+      //bekomme traffic days
+      for (auto const& daytype : d.select_nodes("//DayTypeAssignment")) {
+
+        auto const& operation_period = daytype.node().child("OperatingPeriodRef").attribute("ref").value();
+        for(auto const& operating_period : d.select_nodes("//UicOperatingPeriod")) {
+          if(operation_period == operating_period.node().attribute("id").value()) {
+            //fbs: service traffic days
+            //std::cout << operating_period.node().child("ValidDayBits").text().get() << std::endl;
+            //std::cout << operating_period.node().child("FromDate").text().get() << std::endl;
+            //std::cout << operating_period.node().child("ToDate").text().get() << std::endl;
+            //std::cout << "Same operation id, ." << std::endl;
+          }
+        }
+        //journeyPattern
+        //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
+        for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
+
+          for(auto const& stop_point : service_journey.node().select_nodes("pointsInSequence")) {
+            //fbs route, in_allowed out_allowed
+            auto const& for_alighting =  stop_point.node().child("StopPointInJourneyPattern").child("ForAlighting").text().get();
+            auto const& for_boarding = stop_point.node().child("StopPointInJourneyPattern").child("ForBoarding").text().get();
+            //std::cout << stop_point.node().child("StopPointInJourneyPattern").child("ForBoarding").text().get() << std::endl;
+          }
+            for(auto const& line_ref : service_journey.node().select_nodes("RouteView")) {
+              auto const& line = line_ref.node().child("LineRef").attribute("ref").value();
+              //std::cout << line_ref.node().child("LineRef").attribute("ref").value() << std::endl;
+            }
+            for(auto const& direction_ref : service_journey.node().select_nodes("DirectionRef")) {
+              auto const& direction = direction_ref.node().attribute("ref").value();
+              //std::cout << direction_ref.node().attribute("ref").value() << std::endl;
+            }
+            for(auto const& notice_assignment : service_journey.node().select_nodes("noticeAssignments")) {
+              auto const& notice_text = notice_assignment.node().child("NoticeAssignment").child("Notice").child("Text").text().get();
+              auto const& notice_public_code = notice_assignment.node().child("NoticeAssignment").child("Notice").child("PublicCode").text().get();
+              //std::cout << notice_assignment.node().child("NoticeAssignment").child("Notice").child("Text").text().get() << std::endl;
+            }
+
+
+        }
+
+        //day_type.name_ = station.node().child("Name").text().get();
+        //st1.lat_ = dynamic_cast<double>(station.node().child("Latitude").text().get());
+        //st1.lng_ = static_cast<double>(station.node().child("Longitude").text().get());
+        //stations.insert(std::pair<std::string, station_netex>(st1.id_, st1));
+        //std::cout << "     " << assignment.operating_period_ref_ << "\n";
+        /*auto const new_station =
+            utl::get_or_create(stations, station.node().attribute("id").value(), [&]() {
+              return std::make_unique<station_netex>();
+            });
+         //new_station->id_ = station.node().attribute("id").value();
+         //new_station->name_ = station.node().child("Name").text().get();
+         new_station->name_ = station.node().child("Name").text().get();
+
+        station_map.insert(std::pair<std::string, station_netex>(st1.id_, st1));
+
+        //std::cout << "     " << st1.id_ << st1.name_ << "\n"; */
+
+      }
       //fbs64::Offset<station_netex> test =  stb.get_or_create_station(stations.begin()->first, fbb);
       //TODO get_or_greate  here..
 
