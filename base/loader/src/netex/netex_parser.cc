@@ -51,85 +51,114 @@ void netex_parser::parse(fs::path const& p,
               << file->substr(0, std::min(file->size(), size_t{100U})) << "\n";
 
     try {
+
       xml::xml_document d;
       auto r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                              file->size());
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
+      std::list<service_journey> service_list;
       for(auto const& service : d.select_nodes("//ServiceJourney")) {
         service_journey service_jor;
         for(auto const& day_type_ref : service.node().select_nodes("//DayTypeRef")) {
-          service_jor.day_type_ref_ = day_type_ref.node().attribute("ref").value();
+          auto const& day_ref = day_type_ref.node().attribute("ref").value();
 
-          std::cout << day_type_ref.node().attribute("ref").value() << std::endl;
+          //std::cout << day_type_ref.node().attribute("ref").value() << std::endl;
           //bekomme traffic days
           for (auto const& daytype : d.select_nodes("//DayTypeAssignment")) {
             auto const& operation_period = daytype.node().child("OperatingPeriodRef").attribute("ref").value();
             auto const& day = daytype.node().child("DayTypeRef").attribute("ref").value();
             //std::cout << day << operation_period << std::endl;
-            if(day == service_jor.day_type_ref_) {
+            if(day == day_ref) {
               for (auto const& period :
                    d.select_nodes("//UicOperatingPeriod")) {
                 if (std::strcmp(operation_period
                     ,period.node().attribute("id").value()) == 0) {
-                  // fbs: service traffic days
-                  auto const& valid_day_bits = period.node()
+                  //fromdate, todate, validdaybits
+                  service_jor.uic_operation_period_ = period.node()
                                                    .child("ValidDayBits")
                                                    .text()
                                                    .get();
-                  auto const& from_date = period.node()
+                  service_jor.from_date_ = period.node()
                                               .child("FromDate")
                                               .text()
                                               .get();
-                  auto const& to_date = period.node()
+                  service_jor.to_date_ = period.node()
                                             .child("ToDate")
                                             .text()
                                             .get();
-                  std::cout << period.node()
-                                   .child("ValidDayBits")
-                                   .text()
-                                   .get()
-                            << std::endl;
 
                 }
               }
             }
           }
-          for(auto const& service_journey_pattern_ref : service.node().select_nodes("//ServiceJourneyPatternRef")) {
-            service_jor.service_journey_pattern_ref_ = service_journey_pattern_ref.node().attribute("ref").value();
-            //std::cout << service_journey_pattern_ref.node().attribute("ref").value() << std::endl;
-            //journeyPattern
-            //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
-            for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
-              if(service_jor.service_journey_pattern_ref_ == service_journey.node().attribute("id").value() ) {
-
+          service_jor.service_journey_pattern_ref_ = service.node().child("ServiceJourneyPatternRef").attribute("ref").value();
+          //journeyPattern
+          //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
+          for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
+             if(service_jor.service_journey_pattern_ref_ == service_journey.node().attribute("id").value() ) {
                 for (auto const& stop_point :
                    service_journey.node().select_nodes("pointsInSequence")) {
                   // fbs route, in_allowed out_allowed
-                  auto const& for_alighting =
+                  service_jor.for_alighting_ =
                     stop_point.node()
                         .child("StopPointInJourneyPattern")
                         .child("ForAlighting")
                         .text()
                         .get();
-                  auto const& for_boarding =
+                  service_jor.for_boarding_ =
                     stop_point.node()
                         .child("StopPointInJourneyPattern")
                         .child("ForBoarding")
                         .text()
                         .get();
-                  // std::cout << stop_point.node().child("StopPointInJourneyPattern").child("ForBoarding").text().get() << std::endl;
                 }
                 for (auto const& line_ref :
                    service_journey.node().select_nodes("RouteView")) {
                     auto const& line =
                       line_ref.node().child("LineRef").attribute("ref").value();
-                    // std::cout << line_ref.node().child("LineRef").attribute("ref").value() << std::endl;
+                    for(auto const& line_get : d.select_nodes("//Line")) {
+                      if(std::strcmp(line, line_get.node().attribute("id").value()) == 0) {
+                        //std::cout << line_get.node().child("TransportMode").text().get() << std::endl;
+                        service_jor.name_ = line_get.node().child("Name").text().get();
+                        service_jor.short_name_ = line_get.node().child("ShortName").text().get();
+                        service_jor.transport_mode_ = line_get.node().child("TransportMode").text().get();
+                        auto const& authority_ref = line_get.node().child("AuthorityRef").attribute("ref").value();
+                        auto const& operator_ref = line_get.node().child("OperatorRef").attribute("ref").value();
+                        for(auto const& authority : d.select_nodes("//Authority")) {
+                          if(std::strcmp(authority_ref, authority.node().attribute("id").value()) == 0) {
+                            //childs: Name, PublicCode, LegalName, OrganisationType, Address, ContactDetails
+                            service_jor.name_authority_ = authority.node().child("Name").text().get();
+                            service_jor.short_name_authority_ = authority.node().child("ShortName").text().get();
+                            service_jor.name_authority_ = authority.node().child("Name").text().get();
+                            service_jor.legal_name_authority_ = authority.node().child("LegalName").text().get();
+                            service_jor.public_code_authority_ = authority.node().child("PublicCode").text().get();
+                          }
+                        }
+                        for(auto const& operator_r : d.select_nodes("//Operator")) {
+                          if(std::strcmp(operator_ref, operator_r.node().attribute("id").value())){
+                            //childs: PublicCode, Name, Shortname, LegalName, ContactDetails child Url, Organisation Type, Address
+                            service_jor.name_operator_ = operator_r.node().child("Name").text().get();
+                            service_jor.short_name_operator_ = operator_r.node().child("ShortName").text().get();
+                            service_jor.name_operator_ = operator_r.node().child("Name").text().get();
+                            service_jor.legal_name_operator_ = operator_r.node().child("LegalName").text().get();
+                            service_jor.public_code_operator_ = operator_r.node().child("PublicCode").text().get();
+                          }
+                        }
+                      }
+                    }
                 }
                 for (auto const& direction_ref :
                    service_journey.node().select_nodes("DirectionRef")) {
                   auto const& direction =
                     direction_ref.node().attribute("ref").value();
                   // std::cout << direction_ref.node().attribute("ref").value() << std::endl;
+                  for(auto const& dir : d.select_nodes("//Direction")) {
+                    if(std::strcmp(dir.node().attribute("id").value(), direction) == 0) {
+                      //childs: Name, ShortName
+                      service_jor.name_direction_ = dir.node().child("Name").text().get();
+                      service_jor.short_name_direction_ = dir.node().child("ShortName").text().get();
+                    }
+                  }
                 }
                 for (auto const& notice_assignment :
                    service_journey.node().select_nodes("noticeAssignments")) {
@@ -148,11 +177,13 @@ void netex_parser::parse(fs::path const& p,
                   // std::cout << notice_assignment.node().child("NoticeAssignment").child("Notice").child("Text").text().get() << std::endl;
                 }
               }
-            }
+             }
           }
-          //service_list.push_back(service_jor);
+          service_list.push_back(service_jor);
         }
-      }
+        for(auto const& at : service_list) {
+            std::cout << "Line: " << at.name_ << " Dir: " << at.name_direction_ << " Auth: " << at.name_authority_ << " Op: " << at.name_operator_ << std::endl;
+        }
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
