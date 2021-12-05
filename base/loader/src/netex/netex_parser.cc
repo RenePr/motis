@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <vector>
 
 #include "boost/filesystem.hpp"
 
@@ -12,9 +13,11 @@
 
 #include "motis/core/common/logging.h"
 #include "motis/core/common/zip_reader.h"
+#include "motis/loader/netex/line_parse.h"
+#include "motis/loader/netex/service_journey.h"
 #include "motis/loader/util.h"
 #include "motis/schedule-format/Schedule_generated.h"
-#include "motis/loader/netex/service_journey.h"
+#include "motis/loader/netex/line.h"
 
 namespace fbs64 = flatbuffers64;
 namespace fs = boost::filesystem;
@@ -47,16 +50,17 @@ void netex_parser::parse(fs::path const& p,
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
-    std::cout << "     "
-              << file->substr(0, std::min(file->size(), size_t{100U})) << "\n";
+    //std::cout << "     "
+    //          << file->substr(0, std::min(file->size(), size_t{100U})) << "\n";
 
     try {
-
+      auto start = std::chrono::high_resolution_clock::now();
       xml::xml_document d;
       auto r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                              file->size());
+
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      std::list<service_journey> service_list;
+      //std::list<service_journey> service_list;
       for(auto const& service : d.select_nodes("//ServiceJourney")) {
         service_journey service_jor;
         for(auto const& day_type_ref : service.node().select_nodes("//DayTypeRef")) {
@@ -95,6 +99,7 @@ void netex_parser::parse(fs::path const& p,
           //journeyPattern
           //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
           for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
+
              if(service_jor.service_journey_pattern_ref_ == service_journey.node().attribute("id").value() ) {
                 for (auto const& stop_point :
                    service_journey.node().select_nodes("pointsInSequence")) {
@@ -104,57 +109,35 @@ void netex_parser::parse(fs::path const& p,
                         .child("StopPointInJourneyPattern")
                         .child("ForAlighting")
                         .text()
-                        .get();
+                        .as_bool();
                   service_jor.for_boarding_ =
                     stop_point.node()
                         .child("StopPointInJourneyPattern")
                         .child("ForBoarding")
                         .text()
-                        .get();
+                        .as_bool();
+                  //TODO
+                  // Wie vergleiche ich attribute ref mit id im ganzen xml file
+                  // gibt es hier eine fkt dafür?
+                  // d.select_nodes()
+                  // find_attribute gibt nur eins zurück und stoppt dann...
+                  // iterator? vermutlich deutlich langsamer
+                  // neue fkt speziell dafür programmieren?
                 }
-                for (auto const& line_ref :
-                   service_journey.node().select_nodes("RouteView")) {
-                    auto const& line =
-                      line_ref.node().child("LineRef").attribute("ref").value();
-                    for(auto const& line_get : d.select_nodes("//Line")) {
-                      if(std::strcmp(line, line_get.node().attribute("id").value()) == 0) {
-                        //std::cout << line_get.node().child("TransportMode").text().get() << std::endl;
-                        service_jor.name_ = line_get.node().child("Name").text().get();
-                        service_jor.short_name_ = line_get.node().child("ShortName").text().get();
-                        service_jor.transport_mode_ = line_get.node().child("TransportMode").text().get();
-                        auto const& authority_ref = line_get.node().child("AuthorityRef").attribute("ref").value();
-                        auto const& operator_ref = line_get.node().child("OperatorRef").attribute("ref").value();
-                        for(auto const& authority : d.select_nodes("//Authority")) {
-                          if(std::strcmp(authority_ref, authority.node().attribute("id").value()) == 0) {
-                            //childs: Name, PublicCode, LegalName, OrganisationType, Address, ContactDetails
-                            service_jor.name_authority_ = authority.node().child("Name").text().get();
-                            service_jor.short_name_authority_ = authority.node().child("ShortName").text().get();
-                            service_jor.name_authority_ = authority.node().child("Name").text().get();
-                            service_jor.legal_name_authority_ = authority.node().child("LegalName").text().get();
-                            service_jor.public_code_authority_ = authority.node().child("PublicCode").text().get();
-                          }
-                        }
-                        for(auto const& operator_r : d.select_nodes("//Operator")) {
-                          if(std::strcmp(operator_ref, operator_r.node().attribute("id").value())){
-                            //childs: PublicCode, Name, Shortname, LegalName, ContactDetails child Url, Organisation Type, Address
-                            service_jor.name_operator_ = operator_r.node().child("Name").text().get();
-                            service_jor.short_name_operator_ = operator_r.node().child("ShortName").text().get();
-                            service_jor.name_operator_ = operator_r.node().child("Name").text().get();
-                            service_jor.legal_name_operator_ = operator_r.node().child("LegalName").text().get();
-                            service_jor.public_code_operator_ = operator_r.node().child("PublicCode").text().get();
-                          }
-                        }
-                      }
-                    }
-                }
+                //std::cout << "Here? " <<std::endl;
+                //pugi::xpath_node_set & line = service_journey.node().select_nodes("RouteView");
+                std::vector<line> line_test = parse_line(service_journey , d);
+
                 for (auto const& direction_ref :
                    service_journey.node().select_nodes("DirectionRef")) {
                   auto const& direction =
                     direction_ref.node().attribute("ref").value();
                   // std::cout << direction_ref.node().attribute("ref").value() << std::endl;
                   for(auto const& dir : d.select_nodes("//Direction")) {
+                   // std::cout << dir.node().attribute("id").value() << direction << std::endl;
                     if(std::strcmp(dir.node().attribute("id").value(), direction) == 0) {
                       //childs: Name, ShortName
+                      //std::cout << "here?" << std::endl;
                       service_jor.name_direction_ = dir.node().child("Name").text().get();
                       service_jor.short_name_direction_ = dir.node().child("ShortName").text().get();
                     }
@@ -162,33 +145,53 @@ void netex_parser::parse(fs::path const& p,
                 }
                 for (auto const& notice_assignment :
                    service_journey.node().select_nodes("noticeAssignments")) {
-                  auto const& notice_text = notice_assignment.node()
+                  service_jor.notice_text_= notice_assignment.node()
                                               .child("NoticeAssignment")
                                               .child("Notice")
                                               .child("Text")
                                               .text()
                                               .get();
-                  auto const& notice_public_code = notice_assignment.node()
+                  service_jor.public_code_= notice_assignment.node()
                                                      .child("NoticeAssignment")
                                                      .child("Notice")
                                                      .child("PublicCode")
                                                      .text()
                                                      .get();
+                  auto const& start_point_ref = notice_assignment.node()
+                                                    .child("NoticeAssignment")
+                                                    .child("StartPointInPatternRef")
+                                                    .attribute("id")
+                                                    .value();
+
+                  auto const& stop_point_ref = notice_assignment.node()
+                                                    .child("NoticeAssignment")
+                                                    .child("StopPointInPatternRef")
+                                                    .attribute("id")
+                                                    .value();
+
                   // std::cout << notice_assignment.node().child("NoticeAssignment").child("Notice").child("Text").text().get() << std::endl;
                 }
               }
              }
           }
-          service_list.push_back(service_jor);
+          //service_list.push_back(service_jor);
         }
-        for(auto const& at : service_list) {
-            std::cout << "Line: " << at.name_ << " Dir: " << at.name_direction_ << " Auth: " << at.name_authority_ << " Op: " << at.name_operator_ << std::endl;
-        }
+        //for(auto const& at : service_list) {
+         // if(std::strcmp(at.name_direction_.c_str(), "1") == 1 || std::strcmp(at.name_direction_.c_str(), "2") == 1 || std::strcmp(at.name_direction_.c_str(), "H") == 1 || std::strcmp(at.name_direction_.c_str(), "R") == 1 ){
+            //std::cout << at.name_direction_ << std::endl;
+         // }
+            //std::cout << "Line: " << at.name_ << " Dir: " << at.name_direction_ << " Auth: " << at.authority_.name_ << " Op: " << at.operator_.name_ << std::endl;
+        //}
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        std::cout << duration.count() << std::endl;
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
       LOG(error) << "unable to parse message";
     }
+
+    std::cout << "finish" << std::endl;
   }
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(output_services),

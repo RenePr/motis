@@ -4,6 +4,14 @@
 
 namespace motis::loader::netex {
 
+//which name is a good name?
+struct test {
+  std::string public_code_;
+  std::string name_;
+  std::string short_name_;
+  std::string legal_name_;
+};
+
 struct service_journey {
   //UicOperationPeriod
   std::string uic_operation_period_;
@@ -12,26 +20,32 @@ struct service_journey {
   //brauch ich das hier noch
   std::string service_journey_pattern_ref_;
 
-  std::string for_alighting_;
-  std::string for_boarding_;
+  bool for_alighting_;
+  bool for_boarding_;
 
   //Line
   std::string name_;
   std::string short_name_;
   std::string transport_mode_;
+
   //Authority
-  std::string public_code_authority_;
-  std::string name_authority_;
-  std::string short_name_authority_;
-  std::string legal_name_authority_;
+  test authority_;
+
   //Operator
-  std::string public_code_operator_;
-  std::string name_operator_;
-  std::string short_name_operator_;
-  std::string legal_name_operator_;
+  test operator_;
+
   //Direction
   std::string name_direction_;
   std::string short_name_direction_;
+
+  //Attributes
+  std::string public_code_;
+  std::string notice_text_;
+
+
+  //StartPoint
+
+  //StopPoint
 
 
 };
