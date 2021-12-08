@@ -18,6 +18,7 @@
 #include "motis/loader/util.h"
 #include "motis/schedule-format/Schedule_generated.h"
 #include "motis/loader/netex/line.h"
+#include "motis/loader/netex/get_valid_day_bits_transform.h"
 
 namespace fbs64 = flatbuffers64;
 namespace fs = boost::filesystem;
@@ -36,7 +37,7 @@ std::vector<std::string> netex_parser::missing_files(fs::path const&) const {
 
 void netex_parser::parse(fs::path const& p,
                          flatbuffers64::FlatBufferBuilder& fbb) {
-  utl::verify(fs::is_regular_file(p), "{} is not a zip file", p);
+  utl::verify(fs::is_regular_file(p), "{} is not a zip file",p);
   auto const output_services = std::vector<fbs64::Offset<Service>>{};
   auto const fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto const fbs_routes = std::map<std::string, fbs64::Offset<Route>>{};
@@ -90,6 +91,14 @@ void netex_parser::parse(fs::path const& p,
                                             .child("ToDate")
                                             .text()
                                             .get();
+                  std::string_view uic_operation_period_=
+                           period.node()
+                          .child("ValidDayBits")
+                          .text()
+                          .as_string();
+
+                  get_valid_day_bits_transform(
+                       service_jor.uic_operation_period_, service_jor.from_date_, service_jor.to_date_ );
 
                 }
               }
@@ -125,7 +134,8 @@ void netex_parser::parse(fs::path const& p,
                   // neue fkt speziell dafür programmieren?
                 }
                 //std::cout << "Here? " <<std::endl;
-                //pugi::xpath_node_set & line = service_journey.node().select_nodes("RouteView");
+                //pugi::xpatSh_node_set & line = service_journey.node().select_nodes("RouteView");
+
                 std::vector<line> line_test = parse_line(service_journey , d);
 
                 for (auto const& direction_ref :

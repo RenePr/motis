@@ -23,8 +23,9 @@ TEST(line_parse, test1) {
     const char* file = "/Users/reneprinz/Documents/motis/base/loader/test_resources/netex_schedules/NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029_line.xml";
     xml::xml_document d;
     auto r = d.load_file(file);
-
-    utl::verify(r, "netex parser: invalid xml in {}", file);
+    utl::verify(r,
+                "netex parser: invalid xml in {}",
+                file);
     std::cout << "123" << std::endl;
     for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
       std::cout << "Here?" << std::endl;
@@ -42,7 +43,7 @@ TEST(line_parse, test1) {
   }
   //Nur als test erstmal
   std::string_view test4 {"1"};
-  std::string_view test5 {"1"};
-  EXPECT_EQ(test4, test5);
+  std::string_view test5 {"2"};
+  ASSERT_EQ(test4, test5);
   //ASSERT_TRUE("1" == "!");
 }
