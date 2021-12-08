@@ -4,10 +4,10 @@
 
 namespace motis::loader::netex {
 
-void get_valid_day_bits_transform(std::string_view valid_day_bits, std::string_view from_date, std::string_view to_date);
+void get_valid_day_bits_transform(const char * valid_day_bits, const char * from_date, const char * to_date);
 
-double get_days(std::string_view from_date, std::string_view to_date);
+double get_days(const char * from_date, const char * to_date);
 
-std::time_t get_time_t(std::string_view date);
+std::time_t get_time_t(const char * date);
 
 } //motis::loader::netex

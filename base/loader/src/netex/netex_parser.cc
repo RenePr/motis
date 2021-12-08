@@ -91,14 +91,22 @@ void netex_parser::parse(fs::path const& p,
                                             .child("ToDate")
                                             .text()
                                             .get();
-                  std::string_view uic_operation_period_=
+                  const char * uic_operation_period_=
                            period.node()
                           .child("ValidDayBits")
                           .text()
                           .as_string();
+                  const char * from_date = period.node()
+                                              .child("FromDate")
+                                              .text()
+                                              .get();
+                  const char * to_date = period.node()
+                                            .child("ToDate")
+                                            .text()
+                                            .get();
 
                   get_valid_day_bits_transform(
-                       service_jor.uic_operation_period_, service_jor.from_date_, service_jor.to_date_ );
+                      uic_operation_period_, from_date, to_date );
 
                 }
               }

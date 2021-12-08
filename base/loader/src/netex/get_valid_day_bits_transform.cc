@@ -5,17 +5,14 @@
 
 namespace motis::loader::netex {
 
-//wegen std::stringview keine &, da std::string_view speicheroptimiert ist und cheap-to-copy ist. siehe https://quuxplusone.github.io/blog/2021/11/09/pass-string-view-by-value/
-void get_valid_day_bits_transform(std::string_view valid_day_bits, std::string_view from_date, std::string_view to_date) {
+
+void get_valid_day_bits_transform(const char * valid_day_bits, const char * from_date, const char * to_date) {
   auto days  = get_days(to_date, from_date);
-  std::cout << " Tage: " << days << " From date: " << from_date << " To Date: " << to_date << " Valid bits: " << valid_day_bits <<  " Size: " << valid_day_bits.size() << std::endl;
-  if(days - valid_day_bits.size() - 1 > 0) {
-    //korrekt;
-    bool test = true;
-  }
+  std::cout << " Tage: " << days << " From date: " << from_date << " To Date: " << to_date << " Valid bits: " << valid_day_bits << std::endl;
+
 }
 
-double get_days(std::string_view from_date, std::string_view to_date) {
+double get_days(const char * from_date, const char * to_date) {
   //ctime, difftime time_t
   std::time_t t1 = get_time_t(from_date);
   std::time_t t2 = get_time_t(to_date);
@@ -23,11 +20,11 @@ double get_days(std::string_view from_date, std::string_view to_date) {
   return  sec / 86400;
 }
 
-std::time_t get_time_t(std::string_view date) {
+std::time_t get_time_t(const char * date) {
   //muss leider so habe bisher keinen besseren weg gefunden
-  const char * test = std::string(date).c_str();
+  //const char * test = std::string(date).c_str();
   int y, m, d, H, M, S;
-  int ret = std::sscanf(test,  "%d-%d-%dT%d:%d:%d", &y, &m, &d, &H, &M, &S);
+  int ret = std::sscanf(date,  "%d-%d-%dT%d:%d:%d", &y, &m, &d, &H, &M, &S);
   std::tm time = {};
   time.tm_year = y;
   time.tm_mon = m;
