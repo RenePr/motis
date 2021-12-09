@@ -39,4 +39,17 @@ std::time_t get_time_t(const char * date) {
   return std::mktime(&time);
 }
 
+void parse_days(const char * valid_day_bits, std::time_t t1, std::time_t t2) {
+  //std::pair<bool, timetable>
+  for(int i = 0; i < sizeof(valid_day_bits); i++) {
+    if(valid_day_bits[i] == 1) {
+      //Bahn fährt
+    } else if(valid_day_bits[i] == 0) {
+      //Bahn fährt nicht
+    } else {
+      //invalid valid day bits
+    }
+  }
+}
+
 } //motis::loader::netex
