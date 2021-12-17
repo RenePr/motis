@@ -19,6 +19,7 @@
 #include "motis/schedule-format/Schedule_generated.h"
 #include "motis/loader/netex/line.h"
 #include "motis/loader/netex/get_valid_day_bits_transform.h"
+#include "motis/loader/netex/days_parse.h"
 
 namespace fbs64 = flatbuffers64;
 namespace fs = boost::filesystem;
@@ -62,56 +63,21 @@ void netex_parser::parse(fs::path const& p,
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
       //std::list<service_journey> service_list;
-      for(auto const& service : d.select_nodes("//ServiceJourney")) {
+      auto const& days = combine_daytyps_uic_opertions(d);
+      for(auto const& service : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
         service_journey service_jor;
-        for(auto const& day_type_ref : service.node().select_nodes("//DayTypeRef")) {
-          auto const& day_ref = day_type_ref.node().attribute("ref").value();
+
+        for(auto const& day_type_ref : service.node().select_nodes("//dayTypes/DayTypeRef")) {
+          auto const& key = day_type_ref.node().attribute("ref").as_string();
+          if(days.count(key) > 0) {
+            auto const& uic_key = days.at(key).uic_id_;
+            std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
+          }
+        }
 
           //std::cout << day_type_ref.node().attribute("ref").value() << std::endl;
           //bekomme traffic days
-          for (auto const& daytype : d.select_nodes("//DayTypeAssignment")) {
-            auto const& operation_period = daytype.node().child("OperatingPeriodRef").attribute("ref").value();
-            auto const& day = daytype.node().child("DayTypeRef").attribute("ref").value();
-            //std::cout << day << operation_period << std::endl;
-            if(day == day_ref) {
-              for (auto const& period :
-                   d.select_nodes("//UicOperatingPeriod")) {
-                if (std::strcmp(operation_period
-                    ,period.node().attribute("id").value()) == 0) {
-                  //fromdate, todate, validdaybits
-                  service_jor.uic_operation_period_ = period.node()
-                                                   .child("ValidDayBits")
-                                                   .text()
-                                                   .get();
-                  service_jor.from_date_ = period.node()
-                                              .child("FromDate")
-                                              .text()
-                                              .get();
-                  service_jor.to_date_ = period.node()
-                                            .child("ToDate")
-                                            .text()
-                                            .get();
-                  const char * uic_operation_period_=
-                           period.node()
-                          .child("ValidDayBits")
-                          .text()
-                          .as_string();
-                  const char * from_date = period.node()
-                                              .child("FromDate")
-                                              .text()
-                                              .get();
-                  const char * to_date = period.node()
-                                            .child("ToDate")
-                                            .text()
-                                            .get();
 
-                  get_valid_day_bits_transform(
-                      uic_operation_period_, from_date, to_date );
-
-                }
-              }
-            }
-          }
           service_jor.service_journey_pattern_ref_ = service.node().child("ServiceJourneyPatternRef").attribute("ref").value();
           //journeyPattern
           //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
@@ -191,7 +157,6 @@ void netex_parser::parse(fs::path const& p,
                 }
               }
              }
-          }
           //service_list.push_back(service_jor);
         }
         //for(auto const& at : service_list) {
