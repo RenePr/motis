@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
+#include <map>
 
 namespace motis::loader::netex {
 
@@ -16,8 +16,7 @@ struct line {
   std::string short_name_;
   //Todo Mabye enum?
   std::string transport_mode_;
-  std::vector<Operator_Authority> operator_;
-  std::vector<Operator_Authority> authority_;
+  Operator_Authority operator_;
 };
 
 } //motis::loader::netex

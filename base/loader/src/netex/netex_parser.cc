@@ -62,29 +62,30 @@ void netex_parser::parse(fs::path const& p,
                              file->size());
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      //std::list<service_journey> service_list;
-      auto const& days = combine_daytyps_uic_opertions(d);
+
+      auto const& days_map = combine_daytyps_uic_opertions(d);
+      auto operator_map = parse_operator(d);
+      //std::map<std::string, Operator_Authority> operator_map = parse_operator(d);
+
       for(auto const& service : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
         service_journey service_jor;
 
         for(auto const& day_type_ref : service.node().select_nodes("//dayTypes/DayTypeRef")) {
           auto const& key = day_type_ref.node().attribute("ref").as_string();
-          if(days.count(key) > 0) {
-            auto const& uic_key = days.at(key).uic_id_;
+          if(days_map.count(key) > 0) {
+            auto const& uic_key = days_map.at(key).uic_id_;
             //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
           }
         }
-
-          //std::cout << day_type_ref.node().attribute("ref").value() << std::endl;
-          //bekomme traffic days
-
-          //service_jor.service_journey_pattern_ref_ = service.node().child("ServiceJourneyPatternRef").attribute("ref").value();
+        for(auto const& service_journey : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern/ServiceJourneyPattern")) {
+          auto const& line = parse_line(service_journey, operator_map);
+        }
           //journeyPattern
           //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
-          /*for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
+        /*for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
 
-             if(service_jor.service_journey_pattern_ref_ == service_journey.node().attribute("id").value() ) {
-                for (auto const& stop_point :
+          if(service_jor.service_journey_pattern_ref_ == service_journey.node().attribute("id").value() ) {
+            for (auto const& stop_point :
                    service_journey.node().select_nodes("pointsInSequence")) {
                   // fbs route, in_allowed out_allowed
                   service_jor.for_alighting_ =
