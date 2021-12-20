@@ -71,17 +71,17 @@ void netex_parser::parse(fs::path const& p,
           auto const& key = day_type_ref.node().attribute("ref").as_string();
           if(days.count(key) > 0) {
             auto const& uic_key = days.at(key).uic_id_;
-            std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
+            //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
           }
         }
 
           //std::cout << day_type_ref.node().attribute("ref").value() << std::endl;
           //bekomme traffic days
 
-          service_jor.service_journey_pattern_ref_ = service.node().child("ServiceJourneyPatternRef").attribute("ref").value();
+          //service_jor.service_journey_pattern_ref_ = service.node().child("ServiceJourneyPatternRef").attribute("ref").value();
           //journeyPattern
           //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")
-          for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
+          /*for(auto const& service_journey : d.select_nodes("//ServiceJourneyPattern")) {
 
              if(service_jor.service_journey_pattern_ref_ == service_journey.node().attribute("id").value() ) {
                 for (auto const& stop_point :
@@ -156,7 +156,7 @@ void netex_parser::parse(fs::path const& p,
                   // std::cout << notice_assignment.node().child("NoticeAssignment").child("Notice").child("Text").text().get() << std::endl;
                 }
               }
-             }
+             }*/
           //service_list.push_back(service_jor);
         }
         //for(auto const& at : service_list) {

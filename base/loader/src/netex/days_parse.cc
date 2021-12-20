@@ -54,9 +54,9 @@ std::unordered_map<std::string, ids> combine_daytyps_uic_opertions(xml::xml_docu
   ids.uic_ = uic_map;
   ids.day_ = daytype_map;
   for(auto const& assignment : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/dayTypeAssignments/DayTypeAssignment")) {
-    if(uic_map.count(assignment.node().child("OperatingPeriodRef").attribute("ref").as_string())  > 0){
+    if(uic_map.find(assignment.node().child("OperatingPeriodRef").attribute("ref").as_string())  != uic_map.end()){
       //found ref
-      if(daytype_map.count(assignment.node().child("DayTypeRef").attribute("ref").as_string())  > 0) {
+      if(daytype_map.find(assignment.node().child("DayTypeRef").attribute("ref").as_string())  != daytype_map.end()) {
         //found ref
         ids.uic_id_ = assignment.node().child("OperatingPeriodRef").attribute("ref").as_string();
         auto const& pair = std::make_pair(assignment.node().child("DayTypeRef").attribute("ref").as_string(), ids);
