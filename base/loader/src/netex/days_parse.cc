@@ -44,11 +44,11 @@ std::map<std::string, uic_opertion_period> transform_to_map_uic_opertion(xml::xm
   return daytypes_map;
 }
 //std::string = daytype_ref
-std::unordered_map<std::string, ids> combine_daytyps_uic_opertions(xml::xml_document& d) {
+std::map<std::string, ids> combine_daytyps_uic_opertions(xml::xml_document& d) {
 
   auto const& daytype_map = transform_to_map_daytype(d);
   auto const& uic_map = transform_to_map_uic_opertion(d);
-  std::unordered_map<std::string, ids> ret_unmap;
+  std::map<std::string, ids> ret_unmap;
   ids ids;
   ids.uic_ = uic_map;
   ids.day_ = daytype_map;
