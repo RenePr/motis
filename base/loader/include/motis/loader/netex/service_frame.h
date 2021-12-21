@@ -24,4 +24,10 @@ struct direction {
   std::string short_name_;
 };
 
+struct scheduled_points {
+  std::string short_name_;
+  std::string public_code_;
+  std::string stop_type_;
+};
+
 } //motis::loader::netex

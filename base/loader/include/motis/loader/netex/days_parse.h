@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <map>
-#include <unordered_map>
 
 #include "motis/loader/netex/days.h"
 

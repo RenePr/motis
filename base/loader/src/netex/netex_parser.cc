@@ -68,10 +68,12 @@ void netex_parser::parse(fs::path const& p,
       //std::map<std::string, Operator_Authority> operator_map = parse_operator(d);
       std::map<std::string, direction> direction;
       std::map<std::string, line> line;
+      std::map<std::string, scheduled_points> scheduled_points;
 
       for(auto const& service_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame")) {
         direction = parse_direction(service_frame);
         line = parse_line(service_frame, operator_map);
+        scheduled_points = parse_scheduled_points(service_frame);
         std::cout << "He" << std::endl;
       }
 

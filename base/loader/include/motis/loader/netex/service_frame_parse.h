@@ -13,11 +13,13 @@ namespace xml = pugi;
 namespace motis::loader::netex {
 
 //TODO void noch verändern
-std::map<std::string ,line> parse_line(xml::xpath_node const& service_jorney, std::map<std::string, Operator_Authority>& operator_map);
+std::map<std::string ,line> parse_line(xml::xpath_node const&, std::map<std::string, Operator_Authority>&);
 
-std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d);
+std::map<std::string, Operator_Authority> parse_operator(xml::xml_document&);
 
-std::map<std::string, direction> parse_direction(xml::xpath_node const& service_jorney);
+std::map<std::string, direction> parse_direction(xml::xpath_node const&);
+
+std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node const&);
 
 
 } //motis::loader::netex

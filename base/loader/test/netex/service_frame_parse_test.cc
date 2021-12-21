@@ -6,9 +6,9 @@
 
 #include "boost/filesystem.hpp"
 
-#include "motis/loader/netex/line.h"
+#include "motis/loader/netex/service_frame.h"
 #include "motis/loader/netex/netex_parser.h"
-#include "motis/loader/netex/line_parse.h"
+#include "motis/loader/netex/service_frame_parse.h"
 
 #include "motis/schedule-format/Schedule_generated.h"
 
