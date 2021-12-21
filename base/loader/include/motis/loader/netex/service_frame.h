@@ -19,4 +19,9 @@ struct line {
   Operator_Authority operator_;
 };
 
+struct direction {
+  std::string name_;
+  std::string short_name_;
+};
+
 } //motis::loader::netex

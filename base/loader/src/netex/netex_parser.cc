@@ -13,11 +13,11 @@
 
 #include "motis/core/common/logging.h"
 #include "motis/core/common/zip_reader.h"
-#include "motis/loader/netex/line_parse.h"
+#include "motis/loader/netex/service_frame_parse.h"
 #include "motis/loader/netex/service_journey.h"
 #include "motis/loader/util.h"
 #include "motis/schedule-format/Schedule_generated.h"
-#include "motis/loader/netex/line.h"
+#include "motis/loader/netex/service_frame.h"
 #include "motis/loader/netex/get_valid_day_bits_transform.h"
 #include "motis/loader/netex/days_parse.h"
 
@@ -66,19 +66,27 @@ void netex_parser::parse(fs::path const& p,
       auto const& days_map = combine_daytyps_uic_opertions(d);
       auto operator_map = parse_operator(d);
       //std::map<std::string, Operator_Authority> operator_map = parse_operator(d);
+      std::map<std::string, direction> direction;
+      std::map<std::string, line> line;
 
-      for(auto const& service : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
-        service_journey service_jor;
+      for(auto const& service_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame")) {
+        direction = parse_direction(service_frame);
+        line = parse_line(service_frame, operator_map);
+        std::cout << "He" << std::endl;
+      }
 
-        for(auto const& day_type_ref : service.node().select_nodes("//dayTypes/DayTypeRef")) {
+      for(auto const& service_journey : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
+        //service_journey service_jor;
+
+        for(auto const& day_type_ref : service_journey.node().select_nodes("//dayTypes/DayTypeRef")) {
           auto const& key = day_type_ref.node().attribute("ref").as_string();
           if(days_map.count(key) > 0) {
             auto const& uic_key = days_map.at(key).uic_id_;
             //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
           }
         }
-        for(auto const& service_journey : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern/ServiceJourneyPattern")) {
-          auto const& line = parse_line(service_journey, operator_map);
+        for(auto const& service_journey_pattern : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
+          //auto const& op = line.operator_;
         }
           //journeyPattern
           //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")

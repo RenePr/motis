@@ -1,4 +1,4 @@
-#include "motis/loader/netex/line_parse.h"
+#include "motis/loader/netex/service_frame_parse.h"
 
 #include <iostream>
 #include <map>
@@ -7,7 +7,7 @@
 #include "pugixml.hpp"
 
 #include "motis/loader/netex/service_journey.h"
-#include "motis/loader/netex/line.h"
+#include "motis/loader/netex/service_frame.h"
 
 namespace xml = pugi;
 
@@ -49,6 +49,19 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d){
     operator_map.insert(pair);
   }
   return operator_map;
+}
+
+std::map<std::string, direction> parse_direction(xml::xpath_node const& service_jorney) {
+  std::map<std::string, direction> direction_map;
+  for(auto const& direction_get : service_jorney.node().select_nodes("//directions/Direction")) {
+    direction dir;
+    dir.name_ = direction_get.node().child("Name").text().as_string();
+    dir.short_name_ = direction_get.node().child("ShortName").text().as_string();
+    std::string id = direction_get.node().attribute("ref").as_string();
+    auto const& pair = std::make_pair(id, dir);
+    direction_map.insert(pair);
+  }
+  return direction_map;
 }
 
 } //motis::loader::netex

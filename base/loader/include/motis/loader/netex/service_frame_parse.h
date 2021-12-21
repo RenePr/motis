@@ -6,7 +6,7 @@
 
 #include "pugixml.hpp"
 
-#include "motis/loader/netex/line.h"
+#include "motis/loader/netex/service_frame.h"
 
 namespace xml = pugi;
 
@@ -16,6 +16,8 @@ namespace motis::loader::netex {
 std::map<std::string ,line> parse_line(xml::xpath_node const& service_jorney, std::map<std::string, Operator_Authority>& operator_map);
 
 std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d);
+
+std::map<std::string, direction> parse_direction(xml::xpath_node const& service_jorney);
 
 
 } //motis::loader::netex
