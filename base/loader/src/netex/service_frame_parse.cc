@@ -65,6 +65,7 @@ std::map<std::string, direction> parse_direction(xml::xpath_node const& service_
 }
 
 std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node const& service_jorney) {
+  //TODO über PassengerStopAssignment -> StopPlace für latidude altidude hinzufügen
   std::map<std::string, scheduled_points> scheduled_stops_map;
   for(auto const& scheduled_points_get : service_jorney.node().select_nodes("//scheduledStopPoints/ScheduledStopPoint")) {
     scheduled_points points;
