@@ -77,18 +77,31 @@ void netex_parser::parse(fs::path const& p,
         std::cout << "He" << std::endl;
       }
 
-      for(auto const& service_journey : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
-        //service_journey service_jor;
+      std::vector<fbs64::Offset<Category>> category;
 
-        for(auto const& day_type_ref : service_journey.node().select_nodes("//dayTypes/DayTypeRef")) {
-          auto const& key = day_type_ref.node().attribute("ref").as_string();
-          if(days_map.count(key) > 0) {
-            auto const& uic_key = days_map.at(key).uic_id_;
-            //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
-          }
+      for(auto const& service_journey_pattern : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
+        for(auto const& line_ref : service_journey_pattern.node().select_nodes("//RouteView/LineRef")) {
+          auto key = line_ref.node().attribute("ref").as_string();
+          auto it = line.find(key);
+          utl::verify(it != end(line), "missing category: {}",
+                      key);
+          auto name = std::string(it->second.name_);
+          auto cate = CreateCategory(fbb, to_fbs_string(fbb, name), 0.0);
+          category.push_back(cate);
+
         }
-        for(auto const& service_journey_pattern : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
-          //auto const& op = line.operator_;
+        //auto const& op = line.operator_;
+      }
+
+      for(auto const& service_journey : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
+        // service_journey service_jor;
+        for(auto const& day_type_ref : service_journey.node().select_nodes("//dayTypes/DayTypeRef")) {
+         auto const& key = day_type_ref.node().attribute("ref").as_string();
+            if(days_map.count(key) > 0) {
+            auto uic_key = days_map.at(key).uic_id_;
+
+             //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
+          }
         }
           //journeyPattern
           //d.select_nodes("//ServiceJourneyPattern/pointsInSequence/StopPointInJourneyPattern")

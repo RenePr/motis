@@ -40,8 +40,8 @@ namespace motis::loader {
 
 std::vector<std::unique_ptr<format_parser>> parsers() {
   std::vector<std::unique_ptr<format_parser>> p;
-  p.emplace_back(std::make_unique<gtfs::gtfs_parser>());
-  p.emplace_back(std::make_unique<hrd::hrd_parser>());
+  //p.emplace_back(std::make_unique<gtfs::gtfs_parser>());
+  //p.emplace_back(std::make_unique<hrd::hrd_parser>());
   p.emplace_back(std::make_unique<netex::netex_parser>());
   return p;
 }
