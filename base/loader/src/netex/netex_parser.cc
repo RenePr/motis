@@ -73,11 +73,18 @@ void netex_parser::parse(fs::path const& p,
       for(auto const& service_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame")) {
         direction = parse_direction(service_frame);
         line = parse_line(service_frame, operator_map);
-        scheduled_points = parse_scheduled_points(service_frame);
-        std::cout << "He" << std::endl;
+        scheduled_points = parse_scheduled_points(service_frame, d);
+      }
+      std::map<std::string, std::string> vehicle_type;
+      for(auto const& timetable_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleTypes/VehicleType")) {
+        auto type = timetable_frame.node().child("Name").text().as_string();
+        auto const pair = std::make_pair(timetable_frame.node().attribute("id").as_string(), type);
+        vehicle_type.insert(pair);
       }
 
-      std::vector<fbs64::Offset<Category>> category;
+      //std::map<std::string ,fbs64::Offset<Provider>> provider;
+      //std::map<std::string ,fbs64::Offset<Category>> category;
+      std::map<std::string, fbs64::Offset<Service>> service;
 
       for(auto const& service_journey_pattern : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
         for(auto const& line_ref : service_journey_pattern.node().select_nodes("//RouteView/LineRef")) {
@@ -85,9 +92,15 @@ void netex_parser::parse(fs::path const& p,
           auto it = line.find(key);
           utl::verify(it != end(line), "missing category: {}",
                       key);
-          auto name = std::string(it->second.name_);
-          auto cate = CreateCategory(fbb, to_fbs_string(fbb, name), 0.0);
-          category.push_back(cate);
+          //TODO timezone_name fehlt!
+          auto prov = CreateProvider(fbb, to_fbs_string(fbb, it->second.operator_.short_name_), to_fbs_string(fbb, it->second.operator_.name_), to_fbs_string(fbb, it->second.operator_.legal_name_), to_fbs_string(fbb, it->second.operator_.name_));
+
+          //TODO output_rule fehlt
+          auto cate = CreateCategory(fbb, to_fbs_string(fbb, it->second.transport_mode_), 0.0);
+
+        }
+
+        for(auto const& notice_ref : service_journey_pattern.node().select_nodes("//noticeAssignments/NoticeAssignment")) {
 
         }
         //auto const& op = line.operator_;
@@ -101,6 +114,12 @@ void netex_parser::parse(fs::path const& p,
             auto uic_key = days_map.at(key).uic_id_;
 
              //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
+          }
+        }
+        for(auto const& vehicle : service_journey.node().select_nodes("//VehicleTypeRef")) {
+          auto key = vehicle.node().attribute("ref").as_string();
+          if(vehicle_type.find(key) != vehicle_type.end()) {
+
           }
         }
           //journeyPattern
