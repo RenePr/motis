@@ -11,10 +11,10 @@ namespace xml = pugi;
 
 namespace motis::loader::netex {
 
-std::map<std::string, daytype> transform_to_map_daytype(xml::xml_document& d);
+std::map<std::string, daytype> transform_to_map_daytype(xml::xml_document&);
 
-std::map<std::string, uic_opertion_period> transform_to_map_uic_opertion(xml::xml_document& d);
+std::map<std::string, uic_opertion_period> transform_to_map_uic_opertion(xml::xml_document&);
 
-std::map<std::string, ids> combine_daytyps_uic_opertions(xml::xml_document& d);
+std::map<std::string, ids> combine_daytyps_uic_opertions(xml::xml_document&);
 
 } //motis::loader::netex

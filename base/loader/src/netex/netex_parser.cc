@@ -77,9 +77,11 @@ void netex_parser::parse(fs::path const& p,
       }
       std::map<std::string, std::string> vehicle_type;
       for(auto const& timetable_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleTypes/VehicleType")) {
-        auto type = timetable_frame.node().child("Name").text().as_string();
-        auto const pair = std::make_pair(timetable_frame.node().attribute("id").as_string(), type);
-        vehicle_type.insert(pair);
+        auto const key = timetable_frame.node().attribute("id").as_string();
+        auto const type = timetable_frame.node().child("Name").text().as_string();
+        //auto const pair = std::make_pair(timetable_frame.node().attribute("id").as_string(), type);
+        //vehicle_type.insert(pair);
+        vehicle_type.try_emplace(key, type);
       }
 
       //std::map<std::string ,fbs64::Offset<Provider>> provider;
@@ -88,15 +90,15 @@ void netex_parser::parse(fs::path const& p,
 
       for(auto const& service_journey_pattern : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
         for(auto const& line_ref : service_journey_pattern.node().select_nodes("//RouteView/LineRef")) {
-          auto key = line_ref.node().attribute("ref").as_string();
-          auto it = line.find(key);
+          auto const key = line_ref.node().attribute("ref").as_string();
+          auto const it = line.find(key);
           utl::verify(it != end(line), "missing category: {}",
                       key);
           //TODO timezone_name fehlt!
-          auto prov = CreateProvider(fbb, to_fbs_string(fbb, it->second.operator_.short_name_), to_fbs_string(fbb, it->second.operator_.name_), to_fbs_string(fbb, it->second.operator_.legal_name_), to_fbs_string(fbb, it->second.operator_.name_));
+          auto const prov = CreateProvider(fbb, to_fbs_string(fbb, it->second.operator_.short_name_), to_fbs_string(fbb, it->second.operator_.name_), to_fbs_string(fbb, it->second.operator_.legal_name_), to_fbs_string(fbb, it->second.operator_.name_));
 
           //TODO output_rule fehlt
-          auto cate = CreateCategory(fbb, to_fbs_string(fbb, it->second.transport_mode_), 0.0);
+          //auto cate = CreateCategory(fbb, to_fbs_string(fbb, it->second.transport_mode_), 0.0);
 
         }
 
