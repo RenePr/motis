@@ -76,7 +76,7 @@ TEST(service_frame_parse, scheduled_points) {
     auto r = d.load_file(file);
     auto operator_map = parse_operator(d);
     for(auto const& service_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame")) {
-      auto const& scheduled_stop =  parse_scheduled_points(service_frame);
+      auto const& scheduled_stop =  parse_scheduled_points(service_frame, d);
       std::string_view short_name = "HE GI Allendorf Allendorf Treiser Straße Vtreis";
       std::string_view public_code = "---trstr";
       std::string_view stop_type =  "busStation";

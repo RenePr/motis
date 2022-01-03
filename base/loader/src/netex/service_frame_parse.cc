@@ -88,8 +88,8 @@ std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node c
         stop.key_ = stop_points.node().child("keyList").child("KeyValue").child("Key").text().as_string();
         stop.value_ = stop_points.node().child("keyList").child("KeyValue").child("Value").text().as_string();
         stop.name_ = stop_points.node().child("keyList").child("Name").text().as_string();
-        stop.lon_ = stop_points.node().child("keyList").child("Centroid").child("Location").child("Longitude").text().as_string();
-        stop.lat_ = stop_points.node().child("keyList").child("Centroid").child("Location").child("Latitude").text().as_string();
+        stop.lon_ = stop_points.node().child("keyList").child("Centroid").child("Location").child("Longitude").text().as_double();
+        stop.lat_ = stop_points.node().child("keyList").child("Centroid").child("Location").child("Latitude").text().as_double();
         stop.timezone_ = stop_points.node().child("keyList").child("Locale").child("TimeZone").text().as_string();
         points.stop_point_ = stop;
       }

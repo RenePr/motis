@@ -28,8 +28,8 @@ struct stop_point {
   std::string_view key_;
   std::string_view value_;
   std::string_view name_;
-  std::string_view lon_;
-  std::string_view lat_;
+  double lon_;
+  double lat_;
   std::string_view timezone_;
 
 };
