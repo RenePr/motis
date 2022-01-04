@@ -19,7 +19,7 @@ std::map<std::string, line> parse_line(xml::xpath_node const& service_jorney, st
     auto const id = std::string(line_get.node().attribute("id").as_string());
     auto const operator_id = std::string(line_get.node().child("AuthorityRef").attribute("ref").as_string());
     line line_parse;
-    line_parse.name_ = line_get.node().child("Name").text().as_string();
+    line_parse.name_ = line_get.node().child("Name").text().as_int();
     line_parse.short_name_ = line_get.node().child("ShortName").text().as_string();
     line_parse.transport_mode_ = line_get.node().child("TransportMode").text().as_string();
     //std::string_view operator_ref {line_get.node().child("OperatorRef").attribute("ref").as_string() };
@@ -63,8 +63,8 @@ std::map<std::string, direction> parse_direction(xml::xpath_node const& service_
 std::map<std::string, std::string> parse_passenger_assignment(xml::xpath_node const& service_jorney) {
   std::map<std::string, std::string> passengers_assignment_map;
   for(auto const& passenger_assignments : service_jorney.node().select_nodes("//stopAssignments/PassengerStopAssignment")) {
-    auto const scheduled_place = passenger_assignments.node().child("//ScheduledStopPointRef").attribute("ref").as_string();
-    auto const stop_place = passenger_assignments.node().child("//StopPlaceRef").attribute("ref").as_string();
+    auto const scheduled_place = passenger_assignments.node().child("ScheduledStopPointRef").attribute("ref").as_string();
+    auto const stop_place = passenger_assignments.node().child("StopPlaceRef").attribute("ref").as_string();
     passengers_assignment_map.try_emplace(scheduled_place, stop_place);
   }
   return passengers_assignment_map;
@@ -80,17 +80,21 @@ std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node c
     points.short_name_ = scheduled_points_get.node().child("ShortName").text().as_string();
     points.public_code_ = scheduled_points_get.node().child("PublicCode").text().as_string();
     points.stop_type_ = scheduled_points_get.node().child("StopType").text().as_string();
+    //std::cout << "hd" << std::endl;
     stop_point stop;
-    for(auto const& stop_points : d.select_nodes("//dataObjects/CompositeFrame/frames/SiteFrame/stopPlaces/StopPlace")) {
+    for(auto const& stop_points : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/SiteFrame/stopPlaces/StopPlace")) {
       auto const id_stop_point = std::string_view(stop_points.node().attribute("id").as_string());
+      //std::cout << "hd3" << std::endl;
       auto const id_scheduled = std::string_view(passenger_assignments.at(id));
+      //std::cout << "hd2" << std::endl;
       if(id_stop_point == id_scheduled) {
+
         stop.key_ = stop_points.node().child("keyList").child("KeyValue").child("Key").text().as_string();
         stop.value_ = stop_points.node().child("keyList").child("KeyValue").child("Value").text().as_string();
-        stop.name_ = stop_points.node().child("keyList").child("Name").text().as_string();
-        stop.lon_ = stop_points.node().child("keyList").child("Centroid").child("Location").child("Longitude").text().as_double();
-        stop.lat_ = stop_points.node().child("keyList").child("Centroid").child("Location").child("Latitude").text().as_double();
-        stop.timezone_ = stop_points.node().child("keyList").child("Locale").child("TimeZone").text().as_string();
+        stop.name_ = stop_points.node().child("Name").text().as_string();
+        stop.lon_ = stop_points.node().child("Centroid").child("Location").child("Longitude").text().as_double();
+        stop.lat_ = stop_points.node().child("Centroid").child("Location").child("Latitude").text().as_double();
+        stop.timezone_ = stop_points.node().child("Locale").child("TimeZone").text().as_string();
         points.stop_point_ = stop;
       }
     }

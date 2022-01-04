@@ -41,13 +41,9 @@ struct service_journey {
   //Attributes
   std::string public_code_;
   std::string notice_text_;
-
-
   //StartPoint
 
   //StopPoint
-
-
 };
 
 } //motis::loader::netex

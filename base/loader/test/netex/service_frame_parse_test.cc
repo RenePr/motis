@@ -29,7 +29,7 @@ TEST(service_frame_parse, line) {
       std::string_view name =  "371";
       std::string_view mode = "bus";
       ASSERT_TRUE(lines.size() == 1);
-      ASSERT_TRUE(lines.at("DE::Line:138143::").name_ == name);
+      ASSERT_TRUE(lines.at("DE::Line:138143::").name_ == 371);
       ASSERT_TRUE(lines.at("DE::Line:138143::").short_name_ == name);
       ASSERT_TRUE(lines.at("DE::Line:138143::").transport_mode_ == mode);
     }
@@ -74,7 +74,6 @@ TEST(service_frame_parse, scheduled_points) {
     const char* file = "base/loader/test_resources/netex_schedules/NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029_line.xml";
     xml::xml_document d;
     auto r = d.load_file(file);
-    auto operator_map = parse_operator(d);
     for(auto const& service_frame : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame")) {
       auto const& scheduled_stop =  parse_scheduled_points(service_frame, d);
       std::string_view short_name = "HE GI Allendorf Allendorf Treiser Straße Vtreis";

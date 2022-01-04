@@ -12,7 +12,7 @@ struct Operator_Authority {
   std::string legal_name_;
 };
 struct line {
-  std::string_view name_;
+  int name_;
   std::string_view short_name_;
   //Todo Mabye enum?
   std::string_view transport_mode_;

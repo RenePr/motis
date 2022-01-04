@@ -16,7 +16,7 @@ struct service_journey_pattern {
   fbs64::Offset<Provider> provider_;
   fbs64::Offset<Category> category_;
 
-  std::string name_;
+  int name_;
   std::string direction_;
 };
 

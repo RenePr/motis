@@ -64,12 +64,12 @@ void netex_parser::parse(fs::path const& p,
                              file->size());
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-
+      std::cout << "Here?2" << std::endl;
       auto days_map = combine_daytyps_uic_opertions(d);
       auto operator_map = parse_operator(d);
       //TODO noch auslagern
       std::map<std::string, std::string> vehicle_type;
-      for(auto const& v : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleTypes/VehicleType")) {
+      for(auto const& v : d.select_nodes("//PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleTypes/VehicleType")) {
         auto const key = std::string(v.node().attribute("id").as_string());
         auto const type = std::string(v.node().child("Name").text().as_string());
         vehicle_type.try_emplace(key, type);
@@ -78,87 +78,174 @@ void netex_parser::parse(fs::path const& p,
       std::map<std::string, direction> direction;
       std::map<std::string, line> line;
       std::map<std::string, scheduled_points> scheduled_points;
-      for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame")) {
+      for(auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame")) {
+        std::cout << "Here" << std::endl;
         direction = parse_direction(s);
+        std::cout << "h0" << std::endl;
         line = parse_line(s, operator_map);
+        std::cout << "h1" << std::endl;
         scheduled_points = parse_scheduled_points(s, d);
+        std::cout << "h2" << std::endl;
       }
+      std::cout << "h3" << std::endl;
+        std::map<std::string, service_journey_pattern> service_journey_pattern_map;
+        //ServiceJourneyPattern
+        for (auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
+          auto const key_service =
+              std::string(s.node().attribute("id").as_string());
+          service_journey_pattern sjp;
+          sjp.direction_ = std::string(
+              s.node().child("DirectionRef").attribute("ref").as_string());
 
-      std::map<std::string, service_journey_pattern> service_journey_pattern_map;
-      for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
-        auto const key_service = std::string(s.node().attribute("id").as_string());
-        service_journey_pattern sjp;
-        sjp.direction_ = std::string(s.node().child("DirectionRef").attribute("ref").as_string());
-
-        std::vector<fbs64::Offset<Station>> stations_vec;
-        for(auto const& s : s.node().select_nodes("//pointsInSequence/StopPointInJourneyPattern")) {
-          auto const key = std::string(s.node().child("ScheduledStopPointRef").attribute("ref").as_string());
-          auto const it = scheduled_points.find(key);
-          utl::verify(it != end(scheduled_points), "missing category: {}",
-                      key);
-          //TODO station id == name?, interchange_name ?, external ids?
-          std::vector<std::string> test;
-          test.push_back("test");
-          auto const st = CreateStation(fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key), it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0, fbb.CreateVector(utl::to_vec(
-                                                                                                                                                                begin(test), end(test),
-                                                                                                                                                                [&](std::string const& s) { return fbb.CreateString(s); })) ,timezone, to_fbs_string(fbb, std::string(it->second.stop_point_.timezone_)));
-          stations_vec.push_back(st);
-        }
-        sjp.stations_vec_ = stations_vec;
-
-        std::vector<fbs64::Offset<AttributeInfo>> attribute_vec;
-        for(auto const& n : s.node().select_nodes("//noticeAssignments/NoticeAssignment")) {
-          auto const key = std::string(n.node().child("Notice").attribute("id").as_string());
-          auto const text = std::string(n.node().child("Notice").child("Text").text().as_string());
-          auto const public_code = std::string(n.node().child("Notice").child("PublicCode").text().as_string());
-          auto attribute_info = CreateAttributeInfo(fbb, to_fbs_string(fbb, text), to_fbs_string(fbb, public_code));
-          attribute_vec.push_back(attribute_info);
-        }
-        sjp.attributeinfo_vec_ = attribute_vec;
-
-        for(auto const& l : s.node().select_nodes("//RouteView/LineRef")) {
-          auto const key = std::string(l.node().attribute("ref").as_string());
-          if(line.size() != 1) {
-            std::cout << "Warning more than one line in one file" << std::endl;
-          }
-          auto const it = line.find(key);
-          try{
-            utl::verify(it != end(line), "missing line: {}",
+          std::vector<fbs64::Offset<Station>> stations_vec;
+          for (auto const& s : s.node().select_nodes("//pointsInSequence/StopPointInJourneyPattern")) {
+            auto const key = std::string(s.node()
+                                             .child("ScheduledStopPointRef")
+                                             .attribute("ref")
+                                             .as_string());
+            auto const it = scheduled_points.find(key);
+            utl::verify(it != end(scheduled_points), "missing category: {}",
                         key);
-          } catch(std::runtime_error& e) {
+            // TODO station id == name?, interchange_name ?, external ids?
+            std::vector<std::string> test;
+            test.push_back("test");
+            /*auto const st = CreateStation(
+                fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key),
+                it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
+                fbb.CreateVector(utl::to_vec(
+                    begin(test), end(test),
+                    [&](std::string const& s) { return fbb.CreateString(s); })),
+                timezone,
+                to_fbs_string(fbb,
+                              std::string(it->second.stop_point_.timezone_)));
+            stations_vec.push_back(st);*/
+          }
+          sjp.stations_vec_ = stations_vec;
+
+          std::vector<fbs64::Offset<AttributeInfo>> attribute_vec;
+          for (auto const& n :
+               s.node().select_nodes("//noticeAssignments/NoticeAssignment")) {
+            auto const key = std::string(
+                n.node().child("Notice").attribute("id").as_string());
+            auto const text = std::string(
+                n.node().child("Notice").child("Text").text().as_string());
+            auto const public_code = std::string(n.node()
+                                                     .child("Notice")
+                                                     .child("PublicCode")
+                                                     .text()
+                                                     .as_string());
+            auto attribute_info = CreateAttributeInfo(
+                fbb, to_fbs_string(fbb, text), to_fbs_string(fbb, public_code));
+            attribute_vec.push_back(attribute_info);
+          }
+          sjp.attributeinfo_vec_ = attribute_vec;
+
+          for (auto const& l : s.node().select_nodes("//RouteView/LineRef")) {
+            auto const key = std::string(l.node().attribute("ref").as_string());
+            if (line.size() != 1) {
+              std::cout << "Warning more than one line in one file"
+                        << std::endl;
+            }
+            auto const it = line.find(key);
+            try {
+              utl::verify(it != end(line), "missing line: {}", key);
+              sjp.name_ = it->second.name_;
+            } catch (std::runtime_error& e) {
+              std::cout << e.what() << std::endl;
+              continue;
+            }
+            // TODO timezone_name fehlt, keine timezone bei operator und provider und die timezone ist ja nicht gleich der timezone der Stationen oder ?!?
+            /*auto prov = CreateProvider(
+                fbb, to_fbs_string(fbb, it->second.operator_.short_name_),
+                to_fbs_string(fbb, it->second.operator_.name_),
+                to_fbs_string(fbb, it->second.operator_.legal_name_),
+                to_fbs_string(fbb, it->second.operator_.name_));
+            // TODO output_rule fehlt
+            auto category = CreateCategory(
+                fbb,
+                to_fbs_string(fbb, std::string(it->second.transport_mode_)),
+                0.0);
+
+            sjp.provider_ = prov;
+            sjp.category_ = category;*/
+            //std::cout << sjp.name_ << std::endl;
+            // sjp.name_ = key;
+
+            // auto const section = CreateSection(fbb, category ,prov, 0, to_fbs_string(fbb, key), fbb.CreateVector(utl::to_vec(
+            //                                                                     begin(attribute_vec), end(attribute_vec),
+            //                                                                     [&](fbs64::Offset<Attribute> const& a) { return a; })),  dir);
+          }
+          service_journey_pattern_map.try_emplace(key_service, sjp);
+          //std::cout << "sjp" << std::endl;
+        }
+
+
+      for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
+        auto key_sjp = std::string(s.node()
+                                       .child("ServiceJourneyPatternRef")
+                                       .attribute("ref")
+                                       .as_string());
+        auto it_sjp = service_journey_pattern_map.find(key_sjp);
+        try {
+          utl::verify(it_sjp != end(service_journey_pattern_map),
+                      "missing service_journey_pattern: {}", key_sjp);
+        } catch (std::runtime_error& e) {
+          std::cout << e.what() << std::endl;
+          continue;
+        }
+        std::string valid_day_bits;
+        // TODO auslagern
+        for (auto const& d : s.node().select_nodes("//dayTypes/DayTypeRef")) {
+          auto const key = std::string(d.node().attribute("ref").as_string());
+          auto it = days_map.find(key);
+          try {
+            utl::verify(it != end(days_map), "missing day_types: {}", key);
+            std::string uic_id = it->second.uic_id_;
+            try {
+              auto it_uic_id = it->second.uic_.find(uic_id);
+              utl::verify(it_uic_id != end(it->second.uic_),
+                          "missing service_journey_pattern: {}", uic_id);
+              valid_day_bits =
+                  std::string(it->second.uic_.at(uic_id).valid_day_bits_);
+            } catch (std::runtime_error& e) {
+              std::cout << e.what() << std::endl;
+              continue;
+            }
+          } catch (std::runtime_error& e) {
             std::cout << e.what() << std::endl;
             continue;
           }
-          //TODO timezone_name fehlt, keine timezone bei operator und provider und die timezone ist ja nicht gleich der timezone der Stationen oder ?!?
-          auto prov = CreateProvider(fbb, to_fbs_string(fbb, it->second.operator_.short_name_), to_fbs_string(fbb, it->second.operator_.name_), to_fbs_string(fbb, it->second.operator_.legal_name_), to_fbs_string(fbb, it->second.operator_.name_));
-          //TODO output_rule fehlt
-          auto category = CreateCategory(fbb, to_fbs_string(fbb, std::string(it->second.transport_mode_)), 0.0);
-
-          sjp.provider_ = prov;
-          sjp.category_ = category;
-          sjp.name_ = key;
-
-          //auto const section = CreateSection(fbb, category ,prov, 0, to_fbs_string(fbb, key), fbb.CreateVector(utl::to_vec(
-          //                                                                    begin(attribute_vec), end(attribute_vec),
-          //                                                                    [&](fbs64::Offset<Attribute> const& a) { return a; })),  dir);
-        }
-        service_journey_pattern_map.try_emplace(key_service, sjp);
-      }
-
-      for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
-        // service_journey service_jor;
-        for(auto const& d : s.node().select_nodes("//dayTypes/DayTypeRef")) {
-         auto const& k = d.node().attribute("ref").as_string();
-            if(days_map.count(k) > 0) {
-            auto uic_key = days_map.at(k).uic_id_;
-
-             //std::cout << "Key from DayTypeRef exists" <<  days.at(key).uic_id_ <<days.at(key).uic_.at(uic_key).valid_day_bits_ << std::endl;
+          auto attribute =
+              utl::to_vec(begin(it_sjp->second.attributeinfo_vec_),
+                          end(it_sjp->second.attributeinfo_vec_),
+                          [&](fbs64::Offset<AttributeInfo> const& ai) {
+                            return CreateAttribute(
+                                fbb, ai, to_fbs_string(fbb, valid_day_bits));
+                          });
+          // TODO stations anpassen
+          /*auto const dir =
+              CreateDirection(fbb, it_sjp->second.stations_vec_.emplace_back(),
+                              to_fbs_string(fbb, it_sjp->second.direction_));
+          auto const section = CreateSection(
+              fbb, it_sjp->second.category_, it_sjp->second.provider_, 0,
+              to_fbs_string(fbb, key),
+              fbb.CreateVector(utl::to_vec(
+                  begin(attribute), end(attribute),
+                  [&](fbs64::Offset<Attribute> const& a) { return a; })),
+              dir);*/
+          auto key_uic = std::string(days_map.at(key).uic_id_);
+          auto it_uic = days_map.at(key).uic_.find(key_uic);
+          try {
+            utl::verify(it_uic != end(days_map.at(key).uic_),
+                        "missing traffic days: {}", key_uic);
+          } catch (std::runtime_error& e) {
+            continue;
           }
+          valid_day_bits = days_map.at(key).uic_.at(key_uic).valid_day_bits_;
         }
-        for(auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
+        for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
           auto key = vehicle.node().attribute("ref").as_string();
-          if(vehicle_type.find(key) != vehicle_type.end()) {
-
+          if (vehicle_type.find(key) != vehicle_type.end()) {
           }
         }
         }
