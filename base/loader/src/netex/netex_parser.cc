@@ -69,6 +69,9 @@ void netex_parser::parse(fs::path const& p,
       std::cout << "Here?2" << std::endl;
       auto days_map = combine_daytyps_uic_opertions(d);
       auto operator_map = parse_operator(d);
+      //TODO dummyweise hier, das rest ermal geht
+      auto const season = CreateSeason(fbb, 0, 0, 0 , 0);
+      auto const timezone = CreateTimezone(fbb, 0, season);
       //TODO noch auslagern
       std::map<std::string, std::string> vehicle_type;
       for(auto const& v : d.select_nodes("//PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleTypes/VehicleType")) {
@@ -110,8 +113,8 @@ void netex_parser::parse(fs::path const& p,
                         key);
             // TODO station id == name?, interchange_name ?, external ids?
             std::vector<std::string> test;
-            test.push_back("test");
-            /*auto const st = CreateStation(
+            test.push_back(std::string("test"));
+            auto const st = CreateStation(
                 fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key),
                 it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
                 fbb.CreateVector(utl::to_vec(
@@ -120,7 +123,7 @@ void netex_parser::parse(fs::path const& p,
                 timezone,
                 to_fbs_string(fbb,
                               std::string(it->second.stop_point_.timezone_)));
-            stations_vec.push_back(st);*/
+            stations_vec.push_back(st);
           }
           sjp.stations_vec_ = stations_vec;
 
@@ -157,7 +160,7 @@ void netex_parser::parse(fs::path const& p,
               continue;
             }
             // TODO timezone_name fehlt, keine timezone bei operator und provider und die timezone ist ja nicht gleich der timezone der Stationen oder ?!?
-            /*auto prov = CreateProvider(
+            auto prov = CreateProvider(
                 fbb, to_fbs_string(fbb, it->second.operator_.short_name_),
                 to_fbs_string(fbb, it->second.operator_.name_),
                 to_fbs_string(fbb, it->second.operator_.legal_name_),
@@ -169,16 +172,9 @@ void netex_parser::parse(fs::path const& p,
                 0.0);
 
             sjp.provider_ = prov;
-            sjp.category_ = category;*/
-            //std::cout << sjp.name_ << std::endl;
-            // sjp.name_ = key;
-
-            // auto const section = CreateSection(fbb, category ,prov, 0, to_fbs_string(fbb, key), fbb.CreateVector(utl::to_vec(
-            //                                                                     begin(attribute_vec), end(attribute_vec),
-            //                                                                     [&](fbs64::Offset<Attribute> const& a) { return a; })),  dir);
+            sjp.category_ = category;
           }
           service_journey_pattern_map.try_emplace(key_service, sjp);
-          //std::cout << "sjp" << std::endl;
         }
 
 
@@ -227,16 +223,17 @@ void netex_parser::parse(fs::path const& p,
                               fbb, ai, to_fbs_string(fbb, valid_day_bits));
                         });
         // TODO stations anpassen
-        /*auto const dir =
+        auto const dir =
             CreateDirection(fbb, it_sjp->second.stations_vec_.emplace_back(),
                             to_fbs_string(fbb, it_sjp->second.direction_));
+        //TODO which name?, train nummer?
         auto const section = CreateSection(
             fbb, it_sjp->second.category_, it_sjp->second.provider_, 0,
-            to_fbs_string(fbb, key),
+            to_fbs_string(fbb, std::string("key")),
             fbb.CreateVector(utl::to_vec(
                 begin(attribute), end(attribute),
                 [&](fbs64::Offset<Attribute> const& a) { return a; })),
-            dir);*/
+            dir);
         for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
           auto key = vehicle.node().attribute("ref").as_string();
           /*if (vehicle_type.lower_bound(key) != vehicle_type.end()) {
