@@ -2,9 +2,14 @@
 
 #include <iostream>
 
+#include "motis/schedule-format/Schedule_generated.h"
+
+namespace fbs64 = flatbuffers64;
+
 namespace motis::loader::netex {
 
 //which name is a good name?
+//TODO unnötig
 struct test {
   std::string public_code_;
   std::string name_;
@@ -12,6 +17,7 @@ struct test {
   std::string legal_name_;
 };
 
+//TODO unnötig
 struct service_journey {
   //UicOperationPeriod
   std::string uic_operation_period_;

@@ -17,6 +17,8 @@ struct line {
   //Todo Mabye enum?
   std::string_view transport_mode_;
   Operator_Authority operator_;
+
+  std::string_view id_;
 };
 
 struct direction {

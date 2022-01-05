@@ -92,7 +92,7 @@ void netex_parser::parse(fs::path const& p,
         scheduled_points = parse_scheduled_points(s, d);
         //std::cout << "h2" << std::endl;
       }
-      //std::cout << "h3" << std::endl;
+      std::cout << "h3" << std::endl;
         std::map<std::string, service_journey_pattern> service_journey_pattern_map;
         //ServiceJourneyPattern
         for (auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
@@ -101,32 +101,6 @@ void netex_parser::parse(fs::path const& p,
           service_journey_pattern sjp;
           sjp.direction_ = std::string(
               s.node().child("DirectionRef").attribute("ref").as_string());
-
-          std::vector<fbs64::Offset<Station>> stations_vec;
-          for (auto const& s : s.node().select_nodes("//pointsInSequence/StopPointInJourneyPattern")) {
-            auto const key = std::string(s.node()
-                                             .child("ScheduledStopPointRef")
-                                             .attribute("ref")
-                                             .as_string());
-            auto const it = scheduled_points.find(key);
-            utl::verify(it != end(scheduled_points), "missing category: {}",
-                        key);
-            // TODO station id == name?, interchange_name ?, external ids?
-            std::vector<std::string> test;
-            test.push_back(std::string("test"));
-            auto const st = CreateStation(
-                fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key),
-                it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
-                fbb.CreateVector(utl::to_vec(
-                    begin(test), end(test),
-                    [&](std::string const& s) { return fbb.CreateString(s); })),
-                timezone,
-                to_fbs_string(fbb,
-                              std::string(it->second.stop_point_.timezone_)));
-            stations_vec.push_back(st);
-          }
-          sjp.stations_vec_ = stations_vec;
-
           std::vector<fbs64::Offset<AttributeInfo>> attribute_vec;
           for (auto const& n :
                s.node().select_nodes("//noticeAssignments/NoticeAssignment")) {
@@ -176,7 +150,7 @@ void netex_parser::parse(fs::path const& p,
           }
           service_journey_pattern_map.try_emplace(key_service, sjp);
         }
-
+        std::cout << "h4" << std::endl;
 
       for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
         auto key_sjp = std::string(s.node()
@@ -215,27 +189,62 @@ void netex_parser::parse(fs::path const& p,
             continue;
           }
         }
-        auto attribute =
+        auto const attribute =
             utl::to_vec(begin(it_sjp->second.attributeinfo_vec_),
                         end(it_sjp->second.attributeinfo_vec_),
                         [&](fbs64::Offset<AttributeInfo> const& ai) {
                           return CreateAttribute(
                               fbb, ai, to_fbs_string(fbb, valid_day_bits));
                         });
-        // TODO stations anpassen
-        auto const dir =
-            CreateDirection(fbb, it_sjp->second.stations_vec_.emplace_back(),
-                            to_fbs_string(fbb, it_sjp->second.direction_));
-        //TODO which name?, train nummer?
-        auto const section = CreateSection(
-            fbb, it_sjp->second.category_, it_sjp->second.provider_, 0,
-            to_fbs_string(fbb, std::string("key")),
-            fbb.CreateVector(utl::to_vec(
-                begin(attribute), end(attribute),
-                [&](fbs64::Offset<Attribute> const& a) { return a; })),
-            dir);
+        std::vector<bool> in_allowed_vec, out_allowed_vec;
+        std::vector<fbs64::Offset<Station>> stations_vec;
+        std::vector<fbs64::Offset<Section>> section_vec;
+        for(auto const& s_p : s.node().select_nodes("//passingTimes/TimetabledPassingTime")) {
+          auto const key = std::string(s_p.node()
+                                           .child("ScheduledStopPointRef")
+                                           .attribute("ref")
+                                           .as_string());
+          auto const out_allowed = s_p.node().child("ForAlighting").text().as_bool();
+          out_allowed_vec.push_back(out_allowed);
+          auto const in_allowed = s_p.node().child("ForAlighting").text().as_bool();
+          in_allowed_vec.push_back(in_allowed);
+
+          auto const it = scheduled_points.lower_bound(key);
+          utl::verify(it != end(scheduled_points), "missing schelduled_point: {}",
+                      key);
+          std::vector<std::string> test;
+          test.push_back(std::string("test"));
+          // TODO station id == name?, interchange_time = time in ServiceJourney/JourneyDuration ?, external ids?
+          auto const st = CreateStation(
+              fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key),
+              it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
+              fbb.CreateVector(utl::to_vec(
+                  begin(test), end(test),
+                  [&](std::string const& s) { return fbb.CreateString(s); })),
+              timezone,
+              to_fbs_string(fbb,
+                            std::string(it->second.stop_point_.timezone_)));
+          stations_vec.push_back(st);
+
+          // TODO stations anpassen
+          auto const dir =
+              CreateDirection(fbb, st,
+                              to_fbs_string(fbb, it_sjp->second.direction_));
+          //TODO which name=line id?, train nummer=name as_int() geht?
+          auto const section = CreateSection(
+              fbb, it_sjp->second.category_, it_sjp->second.provider_, it_sjp->second.name_,
+              to_fbs_string(fbb, std::string(begin(line)->second.id_)),
+              fbb.CreateVector(utl::to_vec(
+                  begin(attribute), end(attribute),
+                  [&](fbs64::Offset<Attribute> const& a) { return a; })),
+              dir);
+          section_vec.push_back(section);
+          //std::cout << "Here?" << std::endl;
+        }
+        //TODO create Route, service?
+
         for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
-          auto key = vehicle.node().attribute("ref").as_string();
+          auto const key = vehicle.node().attribute("ref").as_string();
           /*if (vehicle_type.lower_bound(key) != vehicle_type.end()) {
           }*/
         }

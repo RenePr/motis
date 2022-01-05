@@ -22,6 +22,8 @@ std::map<std::string, line> parse_line(xml::xpath_node const& service_jorney, st
     line_parse.name_ = line_get.node().child("Name").text().as_int();
     line_parse.short_name_ = line_get.node().child("ShortName").text().as_string();
     line_parse.transport_mode_ = line_get.node().child("TransportMode").text().as_string();
+
+    line_parse.id_ = id;
     //std::string_view operator_ref {line_get.node().child("OperatorRef").attribute("ref").as_string() };
     if(operator_map.find(operator_id) != operator_map.end()) {
       line_parse.operator_ = operator_map.at(operator_id);
