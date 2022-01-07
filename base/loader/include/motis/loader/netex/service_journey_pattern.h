@@ -8,6 +8,12 @@ namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
 
+struct stop_point_in_journey_pattern {
+  std::string_view id_;
+  bool in_allowed_;
+  bool out_allowed_;
+};
+
 struct service_journey_pattern {
   std::vector<fbs64::Offset<Station>> stations_vec_;
   std::vector<fbs64::Offset<AttributeInfo>> attributeinfo_vec_;
@@ -15,6 +21,8 @@ struct service_journey_pattern {
   //fbs64::Offset<Timezone> timezone_;
   fbs64::Offset<Provider> provider_;
   fbs64::Offset<Category> category_;
+
+  std::map<std::string, stop_point_in_journey_pattern> stop_point_map;
 
   int name_;
   std::string direction_;

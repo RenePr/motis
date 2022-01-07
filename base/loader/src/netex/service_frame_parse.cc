@@ -12,13 +12,13 @@
 namespace xml = pugi;
 
 namespace motis::loader::netex {
-
+//TODO Rückgabe wert mit pointern? da so nur kopiert wird
 std::map<std::string, line> parse_line(xml::xpath_node const& service_jorney, std::map<std::string, Operator_Authority>& operator_map) {
-  std::map<std::string, line> line_map;
+  auto line_map = std::map<std::string, line>{};
   for(auto const& line_get : service_jorney.node().select_nodes("//lines/Line")) {
     auto const id = std::string(line_get.node().attribute("id").as_string());
     auto const operator_id = std::string(line_get.node().child("AuthorityRef").attribute("ref").as_string());
-    line line_parse;
+    auto line_parse = line{};
     line_parse.name_ = line_get.node().child("Name").text().as_int();
     line_parse.short_name_ = line_get.node().child("ShortName").text().as_string();
     line_parse.transport_mode_ = line_get.node().child("TransportMode").text().as_string();
@@ -36,10 +36,10 @@ std::map<std::string, line> parse_line(xml::xpath_node const& service_jorney, st
 }
 
 std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d){
-  std::map<std::string, Operator_Authority> operator_map;
+  auto operator_map = std::map<std::string, Operator_Authority>{};
   for(auto const& operator_get : d.select_nodes("//dataObjects/CompositeFrame/frames/ResourceFrame/organisations/Operator")) {
     auto const id = std::string(operator_get.node().attribute("id").as_string());
-    Operator_Authority operator_parse;
+    auto operator_parse = Operator_Authority{};
     //childs: PublicCode, Name, Shortname, LegalName, ContactDetails child Url, Organisation Type, Address
     operator_parse.name_ = operator_get.node().child("Name").text().get();
     operator_parse.short_name_ = operator_get.node().child("ShortName").text().as_string();
@@ -51,10 +51,10 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d){
 }
 
 std::map<std::string, direction> parse_direction(xml::xpath_node const& service_jorney) {
-  std::map<std::string, direction> direction_map;
+  auto direction_map = std::map<std::string, direction>{};
   for(auto const& direction_get : service_jorney.node().select_nodes("//directions/Direction")) {
     auto const id = std::string(direction_get.node().attribute("id").as_string());
-    direction dir;
+    auto dir = direction{};
     dir.name_ = direction_get.node().child("Name").text().as_string();
     dir.short_name_ = direction_get.node().child("ShortName").text().as_string();
     direction_map.try_emplace(id, dir);
@@ -75,7 +75,7 @@ std::map<std::string, std::string> parse_passenger_assignment(xml::xpath_node co
 std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node const& service_jorney, xml::xml_document& d) {
   //TODO über PassengerStopAssignment -> StopPlace für latidude altidude hinzufügen
   auto passenger_assignments = parse_passenger_assignment(service_jorney);
-  std::map<std::string, scheduled_points> scheduled_stops_map;
+  auto scheduled_stops_map = std::map<std::string, scheduled_points>{};
   for(auto const& scheduled_points_get : service_jorney.node().select_nodes("//scheduledStopPoints/ScheduledStopPoint")) {
     auto const id = std::string(scheduled_points_get.node().attribute("id").as_string());
     scheduled_points points;
@@ -83,7 +83,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node c
     points.public_code_ = scheduled_points_get.node().child("PublicCode").text().as_string();
     points.stop_type_ = scheduled_points_get.node().child("StopType").text().as_string();
     //std::cout << "hd" << std::endl;
-    stop_point stop;
+    auto stop = stop_point{};
     for(auto const& stop_points : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/SiteFrame/stopPlaces/StopPlace")) {
       auto const id_stop_point = std::string_view(stop_points.node().attribute("id").as_string());
       //std::cout << "hd3" << std::endl;

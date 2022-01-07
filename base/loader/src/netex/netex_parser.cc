@@ -42,7 +42,7 @@ void netex_parser::parse(fs::path const& p,
                          flatbuffers64::FlatBufferBuilder& fbb) {
   utl::verify(fs::is_regular_file(p), "{} is not a zip file",p);
   auto const output_services = std::vector<fbs64::Offset<Service>>{};
-  auto const fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
+  auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto const fbs_routes = std::map<std::string, fbs64::Offset<Route>>{};
   auto const interval = Interval{0, 0};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
@@ -73,35 +73,38 @@ void netex_parser::parse(fs::path const& p,
       auto const season = CreateSeason(fbb, 0, 0, 0 , 0);
       auto const timezone = CreateTimezone(fbb, 0, season);
       //TODO noch auslagern
-      std::map<std::string, std::string> vehicle_type;
+      auto vehicle_type = std::map<std::string, std::string>{};
       for(auto const& v : d.select_nodes("//PublicationDelivery/dataObjects/CompositeFrame/frames/TimetableFrame/vehicleTypes/VehicleType")) {
         auto const key = std::string(v.node().attribute("id").as_string());
         auto const type = std::string(v.node().child("Name").text().as_string());
         vehicle_type.try_emplace(key, type);
       }
 
-      std::map<std::string, direction> direction;
-      std::map<std::string, line> line;
-      std::map<std::string, scheduled_points> scheduled_points;
+      auto direction_map = std::map<std::string, direction>{};
+      auto line_map = std::map<std::string, line>{};
+      auto scheduled_point_map = std::map<std::string, scheduled_points>{};
       for(auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame")) {
         //std::cout << "Here" << std::endl;
-        direction = parse_direction(s);
+        direction_map = parse_direction(s);
         //std::cout << "h0" << std::endl;
-        line = parse_line(s, operator_map);
+        line_map = parse_line(s, operator_map);
         //std::cout << "h1" << std::endl;
-        scheduled_points = parse_scheduled_points(s, d);
+        scheduled_point_map = parse_scheduled_points(s, d);
         //std::cout << "h2" << std::endl;
-      }
-      std::cout << "h3" << std::endl;
-        std::map<std::string, service_journey_pattern> service_journey_pattern_map;
-        //ServiceJourneyPattern
-        for (auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
+      }//ServiceFrame
+      auto stop_sf = std::chrono::high_resolution_clock::now();
+      auto duration_sf = std::chrono::duration_cast<std::chrono::seconds>(stop_sf - start);
+      std::cout << duration_sf.count() << std::endl;
+      std::cout << "sf" << std::endl;
+      auto service_journey_pattern_map = std::map<std::string, service_journey_pattern>{};
+      //ServiceJourneyPattern
+      for (auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
           auto const key_service =
               std::string(s.node().attribute("id").as_string());
-          service_journey_pattern sjp;
+          auto sjp = service_journey_pattern{};
           sjp.direction_ = std::string(
               s.node().child("DirectionRef").attribute("ref").as_string());
-          std::vector<fbs64::Offset<AttributeInfo>> attribute_vec;
+          auto attribute_vec = std::vector<fbs64::Offset<AttributeInfo>>{};
           for (auto const& n :
                s.node().select_nodes("//noticeAssignments/NoticeAssignment")) {
             auto const key = std::string(
@@ -116,18 +119,18 @@ void netex_parser::parse(fs::path const& p,
             auto attribute_info = CreateAttributeInfo(
                 fbb, to_fbs_string(fbb, text), to_fbs_string(fbb, public_code));
             attribute_vec.push_back(attribute_info);
-          }
+          }//NoticeAssignment
           sjp.attributeinfo_vec_ = attribute_vec;
 
           for (auto const& l : s.node().select_nodes("//RouteView/LineRef")) {
             auto const key = std::string(l.node().attribute("ref").as_string());
-            if (line.size() != 1) {
+            if (line_map.size() != 1) {
               std::cout << "Warning more than one line in one file"
                         << std::endl;
             }
-            auto const it = line.lower_bound(key);
+            auto const it = line_map.lower_bound(key);
             try {
-              utl::verify(it != end(line), "missing line: {}", key);
+              utl::verify(it != end(line_map), "missing line: {}", key);
               sjp.name_ = it->second.name_;
             } catch (std::runtime_error& e) {
               std::cout << e.what() << std::endl;
@@ -147,10 +150,23 @@ void netex_parser::parse(fs::path const& p,
 
             sjp.provider_ = prov;
             sjp.category_ = category;
-          }
+          }//LineRef
+          auto stop_point_map = std::map<std::string, stop_point_in_journey_pattern>{};
+          for(auto const& sp : s.node().select_nodes("//pointsInSequence/StopPointInJourneyPattern")) {
+            auto const key = std::string(sp.node().attribute("id").as_string());
+            auto stopPointInJourneyPattern = stop_point_in_journey_pattern{};
+            stopPointInJourneyPattern.id_ = std::string_view(sp.node().child("ScheduledStopPointRef").attribute("ref").as_string());
+            stopPointInJourneyPattern.in_allowed_ = sp.node().child("ForBoarding").text().as_bool();
+            stopPointInJourneyPattern.out_allowed_ = sp.node().child("ForAlighting").text().as_bool();
+            stop_point_map.try_emplace(key,stopPointInJourneyPattern);
+          }//StopPointInJourneyPattern
+          sjp.stop_point_map = stop_point_map;
           service_journey_pattern_map.try_emplace(key_service, sjp);
-        }
-        std::cout << "h4" << std::endl;
+      }//ServiceJourneyPattern
+      auto stop_sjp = std::chrono::high_resolution_clock::now();
+      auto duration_sjp = std::chrono::duration_cast<std::chrono::seconds>(stop_sjp - start);
+      std::cout << duration_sjp.count() << std::endl;
+      std::cout << "sjp" << std::endl;
 
       for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
         auto key_sjp = std::string(s.node()
@@ -177,7 +193,7 @@ void netex_parser::parse(fs::path const& p,
             try {
               auto it_uic_id = it->second.uic_.lower_bound(uic_id);
               utl::verify(it_uic_id != end(it->second.uic_),
-                          "missing service_journey_pattern: {}", uic_id);
+                          "missing uic_id: {}", uic_id);
               valid_day_bits =
                   std::string(it->second.uic_.at(uic_id).valid_day_bits_);
             } catch (std::runtime_error& e) {
@@ -188,7 +204,11 @@ void netex_parser::parse(fs::path const& p,
             std::cout << e.what() << std::endl;
             continue;
           }
-        }
+        }//DayTypes
+        auto stop_day = std::chrono::high_resolution_clock::now();
+        auto duration_day = std::chrono::duration_cast<std::chrono::seconds>(stop_day - start);
+        std::cout << duration_day.count() << std::endl;
+        std::cout << "day" << std::endl;
         auto const attribute =
             utl::to_vec(begin(it_sjp->second.attributeinfo_vec_),
                         end(it_sjp->second.attributeinfo_vec_),
@@ -196,36 +216,48 @@ void netex_parser::parse(fs::path const& p,
                           return CreateAttribute(
                               fbb, ai, to_fbs_string(fbb, valid_day_bits));
                         });
-        std::vector<bool> in_allowed_vec, out_allowed_vec;
-        std::vector<fbs64::Offset<Station>> stations_vec;
-        std::vector<fbs64::Offset<Section>> section_vec;
+        auto stop_att = std::chrono::high_resolution_clock::now();
+        auto duration_att = std::chrono::duration_cast<std::chrono::seconds>(stop_att - start);
+        std::cout << duration_att.count() << std::endl;
+        std::cout << "attribute" << std::endl;
+        auto in_allowed_vec = std::vector<uint8_t>{};
+        auto out_allowed_vec = std::vector<uint8_t>{};
+        auto stations_vec = std::vector<fbs64::Offset<Station>>{};
+        auto section_vec = std::vector<fbs64::Offset<Section>>{};
         for(auto const& s_p : s.node().select_nodes("//passingTimes/TimetabledPassingTime")) {
           auto const key = std::string(s_p.node()
-                                           .child("ScheduledStopPointRef")
+                                           .child("StopPointInJourneyPatternRef")
                                            .attribute("ref")
                                            .as_string());
-          auto const out_allowed = s_p.node().child("ForAlighting").text().as_bool();
+          auto const it_stop_point_pattern = it_sjp->second.stop_point_map.lower_bound(key);
+          utl::verify(it_stop_point_pattern != end(it_sjp->second.stop_point_map), "missing stop_point_in_journey_pattern: {}",
+                      key);
+          auto const key_scheduled_points = std::string(it_stop_point_pattern->second.id_);
+          auto const it_scheduled_point = scheduled_point_map.lower_bound(key_scheduled_points);
+          utl::verify(it_scheduled_point != end(scheduled_point_map), "missing schelduled_point: {}",
+                      key);
+
+          //TODO in_allowed_vec as bool und anschließend in uin8_t umwandeln. Dummyweise nur so hier
+          auto const out_allowed = static_cast<uint>(it_stop_point_pattern->second.out_allowed_);
           out_allowed_vec.push_back(out_allowed);
-          auto const in_allowed = s_p.node().child("ForAlighting").text().as_bool();
+          auto const in_allowed = static_cast<uint>(it_stop_point_pattern->second.in_allowed_);
           in_allowed_vec.push_back(in_allowed);
 
-          auto const it = scheduled_points.lower_bound(key);
-          utl::verify(it != end(scheduled_points), "missing schelduled_point: {}",
-                      key);
-          std::vector<std::string> test;
+          auto test = std::vector<std::string>{};
           test.push_back(std::string("test"));
-          // TODO station id == name?, interchange_time = time in ServiceJourney/JourneyDuration ?, external ids?
-          auto const st = CreateStation(
+          // TODO station id == name?, interchange_time =  ?, external ids?
+          auto st = CreateStation(
               fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key),
-              it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
+              it_scheduled_point->second.stop_point_.lat_, it_scheduled_point->second.stop_point_.lon_, 0,
               fbb.CreateVector(utl::to_vec(
                   begin(test), end(test),
                   [&](std::string const& s) { return fbb.CreateString(s); })),
               timezone,
               to_fbs_string(fbb,
-                            std::string(it->second.stop_point_.timezone_)));
+                            std::string(it_scheduled_point->second.stop_point_.timezone_)));
           stations_vec.push_back(st);
-
+          fbs_stations.try_emplace(key, st);
+          //TODO check if direction exists
           // TODO stations anpassen
           auto const dir =
               CreateDirection(fbb, st,
@@ -233,25 +265,40 @@ void netex_parser::parse(fs::path const& p,
           //TODO which name=line id?, train nummer=name as_int() geht?
           auto const section = CreateSection(
               fbb, it_sjp->second.category_, it_sjp->second.provider_, it_sjp->second.name_,
-              to_fbs_string(fbb, std::string(begin(line)->second.id_)),
+              to_fbs_string(fbb, std::string(begin(line_map)->second.id_)),
               fbb.CreateVector(utl::to_vec(
                   begin(attribute), end(attribute),
                   [&](fbs64::Offset<Attribute> const& a) { return a; })),
               dir);
           section_vec.push_back(section);
           //std::cout << "Here?" << std::endl;
+        }//TimetablePassingTime
+        auto stop_tpt = std::chrono::high_resolution_clock::now();
+        auto duration_tpt = std::chrono::duration_cast<std::chrono::seconds>(stop_tpt - start);
+        std::cout << duration_tpt.count() << std::endl;
+        std::cout << "tpt" << std::endl;
+        if(stations_vec.size() != in_allowed_vec.size() != out_allowed_vec.size()) {
+          //wrong size
+          continue;
         }
-        //TODO create Route, service?
+        auto const route = CreateRoute(fbb, fbb.CreateVector(utl::to_vec(begin(stations_vec), end(stations_vec), [&](fbs64::Offset<Station> const& s) {return s;})),
+                                       fbb.CreateVector(utl::to_vec(begin(in_allowed_vec), end(in_allowed_vec), [](uint8_t const& i)  {return i;})),
+                                       fbb.CreateVector(utl::to_vec(begin(out_allowed_vec), end(out_allowed_vec), [](uint8_t const& o) {return o;})));
+        auto stop_r = std::chrono::high_resolution_clock::now();
+        auto duration_r = std::chrono::duration_cast<std::chrono::seconds>(stop_r - start);
+        std::cout << duration_r.count() << std::endl;
+        std::cout << "r" << std::endl;
+        //TODO create service?
 
         for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
           auto const key = vehicle.node().attribute("ref").as_string();
           /*if (vehicle_type.lower_bound(key) != vehicle_type.end()) {
           }*/
         }
-        }
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-        std::cout << duration.count() << std::endl;
+      }//ServiceJourney
+      auto stop = std::chrono::high_resolution_clock::now();
+      auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+      std::cout << duration.count() << std::endl;
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
