@@ -123,6 +123,11 @@ void netex_parser::parse(fs::path const& p,
             auto attribute_info = CreateAttributeInfo(
                 fbb, to_fbs_string(fbb, text), to_fbs_string(fbb, public_code));
             attribute_vec.push_back(attribute_info);
+            sjp.start_point_in_journey_pattern_ = std::string(
+                n.node().child("StartPointInPatternRef").attribute("ref").as_string());
+            sjp.stop_point_in_journey_pattern_ = std::string(
+                n.node().child("StopPointInPatternRef").attribute("ref").as_string());
+
           }//NoticeAssignment
           sjp.attributeinfo_vec_ = attribute_vec;
 
@@ -174,6 +179,8 @@ void netex_parser::parse(fs::path const& p,
                                                                   start);
         std::cout << "sjp " << duration_sjp.count() << std::endl;
       }
+
+      int start_point, stop_point;
       for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
         auto key_sjp = std::string(s.node()
                                        .child("ServiceJourneyPatternRef")
@@ -187,6 +194,7 @@ void netex_parser::parse(fs::path const& p,
           std::cout << e.what() << std::endl;
           continue;
         }
+
         std::string valid_day_bits;
         // TODO auslagern
         for (auto const& d : s.node().select_nodes("//dayTypes/DayTypeRef")) {
@@ -241,14 +249,25 @@ void netex_parser::parse(fs::path const& p,
                                            .child("StopPointInJourneyPatternRef")
                                            .attribute("ref")
                                            .as_string());
+
           auto const it_stop_point_pattern = it_sjp->second.stop_point_map.lower_bound(key);
           utl::verify(it_stop_point_pattern != end(it_sjp->second.stop_point_map), "missing stop_point_in_journey_pattern: {}",
                       key);
+
           auto const key_scheduled_points = std::string(it_stop_point_pattern->second.id_);
           auto const it_scheduled_point = scheduled_point_map.lower_bound(key_scheduled_points);
           utl::verify(it_scheduled_point != end(scheduled_point_map), "missing schelduled_point: {}",
                       key);
-
+          auto const key_sv = std::string_view(key);
+          auto const key_start = std::string_view(it_sjp->second.start_point_in_journey_pattern_);
+          auto const key_stop = std::string_view(it_sjp->second.stop_point_in_journey_pattern_);
+          if(key_sv == key_start) {
+            //start_point = static_cast<int>(std::string(it_scheduled_point->second.short_name_));
+            start_point = 0;
+          } else if(key_sv == key_stop) {
+            //stop_point = static_cast<int>(std::string(it_scheduled_point->second.short_name_));
+            stop_point = 0;
+          }
           //TODO in_allowed_vec as bool und anschließend in uin8_t umwandeln. Dummyweise nur so hier
           auto const out_allowed = static_cast<uint>(it_stop_point_pattern->second.out_allowed_);
           out_allowed_vec.push_back(0);
@@ -307,7 +326,11 @@ void netex_parser::parse(fs::path const& p,
                                                                     start);
           std::cout << "r " << duration_r.count() << std::endl;
         }
-        //TODO trackroules?, times?, rutekey uint?, debug, rule_participant?, initial_train_nr?, trip id optional ?
+        auto const service_debug = CreateServiceDebugInfo(fbb, to_fbs_string(fbb, std::string(z.current_file_name())) ,start_point, stop_point);
+        // wzl-BUS-1 über passengerassignment,
+        // 209-wefra über schedulestoppoint name -> quay
+        // gar nicht
+        //TODO trackroules= new over passengerassignment -> quay, times in siteconnection WalkTransferDuration?, routekey uint?, rule_participant?, initial_train_nr?, trip id optional ?
         //auto const service = CreateService(fbb, route, to_fbs_string(fbb, valid_day_bits), ,);
 
         for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
@@ -316,6 +339,9 @@ void netex_parser::parse(fs::path const& p,
           }*/
         }
       }//ServiceJourney
+
+      //TODO create schedule, Interval?, Footpath, RuleService?, MetaStations?, name, hash?
+      //auto const schedule = CreateSchedule();
       if(zeit_messen) {
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =

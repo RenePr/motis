@@ -26,6 +26,8 @@ struct service_journey_pattern {
 
   int name_;
   std::string direction_;
+  std::string start_point_in_journey_pattern_;
+  std::string stop_point_in_journey_pattern_;
 };
 
 } //motis::loader::netex
