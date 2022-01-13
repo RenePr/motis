@@ -51,13 +51,15 @@ void netex_parser::parse(fs::path const& p,
   auto const dataset_name = "test";
   auto const hash = 123;
 
+
+  auto const zeit_messen = false;
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
     //std::cout << "     "
     //          << file->substr(0, std::min(file->size(), size_t{100U})) << "\n";
-    auto size = fs::file_size(p);
-    std::cout << size << std::endl;
+    //auto size = fs::file_size(p);
+    //std::cout << size << std::endl;
 
     try {
       auto start = std::chrono::high_resolution_clock::now();
@@ -66,7 +68,7 @@ void netex_parser::parse(fs::path const& p,
                              file->size());
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      std::cout << "Here?2" << std::endl;
+      //std::cout << "Here?2" << std::endl;
       auto days_map = combine_daytyps_uic_opertions(d);
       auto operator_map = parse_operator(d);
       //TODO dummyweise hier, das rest ermal geht
@@ -79,7 +81,6 @@ void netex_parser::parse(fs::path const& p,
         auto const type = std::string(v.node().child("Name").text().as_string());
         vehicle_type.try_emplace(key, type);
       }
-
       auto direction_map = std::map<std::string, direction>{};
       auto line_map = std::map<std::string, line>{};
       auto scheduled_point_map = std::map<std::string, scheduled_points>{};
@@ -92,10 +93,13 @@ void netex_parser::parse(fs::path const& p,
         scheduled_point_map = parse_scheduled_points(s, d);
         //std::cout << "h2" << std::endl;
       }//ServiceFrame
-      auto stop_sf = std::chrono::high_resolution_clock::now();
-      auto duration_sf = std::chrono::duration_cast<std::chrono::seconds>(stop_sf - start);
-      std::cout << duration_sf.count() << std::endl;
-      std::cout << "sf" << std::endl;
+      if(zeit_messen) {
+        auto stop_sf = std::chrono::high_resolution_clock::now();
+        auto duration_sf =
+            std::chrono::duration_cast<std::chrono::milliseconds>(stop_sf -
+                                                                  start);
+        std::cout << "sf " << duration_sf.count() << std::endl;
+      }
       auto service_journey_pattern_map = std::map<std::string, service_journey_pattern>{};
       //ServiceJourneyPattern
       for (auto const& s : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
@@ -163,11 +167,13 @@ void netex_parser::parse(fs::path const& p,
           sjp.stop_point_map = stop_point_map;
           service_journey_pattern_map.try_emplace(key_service, sjp);
       }//ServiceJourneyPattern
-      auto stop_sjp = std::chrono::high_resolution_clock::now();
-      auto duration_sjp = std::chrono::duration_cast<std::chrono::seconds>(stop_sjp - start);
-      std::cout << duration_sjp.count() << std::endl;
-      std::cout << "sjp" << std::endl;
-
+      if(zeit_messen) {
+        auto stop_sjp = std::chrono::high_resolution_clock::now();
+        auto duration_sjp =
+            std::chrono::duration_cast<std::chrono::milliseconds>(stop_sjp -
+                                                                  start);
+        std::cout << "sjp " << duration_sjp.count() << std::endl;
+      }
       for(auto const& s : d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
         auto key_sjp = std::string(s.node()
                                        .child("ServiceJourneyPatternRef")
@@ -205,10 +211,13 @@ void netex_parser::parse(fs::path const& p,
             continue;
           }
         }//DayTypes
-        auto stop_day = std::chrono::high_resolution_clock::now();
-        auto duration_day = std::chrono::duration_cast<std::chrono::seconds>(stop_day - start);
-        std::cout << duration_day.count() << std::endl;
-        std::cout << "day" << std::endl;
+        if(zeit_messen) {
+          auto stop_day = std::chrono::high_resolution_clock::now();
+          auto duration_day =
+              std::chrono::duration_cast<std::chrono::milliseconds>(stop_day -
+                                                                    start);
+          std::cout << "day " << duration_day.count() << std::endl;
+        }
         auto const attribute =
             utl::to_vec(begin(it_sjp->second.attributeinfo_vec_),
                         end(it_sjp->second.attributeinfo_vec_),
@@ -216,10 +225,13 @@ void netex_parser::parse(fs::path const& p,
                           return CreateAttribute(
                               fbb, ai, to_fbs_string(fbb, valid_day_bits));
                         });
-        auto stop_att = std::chrono::high_resolution_clock::now();
-        auto duration_att = std::chrono::duration_cast<std::chrono::seconds>(stop_att - start);
-        std::cout << duration_att.count() << std::endl;
-        std::cout << "attribute" << std::endl;
+        if(zeit_messen) {
+          auto stop_att = std::chrono::high_resolution_clock::now();
+          auto duration_att =
+              std::chrono::duration_cast<std::chrono::milliseconds>(stop_att -
+                                                                    start);
+          std::cout << "attribute " << duration_att.count() << std::endl;
+        }
         auto in_allowed_vec = std::vector<uint8_t>{};
         auto out_allowed_vec = std::vector<uint8_t>{};
         auto stations_vec = std::vector<fbs64::Offset<Station>>{};
@@ -239,9 +251,9 @@ void netex_parser::parse(fs::path const& p,
 
           //TODO in_allowed_vec as bool und anschließend in uin8_t umwandeln. Dummyweise nur so hier
           auto const out_allowed = static_cast<uint>(it_stop_point_pattern->second.out_allowed_);
-          out_allowed_vec.push_back(out_allowed);
+          out_allowed_vec.push_back(0);
           auto const in_allowed = static_cast<uint>(it_stop_point_pattern->second.in_allowed_);
-          in_allowed_vec.push_back(in_allowed);
+          in_allowed_vec.push_back(0);
 
           auto test = std::vector<std::string>{};
           test.push_back(std::string("test"));
@@ -273,22 +285,30 @@ void netex_parser::parse(fs::path const& p,
           section_vec.push_back(section);
           //std::cout << "Here?" << std::endl;
         }//TimetablePassingTime
-        auto stop_tpt = std::chrono::high_resolution_clock::now();
-        auto duration_tpt = std::chrono::duration_cast<std::chrono::seconds>(stop_tpt - start);
-        std::cout << duration_tpt.count() << std::endl;
-        std::cout << "tpt" << std::endl;
-        if(stations_vec.size() != in_allowed_vec.size() != out_allowed_vec.size()) {
-          //wrong size
-          continue;
+        if(zeit_messen) {
+          auto stop_tpt = std::chrono::high_resolution_clock::now();
+          auto duration_tpt =
+              std::chrono::duration_cast<std::chrono::milliseconds>(stop_tpt -
+                                                                    start);
+          std::cout << "tpt " << duration_tpt.count() << std::endl;
         }
+        //falsch aber überhaupt notwendig?
+        /*if(stations_vec.size() != in_allowed_vec.size() != out_allowed_vec.size()) {
+          std::cout << "Wrong size" << std::endl;
+          continue;
+        }*/
         auto const route = CreateRoute(fbb, fbb.CreateVector(utl::to_vec(begin(stations_vec), end(stations_vec), [&](fbs64::Offset<Station> const& s) {return s;})),
                                        fbb.CreateVector(utl::to_vec(begin(in_allowed_vec), end(in_allowed_vec), [](uint8_t const& i)  {return i;})),
                                        fbb.CreateVector(utl::to_vec(begin(out_allowed_vec), end(out_allowed_vec), [](uint8_t const& o) {return o;})));
-        auto stop_r = std::chrono::high_resolution_clock::now();
-        auto duration_r = std::chrono::duration_cast<std::chrono::seconds>(stop_r - start);
-        std::cout << duration_r.count() << std::endl;
-        std::cout << "r" << std::endl;
-        //TODO create service?
+        if(zeit_messen) {
+          auto stop_r = std::chrono::high_resolution_clock::now();
+          auto duration_r =
+              std::chrono::duration_cast<std::chrono::milliseconds>(stop_r -
+                                                                    start);
+          std::cout << "r " << duration_r.count() << std::endl;
+        }
+        //TODO trackroules?, times?, rutekey uint?, debug, rule_participant?, initial_train_nr?, trip id optional ?
+        //auto const service = CreateService(fbb, route, to_fbs_string(fbb, valid_day_bits), ,);
 
         for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
           auto const key = vehicle.node().attribute("ref").as_string();
@@ -296,17 +316,17 @@ void netex_parser::parse(fs::path const& p,
           }*/
         }
       }//ServiceJourney
-      auto stop = std::chrono::high_resolution_clock::now();
-      auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-      std::cout << duration.count() << std::endl;
+      if(zeit_messen) {
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+        std::cout << duration.count() << std::endl;
+      }
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
       LOG(error) << "unable to parse message";
     }
-
-    //std::cout << "finish" << std::endl;
-
   }
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(output_services),
