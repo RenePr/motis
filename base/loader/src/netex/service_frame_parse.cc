@@ -1,4 +1,4 @@
-#include "motis/loader/netex/service_frame_parse.h"
+#include "motis/loader/netex/service_frame/service_frame_parse.h"
 
 #include <iostream>
 #include <map>
@@ -7,7 +7,7 @@
 #include "pugixml.hpp"
 
 #include "motis/loader/netex/service_journey.h"
-#include "motis/loader/netex/service_frame.h"
+#include "motis/loader/netex/service_frame/service_frame.h"
 
 namespace xml = pugi;
 
@@ -105,5 +105,14 @@ std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node c
 
   return scheduled_stops_map;
 }
+void parse_frame(xml::xml_document& d, std::map<std::string ,line>& l_m, std::map<std::string, scheduled_points>& s_m,std::map<std::string, direction>& d_m) {
 
+  for(auto const& sf : d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/ServiceFrame")) {
+    auto o = parse_operator(d);
+    l_m = parse_line(sf, o);
+    s_m = parse_scheduled_points(sf, d);
+    d_m = parse_direction(sf);
+  }
+
+}
 } //motis::loader::netex

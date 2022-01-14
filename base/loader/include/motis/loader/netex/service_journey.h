@@ -18,7 +18,7 @@ struct test {
 };
 
 //TODO unnötig
-struct service_journey {
+struct service_journey123 {
   //UicOperationPeriod
   std::string uic_operation_period_;
   std::string from_date_;

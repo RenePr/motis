@@ -6,7 +6,7 @@
 
 #include "pugixml.hpp"
 
-#include "motis/loader/netex/service_frame.h"
+#include "service_frame.h"
 
 namespace xml = pugi;
 
@@ -22,6 +22,8 @@ std::map<std::string, direction> parse_direction(xml::xpath_node const&);
 std::map<std::string, std::string> parse_passenger_assignment(xml::xpath_node const&);
 
 std::map<std::string, scheduled_points> parse_scheduled_points(xml::xpath_node const&, xml::xml_document&);
+
+void parse_frame(xml::xml_document& ,std::map<std::string ,line>&, std::map<std::string, scheduled_points>&,std::map<std::string, direction>&);
 
 
 } //motis::loader::netex
