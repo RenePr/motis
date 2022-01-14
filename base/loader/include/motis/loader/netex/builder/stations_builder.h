@@ -12,5 +12,17 @@
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
+#include "motis/loader/netex/builder/helper_builder.h"
 
-} //motis::loader::netex
+#include <iostream>
+#include <map>
+#include <string_view>
+
+#include "pugixml.hpp"
+
+#include "motis/loader/netex/days.h"
+#include "motis/loader/util.h"
+
+namespace xml = pugi;
+
+namespace motis::loader::netex {}  // namespace motis::loader::netex

@@ -13,9 +13,12 @@ namespace xml = pugi;
 
 namespace motis::loader::netex {
 
-void parse_service_journey(xml::xml_document& d, std::map<std::string, service_journey>& sj) {
+void parse_service_journey(xml::xml_document& d,
+                           std::map<std::string, service_journey>& sj_m) {
   for (auto const& sj :
-       d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/vehicleJourneys/ServiceJourney")) {
+       d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/"
+                      "vehicleJourneys/ServiceJourney")) {
+    auto const key_sj = std::string(sj.node().attribute("id").as_string());
     auto service_j = service_journey{};
     service_j.key_sjp_ = std::string(sj.node()
                                          .child("ServiceJourneyPatternRef")
@@ -30,13 +33,6 @@ void parse_service_journey(xml::xml_document& d, std::map<std::string, service_j
       keys_days.push_back(key);
     }  // DayTypes
     service_j.keys_day_ = keys_days;
-    /*auto const attribute =
-        utl::to_vec(begin(it_sjp->second.attributeinfo_vec_),
-                    end(it_sjp->second.attributeinfo_vec_),
-                    [&](fbs64::Offset<AttributeInfo> const& ai) {
-                      return CreateAttribute(
-                          fbb, ai, to_fbs_string(fbb, valid_day_bits));
-                    });*/
     std::vector<std::string> ttpt_v;
     for (auto const& tpt :
          sj.node().select_nodes("//passingTimes/TimetabledPassingTime")) {
@@ -47,7 +43,10 @@ void parse_service_journey(xml::xml_document& d, std::map<std::string, service_j
       ttpt_v.push_back(key);
 
     }  // TimetablePassingTime
+
+    service_j.keys_ttpt_ = ttpt_v;
+    sj_m.try_emplace(key_sj, service_j);
   }
 }
 
-} //motis::loader::netex
+}  // namespace motis::loader::netex
