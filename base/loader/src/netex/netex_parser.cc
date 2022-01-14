@@ -43,7 +43,7 @@ void netex_parser::parse(fs::path const& p,
   utl::verify(fs::is_regular_file(p), "{} is not a zip file",p);
   auto const output_services = std::vector<fbs64::Offset<Service>>{};
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
-  auto const fbs_routes = std::map<std::string, fbs64::Offset<Route>>{};
+  auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
   auto const interval = Interval{0, 0};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
   auto const rule_services = std::vector<fbs64::Offset<RuleService>>{};
@@ -251,6 +251,7 @@ void netex_parser::parse(fs::path const& p,
                                            .as_string());
 
           auto const it_stop_point_pattern = it_sjp->second.stop_point_map.lower_bound(key);
+          //TODO muss ich da noch try catch anwenden mit runtime_error?
           utl::verify(it_stop_point_pattern != end(it_sjp->second.stop_point_map), "missing stop_point_in_journey_pattern: {}",
                       key);
 
@@ -276,7 +277,7 @@ void netex_parser::parse(fs::path const& p,
 
           auto test = std::vector<std::string>{};
           test.push_back(std::string("test"));
-          // TODO station id == name?, interchange_time =  ?, external ids?
+          // TODO station id == name oder name = stop_point_name?, interchange_time = departure-arrivel time , external ids?
           auto st = CreateStation(
               fbb, to_fbs_string(fbb, key), to_fbs_string(fbb, key),
               it_scheduled_point->second.stop_point_.lat_, it_scheduled_point->second.stop_point_.lon_, 0,
@@ -302,7 +303,17 @@ void netex_parser::parse(fs::path const& p,
                   [&](fbs64::Offset<Attribute> const& a) { return a; })),
               dir);
           section_vec.push_back(section);
-          //std::cout << "Here?" << std::endl;
+          //TODO service mit footpath from, to station das gleiche?,
+          //TODO trackroules= new over passengerassignment -> quay, times in siteconnection WalkTransferDuration?, routekey uint?, rule_participant?, initial_train_nr= wie section im through nur merge/split anders, trip id optional ?
+          // wzl-BUS-1 über passengerassignment, siehe doc s. 95
+          // 209-wefra über schedulestoppoint name -> quay
+          // gar nicht
+          //auto const service = CreateService(fbb, route, to_fbs_string(fbb, valid_day_bits), ,);
+
+          //TODO create track?, Gleiß über passengerassignment wenn existert...?
+
+          //TODO create footpath? verstehe ich nicht
+
         }//TimetablePassingTime
         if(zeit_messen) {
           auto stop_tpt = std::chrono::high_resolution_clock::now();
@@ -311,14 +322,11 @@ void netex_parser::parse(fs::path const& p,
                                                                     start);
           std::cout << "tpt " << duration_tpt.count() << std::endl;
         }
-        //falsch aber überhaupt notwendig?
-        /*if(stations_vec.size() != in_allowed_vec.size() != out_allowed_vec.size()) {
-          std::cout << "Wrong size" << std::endl;
-          continue;
-        }*/
-        auto const route = CreateRoute(fbb, fbb.CreateVector(utl::to_vec(begin(stations_vec), end(stations_vec), [&](fbs64::Offset<Station> const& s) {return s;})),
+        auto route = CreateRoute(fbb, fbb.CreateVector(utl::to_vec(begin(stations_vec), end(stations_vec), [&](fbs64::Offset<Station> const& s) {return s;})),
                                        fbb.CreateVector(utl::to_vec(begin(in_allowed_vec), end(in_allowed_vec), [](uint8_t const& i)  {return i;})),
                                        fbb.CreateVector(utl::to_vec(begin(out_allowed_vec), end(out_allowed_vec), [](uint8_t const& o) {return o;})));
+
+        fbs_routes.push_back(route);
         if(zeit_messen) {
           auto stop_r = std::chrono::high_resolution_clock::now();
           auto duration_r =
@@ -327,21 +335,20 @@ void netex_parser::parse(fs::path const& p,
           std::cout << "r " << duration_r.count() << std::endl;
         }
         auto const service_debug = CreateServiceDebugInfo(fbb, to_fbs_string(fbb, std::string(z.current_file_name())) ,start_point, stop_point);
-        // wzl-BUS-1 über passengerassignment,
-        // 209-wefra über schedulestoppoint name -> quay
-        // gar nicht
-        //TODO trackroules= new over passengerassignment -> quay, times in siteconnection WalkTransferDuration?, routekey uint?, rule_participant?, initial_train_nr?, trip id optional ?
-        //auto const service = CreateService(fbb, route, to_fbs_string(fbb, valid_day_bits), ,);
+
+        //TODO
+        //auto const rule_service = CreateRuleService(fbb, fbb.CreateVector());
 
         for (auto const& vehicle : s.node().select_nodes("//VehicleTypeRef")) {
           auto const key = vehicle.node().attribute("ref").as_string();
+          //vehicle.
           /*if (vehicle_type.lower_bound(key) != vehicle_type.end()) {
           }*/
         }
       }//ServiceJourney
 
-      //TODO create schedule, Interval?, Footpath, RuleService?, MetaStations?, name, hash?
-      //auto const schedule = CreateSchedule();
+      //TODO create schedule, Interval ulong?, Footpath = Quay?, RuleService?, MetaStations?, name, hash?
+
       if(zeit_messen) {
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
@@ -357,9 +364,9 @@ void netex_parser::parse(fs::path const& p,
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(output_services),
       fbb.CreateVector(values(fbs_stations)),
-      fbb.CreateVector(values(fbs_routes)), &interval,
+      fbb.CreateVector(fbs_routes), &interval,
       fbb.CreateVector(footpaths), fbb.CreateVector(rule_services),
       fbb.CreateVector(meta_stations), fbb.CreateString(dataset_name), hash));
 }
 
-}  // namespace motis::loader::netex
+}  // namespace motis::
