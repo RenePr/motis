@@ -58,12 +58,6 @@ void netex_parser::parse(fs::path const& p,
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
-    // std::cout << "     "
-    //           << file->substr(0, std::min(file->size(), size_t{100U})) <<
-    //           "\n";
-    // auto size = fs::file_size(p);
-    // std::cout << size << std::endl;
-
     try {
       auto start = std::chrono::high_resolution_clock::now();
       xml::xml_document d;
@@ -73,7 +67,7 @@ void netex_parser::parse(fs::path const& p,
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
       // parse
       auto const days_map = combine_daytyps_uic_opertions(d);
-
+      // 3 noch ok oder in struct?
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto d_m = std::map<std::string, direction>{};
@@ -86,63 +80,57 @@ void netex_parser::parse(fs::path const& p,
       // TODO dummyweise hier, das rest ermal geht
       auto const season = CreateSeason(fbb, 0, 0, 0, 0);
       auto const timezone = CreateTimezone(fbb, 0, season);
-      std::cout << s_m.size() << std::endl;
       for (auto const& sj : sj_m) {
+        std::cout << sj.second.key_sjp_ << std::endl;
         auto const it_sjp = sjp_m.lower_bound(sj.second.key_sjp_);
-        auto attributes = std::vector<fbs64::Offset<Attribute>>{};
+
+        auto a_v = std::vector<fbs64::Offset<Attribute>>{};
         get_attribute_fbs(sj.second.keys_day_,
-                          it_sjp->second.notice_assignments_, days_map,
-                          attributes, fbb);
+                          it_sjp->second.notice_assignments_, days_map, a_v,
+                          fbb);
         auto category = fbs64::Offset<Category>{};
         auto provider = fbs64::Offset<Provider>{};
         int name;
         auto const lines = it_sjp->second.lines_;
         get_provider_operator_fbs(lines, l_m, category, provider, name, fbb);
-        auto stations = std::vector<fbs64::Offset<Station>>{};
+        auto stations_v = std::vector<fbs64::Offset<Station>>{};
+        // TODO
+        auto in_allowed_v = std::vector<uint8_t>{};
+        auto out_allowed_v = std::vector<uint8_t>{};
         for (auto const& ttpt : sj.second.keys_ttpt_) {
-          auto const it = s_m.lower_bound(ttpt);
-          auto test = std::vector<std::string>{};
-          std::string s = std::string("test");
-          test.push_back(s);
-          // std::cout << "Here" << std::endl;
-          std::cout << std::string(it->second.short_name_) << std::endl;
-          /*auto const st = CreateStation(
-              fbb, to_fbs_string(fbb, std::string(it->second.short_name_)),
-              to_fbs_string(fbb, std::string(it->second.short_name_)),
-              it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
-              fbb.CreateVector(utl::to_vec(
-                  begin(test), end(test),
-                  [&](std::string const& s) { return fbb.CreateString(s); })),
-              timezone,
-              to_fbs_string(fbb,
-                            std::string(it->second.stop_point_.timezone_)));
-
-          // stations.push_back(st);
-          auto const dir = CreateDirection(
-              fbb, st, to_fbs_string(fbb, it_sjp->second.direction_));
-
-          auto const section = CreateSection(
-              fbb, category, provider, name,
-              to_fbs_string(fbb, std::string(begin(l_m)->second.id_)),
-              fbb.CreateVector(utl::to_vec(
-                  begin(attribute), end(attribute),
-                  [&](fbs64::Offset<Attribute> const& a) { return a; })),
-              dir);*/
-
-          // auto const section = CreateSection(fbb, )
+          auto s_d_s = station_dir_section{};
+          s_d_s.l_m_ = l_m;
+          s_d_s.s_m_ = s_m;
+          s_d_s.a_v_ = a_v;
+          s_d_s.provider_ = provider;
+          s_d_s.category_ = category;
+          s_d_s.timezone_ = timezone;
+          s_d_s.key_ = std::string(ttpt);
+          s_d_s.direction_ = it_sjp->second.direction_;
+          s_d_s.s_p_m_ = it_sjp->second.stop_point_map;
+          auto station = fbs64::Offset<Station>{};
+          auto direction = fbs64::Offset<Direction>{};
+          auto section = fbs64::Offset<Section>{};
+          get_station_dir_section(s_d_s, station, direction, section, fbb);
+          stations_v.push_back(station);
+          in_allowed_v.push_back(0u);
+          out_allowed_v.push_back(0u);
         }
-        // stations_fbs.try_emplace(sj.first, stations);
+        auto const route = CreateRoute(
+            fbb,
+            fbb.CreateVector(utl::to_vec(
+                begin(stations_v), end(stations_v),
+                [&](fbs64::Offset<Station> const& s) { return s; })),
+            fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
+                                         [](uint8_t const& i) { return i; })),
+            fbb.CreateVector(utl::to_vec(begin(out_allowed_v),
+                                         end(out_allowed_v),
+                                         [](uint8_t const& o) { return o; })));
       }
 
       // TODO create schedule, Interval ulong?, Footpath = Quay?, RuleService?,
       // MetaStations?, name, hash?
 
-      if (zeit_messen) {
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-        std::cout << duration.count() << std::endl;
-      }
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {

@@ -29,7 +29,6 @@ void parse_service_journey(xml::xml_document& d,
     // TODO auslagern
     for (auto const& d : sj.node().select_nodes("//dayTypes/DayTypeRef")) {
       auto const key = std::string(d.node().attribute("ref").as_string());
-      // days_map.lower_bound(key);
       keys_days.push_back(key);
     }  // DayTypes
     service_j.keys_day_ = keys_days;
@@ -43,7 +42,6 @@ void parse_service_journey(xml::xml_document& d,
       ttpt_v.push_back(key);
 
     }  // TimetablePassingTime
-
     service_j.keys_ttpt_ = ttpt_v;
     sj_m.try_emplace(key_sj, service_j);
   }

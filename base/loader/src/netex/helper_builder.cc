@@ -79,5 +79,39 @@ void get_attribute_fbs(std::vector<std::string> const& keys_day,
         return CreateAttribute(fbb, ai, to_fbs_string(fbb, valid_day_bits));
       });
 }
+void get_station_dir_section(station_dir_section const& s_d_s,
+                             fbs64::Offset<Station>& station,
+                             fbs64::Offset<Direction>& direction,
+                             fbs64::Offset<Section>& section,
+                             fbs64::FlatBufferBuilder& fbb) {
+  auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.key_);
+  // it_sjp->second.stop_point_map
+  utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
+              s_d_s.key_);
+  auto const key_sp = std::string(it_sp->second.id_);
+  auto const it = s_d_s.s_m_.lower_bound(key_sp);
+  auto test = std::vector<std::string>{};
+  test.push_back(std::string("test"));
+  station = CreateStation(
+      fbb, to_fbs_string(fbb, std::string(it->second.short_name_)),
+      to_fbs_string(fbb, std::string(it->second.short_name_)),
+      it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
+      fbb.CreateVector(utl::to_vec(
+          begin(test), end(test),
+          [&](std::string const& s) { return fbb.CreateString(s); })),
+      s_d_s.timezone_,
+      to_fbs_string(fbb, std::string(it->second.stop_point_.timezone_)));
+
+  direction =
+      CreateDirection(fbb, station, to_fbs_string(fbb, s_d_s.direction_));
+  int name = 3;
+  section = CreateSection(
+      fbb, s_d_s.category_, s_d_s.provider_, name,
+      to_fbs_string(fbb, std::string(begin(s_d_s.l_m_)->second.id_)),
+      fbb.CreateVector(
+          utl::to_vec(begin(s_d_s.a_v_), end(s_d_s.a_v_),
+                      [&](fbs64::Offset<Attribute> const& a) { return a; })),
+      direction);
+}
 
 }  // namespace motis::loader::netex
