@@ -6,6 +6,8 @@
 
 #include "boost/filesystem.hpp"
 
+#include "pugixml.hpp"
+
 #include "motis/loader/netex/service_frame/service_frame.h"
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
 
@@ -13,11 +15,10 @@
 
 namespace fbs64 = flatbuffers64;
 namespace fs = boost::filesystem;
+namespace xml = pugi;
 using namespace motis::loader::netex;
 
 TEST(service_frame_parse, line) {
-  // TODO how can I start this test, is this even right?
-  // Users/reneprinz/Documents/motis
 
   try {
     const char* file =
