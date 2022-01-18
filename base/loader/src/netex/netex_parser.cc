@@ -13,13 +13,10 @@
 
 #include "motis/core/common/logging.h"
 #include "motis/core/common/zip_reader.h"
-#include "motis/loader/netex/builder/helper_builder.h"
 #include "motis/loader/netex/builder/main_builder.h"
 #include "motis/loader/netex/days_parse.h"
-#include "motis/loader/netex/get_valid_day_bits_transform.h"
 #include "motis/loader/netex/service_frame/service_frame.h"
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
-#include "motis/loader/netex/service_journey.h"
 #include "motis/loader/netex/service_journey/service_journey.h"
 #include "motis/loader/netex/service_journey/service_journey_parse.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
@@ -66,7 +63,6 @@ void netex_parser::parse(fs::path const& p,
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
       // parse
-      auto const days_m = combine_daytyps_uic_opertions(d);
       // 3 noch ok oder in struct?
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
@@ -76,6 +72,8 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey_pattern(d, sjp_m);
       auto sj_m = std::map<std::string, service_journey>{};
       parse_service_journey(d, sj_m);
+      // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
+      auto const days_m = combine_daytyps_uic_opertions(d);
 
       auto b = build{};
       b.l_m_ = l_m;

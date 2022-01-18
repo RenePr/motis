@@ -1,13 +1,10 @@
 #include "motis/loader/netex/service_journey/service_journey_parse.h"
 
-#include <iostream>
 #include <map>
-#include <string_view>
 
 #include "pugixml.hpp"
 
-#include "motis/loader/netex/service_journey.h"
-#include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
+#include "motis/loader/netex/service_journey/service_journey.h"
 
 namespace xml = pugi;
 

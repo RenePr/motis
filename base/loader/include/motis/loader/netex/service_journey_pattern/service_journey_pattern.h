@@ -22,12 +22,6 @@ struct notice_assignment {
 struct service_journey_pattern {
   std::vector<notice_assignment> notice_assignments_;
   std::vector<std::string> lines_;
-  //std::vector<fbs64::Offset<Station>> stations_vec_;
-  //std::vector<fbs64::Offset<AttributeInfo>> attributeinfo_vec_;
-  //fbs64::Offset<Season> season_;
-  //fbs64::Offset<Timezone> timezone_;
-  //fbs64::Offset<Provider> provider_;
-  //fbs64::Offset<Category> category_;
 
   std::map<std::string, stop_point_in_journey_pattern> stop_point_map;
 
@@ -37,4 +31,4 @@ struct service_journey_pattern {
   std::string stop_point_in_journey_pattern_;
 };
 
-} //motis::loader::netex
+}  // namespace motis::loader::netex

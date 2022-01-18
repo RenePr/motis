@@ -1,13 +1,11 @@
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
 
-#include <iostream>
 #include <map>
 #include <string_view>
 
 #include "pugixml.hpp"
 
 #include "motis/loader/netex/service_frame/service_frame.h"
-#include "motis/loader/netex/service_journey.h"
 
 namespace xml = pugi;
 
@@ -15,7 +13,7 @@ namespace motis::loader::netex {
 // TODO Rückgabe wert mit pointern? da so nur kopiert wird
 std::map<std::string, line> parse_line(
     xml::xpath_node const& service_jorney,
-    std::map<std::string, Operator_Authority>& operator_map) {
+    std::map<std::string, Operator_Authority> const& operator_map) {
   auto line_map = std::map<std::string, line>{};
   for (auto const& line_get :
        service_jorney.node().select_nodes("//lines/Line")) {

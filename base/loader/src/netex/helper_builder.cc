@@ -2,16 +2,12 @@
 
 #include <iostream>
 #include <map>
-#include <string_view>
-
-#include "pugixml.hpp"
 
 #include "motis/schedule-format/Schedule_generated.h"
 
 #include "motis/loader/netex/days.h"
 #include "motis/loader/util.h"
 
-namespace xml = pugi;
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
@@ -85,7 +81,6 @@ void get_station_dir_section(station_dir_section const& s_d_s,
                              fbs64::Offset<Section>& section,
                              fbs64::FlatBufferBuilder& fbb) {
   auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.key_);
-  // it_sjp->second.stop_point_map
   utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
               s_d_s.key_);
   auto const key_sp = std::string(it_sp->second.id_);

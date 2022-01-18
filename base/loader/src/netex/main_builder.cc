@@ -2,17 +2,11 @@
 
 #include <iostream>
 #include <map>
-#include <string_view>
-
-#include "pugixml.hpp"
 
 #include "motis/schedule-format/Schedule_generated.h"
 
 #include "motis/loader/netex/builder/helper_builder.h"
-#include "motis/loader/netex/days.h"
-#include "motis/loader/util.h"
 
-namespace xml = pugi;
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
