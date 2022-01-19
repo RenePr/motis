@@ -13,7 +13,7 @@ namespace fbs64 = flatbuffers64;
 namespace motis::loader::netex {
 
 std::string get_valid_day_bits(std::map<std::string, ids> const& days_map,
-                               std::vector<std::string> keys) {
+                               std::vector<std::string> const& keys) {
   auto valid_day_bits = std::string{};
   for (auto const& dt : keys) {
     auto const it = days_map.lower_bound(dt);
@@ -40,17 +40,13 @@ void get_provider_operator_fbs(std::vector<std::string> const& lines,
       std::cout << e.what() << std::endl;
       continue;
     }
-    // TODO timezone_name fehlt, keine timezone bei operator und provider
-    // und die timezone ist ja nicht gleich der timezone der Stationen
-    // oder ?!?
     provider = CreateProvider(
         fbb, to_fbs_string(fbb, it->second.operator_.short_name_),
         to_fbs_string(fbb, it->second.operator_.name_),
-        to_fbs_string(fbb, it->second.operator_.legal_name_),
-        to_fbs_string(fbb, it->second.operator_.name_));
+        to_fbs_string(fbb, it->second.operator_.legal_name_), NULL);
     // TODO output_rule fehlt
     auto s = std::string(it->second.transport_mode_);
-    category = CreateCategory(fbb, to_fbs_string(fbb, s), 0.0);
+    category = CreateCategory(fbb, to_fbs_string(fbb, s), NULL);
   }
 }
 
@@ -76,37 +72,38 @@ void get_attribute_fbs(std::vector<std::string> const& keys_day,
       });
 }
 void get_station_dir_section(station_dir_section const& s_d_s,
+                             uint8_t& in_allowed, uint8_t& out_allowed,
                              fbs64::Offset<Station>& station,
                              fbs64::Offset<Direction>& direction,
                              fbs64::Offset<Section>& section,
+                             fbs64::Offset<Track>& track,
                              fbs64::FlatBufferBuilder& fbb) {
   auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.key_);
   utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
               s_d_s.key_);
   auto const key_sp = std::string(it_sp->second.id_);
+  in_allowed = it_sp->second.in_allowed_;
+  out_allowed = it_sp->second.out_allowed_;
   auto const it = s_d_s.s_m_.lower_bound(key_sp);
-  auto test = std::vector<std::string>{};
-  test.push_back(std::string("test"));
+  // external ids = leer
+  // TODO interchange time
   station = CreateStation(
       fbb, to_fbs_string(fbb, std::string(it->second.short_name_)),
       to_fbs_string(fbb, std::string(it->second.short_name_)),
-      it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0,
-      fbb.CreateVector(utl::to_vec(
-          begin(test), end(test),
-          [&](std::string const& s) { return fbb.CreateString(s); })),
+      it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0, NULL,
       s_d_s.timezone_,
       to_fbs_string(fbb, std::string(it->second.stop_point_.timezone_)));
 
   direction =
       CreateDirection(fbb, station, to_fbs_string(fbb, s_d_s.direction_));
-  int name = 3;
   section = CreateSection(
-      fbb, s_d_s.category_, s_d_s.provider_, name,
+      fbb, s_d_s.category_, s_d_s.provider_, NULL,
       to_fbs_string(fbb, std::string(begin(s_d_s.l_m_)->second.id_)),
       fbb.CreateVector(
           utl::to_vec(begin(s_d_s.a_v_), end(s_d_s.a_v_),
                       [&](fbs64::Offset<Attribute> const& a) { return a; })),
       direction);
+  track = CreateTrack(fbb, to_fbs_string(fbb, s_d_s.traffic_days), NULL);
 }
 
 }  // namespace motis::loader::netex

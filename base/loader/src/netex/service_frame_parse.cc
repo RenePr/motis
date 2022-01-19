@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string_view>
+#include <vector>
 
 #include "pugixml.hpp"
 
@@ -76,20 +77,26 @@ std::map<std::string, direction> parse_direction(
   return direction_map;
 }
 
-std::map<std::string, std::string> parse_passenger_assignment(
+std::map<std::string, passenger_assignments> parse_passenger_assignment(
     xml::xpath_node const& service_jorney) {
-  std::map<std::string, std::string> passengers_assignment_map;
+  auto passengers_assignment_map =
+      std::map<std::string, passenger_assignments>{};
+  auto p_a = passenger_assignments{};
   for (auto const& passenger_assignments : service_jorney.node().select_nodes(
            "//stopAssignments/PassengerStopAssignment")) {
     auto const scheduled_place = passenger_assignments.node()
                                      .child("ScheduledStopPointRef")
                                      .attribute("ref")
                                      .as_string();
-    auto const stop_place = passenger_assignments.node()
-                                .child("StopPlaceRef")
-                                .attribute("ref")
-                                .as_string();
-    passengers_assignment_map.try_emplace(scheduled_place, stop_place);
+    p_a.stop_point_id_ = std::string(passenger_assignments.node()
+                                         .child("StopPlaceRef")
+                                         .attribute("ref")
+                                         .as_string());
+    p_a.quay_id_ = std::string(passenger_assignments.node()
+                                   .child("QuayRef")
+                                   .attribute("ref")
+                                   .as_string());
+    passengers_assignment_map.try_emplace(scheduled_place, p_a);
   }
   return passengers_assignment_map;
 }
@@ -98,13 +105,12 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
     xml::xpath_node const& service_jorney, xml::xml_document& d) {
   // TODO über PassengerStopAssignment -> StopPlace für latidude altidude
   // hinzufügen
-  auto passenger_assignments = parse_passenger_assignment(service_jorney);
   auto scheduled_stops_map = std::map<std::string, scheduled_points>{};
   for (auto const& scheduled_points_get : service_jorney.node().select_nodes(
            "//scheduledStopPoints/ScheduledStopPoint")) {
     auto const id =
         std::string(scheduled_points_get.node().attribute("id").as_string());
-    scheduled_points points;
+    auto points = scheduled_points{};
     points.short_name_ =
         scheduled_points_get.node().child("ShortName").text().as_string();
     points.public_code_ =
@@ -117,56 +123,62 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
                         "frames/SiteFrame/stopPlaces/StopPlace")) {
       auto const id_stop_point =
           std::string_view(stop_points.node().attribute("id").as_string());
-      auto const id_scheduled = std::string_view(passenger_assignments.at(id));
-      if (id_stop_point == id_scheduled) {
-
-        stop.key_ = stop_points.node()
+      stop.key_ = stop_points.node()
+                      .child("keyList")
+                      .child("KeyValue")
+                      .child("Key")
+                      .text()
+                      .as_string();
+      stop.value_ = stop_points.node()
                         .child("keyList")
                         .child("KeyValue")
-                        .child("Key")
+                        .child("Value")
                         .text()
                         .as_string();
-        stop.value_ = stop_points.node()
-                          .child("keyList")
-                          .child("KeyValue")
-                          .child("Value")
-                          .text()
-                          .as_string();
-        stop.name_ = stop_points.node().child("Name").text().as_string();
-        stop.lon_ = stop_points.node()
-                        .child("Centroid")
-                        .child("Location")
-                        .child("Longitude")
-                        .text()
-                        .as_double();
-        stop.lat_ = stop_points.node()
-                        .child("Centroid")
-                        .child("Location")
-                        .child("Latitude")
-                        .text()
-                        .as_double();
-        stop.timezone_ = stop_points.node()
-                             .child("Locale")
-                             .child("TimeZone")
-                             .text()
-                             .as_string();
-        points.stop_point_ = stop;
+      stop.name_ = stop_points.node().child("Name").text().as_string();
+      stop.lon_ = stop_points.node()
+                      .child("Centroid")
+                      .child("Location")
+                      .child("Longitude")
+                      .text()
+                      .as_double();
+      stop.lat_ = stop_points.node()
+                      .child("Centroid")
+                      .child("Location")
+                      .child("Latitude")
+                      .text()
+                      .as_double();
+      stop.timezone_ = stop_points.node()
+                           .child("Locale")
+                           .child("TimeZone")
+                           .text()
+                           .as_string();
+      auto quay_v = std::vector<std::string>{};
+      for (auto const& quay : stop_points.node().select_nodes("//Quay")) {
+        auto const quay_id =
+            std::string_view(quay.node().attribute("id").as_string());
+        auto const name =
+            std::string(quay.node().child("Name").text().as_string());
+        quay_v.push_back(name);
       }
+      stop.quay_ = quay_v;
+      points.stop_point_ = stop;
     }
     scheduled_stops_map.try_emplace(id, points);
   }
-
   return scheduled_stops_map;
 }
 void parse_frame(xml::xml_document& d, std::map<std::string, line>& l_m,
                  std::map<std::string, scheduled_points>& s_m,
-                 std::map<std::string, direction>& d_m) {
+                 std::map<std::string, direction>& d_m,
+                 std::map<std::string, passenger_assignments>& p_m) {
   auto o = parse_operator(d);
   for (auto const& sf : d.select_nodes("/PublicationDelivery/dataObjects/"
                                        "CompositeFrame/frames/ServiceFrame")) {
     l_m = parse_line(sf, o);
     s_m = parse_scheduled_points(sf, d);
     d_m = parse_direction(sf);
+    p_m = parse_passenger_assignment(sf);
   }
 }
 }  // namespace motis::loader::netex

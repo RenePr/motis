@@ -26,11 +26,14 @@ struct build {
   std::map<std::string, line> l_m_;
   std::map<std::string, scheduled_points> s_m_;
   std::map<std::string, direction> d_m_;
+  std::map<std::string, passenger_assignments> p_m_;
 
   std::map<std::string, ids> days_m_;
 
   std::map<std::string, service_journey_pattern> sjp_m_;
   std::map<std::string, service_journey> sj_m_;
+
+  std::string_view file_;
 };
 
 void build_fbs(build const&, fbs64::FlatBufferBuilder&);

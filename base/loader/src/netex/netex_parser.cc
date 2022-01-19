@@ -67,7 +67,8 @@ void netex_parser::parse(fs::path const& p,
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto d_m = std::map<std::string, direction>{};
-      parse_frame(d, l_m, s_m, d_m);
+      auto p_m = std::map<std::string, passenger_assignments>{};
+      parse_frame(d, l_m, s_m, d_m, p_m);
       auto sjp_m = std::map<std::string, service_journey_pattern>{};
       parse_service_journey_pattern(d, sjp_m);
       auto sj_m = std::map<std::string, service_journey>{};
@@ -79,9 +80,11 @@ void netex_parser::parse(fs::path const& p,
       b.l_m_ = l_m;
       b.s_m_ = s_m;
       b.d_m_ = d_m;
+      b.p_m_ = p_m;
       b.sjp_m_ = sjp_m;
       b.sj_m_ = sj_m;
       b.days_m_ = days_m;
+      b.file_ = z.current_file_name();
       build_fbs(b, fbb);
 
     } catch (std::exception const& e) {

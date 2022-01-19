@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 
 namespace motis::loader::netex {
 
@@ -14,7 +15,7 @@ struct Operator_Authority {
 struct line {
   int name_;
   std::string_view short_name_;
-  //Todo Mabye enum?
+  // Todo Mabye enum?
   std::string_view transport_mode_;
   Operator_Authority operator_;
 
@@ -26,6 +27,11 @@ struct direction {
   std::string_view short_name_;
 };
 
+struct passenger_assignments {
+  std::string stop_point_id_;
+  std::string quay_id_;
+};
+
 struct stop_point {
   std::string_view key_;
   std::string_view value_;
@@ -34,6 +40,7 @@ struct stop_point {
   double lat_;
   std::string_view timezone_;
 
+  std::vector<std::string> quay_;
 };
 
 struct scheduled_points {
@@ -42,7 +49,6 @@ struct scheduled_points {
   std::string_view stop_type_;
 
   stop_point stop_point_;
-
 };
 
 struct notice {
@@ -50,4 +56,4 @@ struct notice {
   std::string_view code_;
 };
 
-} //motis::loader::netex
+}  // namespace motis::loader::netex
