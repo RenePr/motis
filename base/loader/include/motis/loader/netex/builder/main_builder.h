@@ -36,6 +36,9 @@ struct build {
   std::string_view file_;
 };
 
-void build_fbs(build const&, fbs64::FlatBufferBuilder&);
+void build_fbs(build const&, std::vector<fbs64::Offset<Route>>&,
+               std::vector<fbs64::Offset<Service>>&,
+               std::map<std::string, fbs64::Offset<Station>>&,
+               fbs64::FlatBufferBuilder&);
 
 }  // namespace motis::loader::netex

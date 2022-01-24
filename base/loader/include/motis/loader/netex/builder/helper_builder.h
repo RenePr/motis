@@ -10,6 +10,7 @@
 
 #include "motis/loader/netex/days.h"
 #include "motis/loader/netex/service_frame/service_frame.h"
+#include "motis/loader/netex/service_journey/service_journey.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
 
 namespace fbs64 = flatbuffers64;
@@ -21,7 +22,7 @@ struct station_dir_section {
   std::map<std::string, scheduled_points> s_m_;
   std::map<std::string, line> l_m_;
   std::string traffic_days;
-  std::string key_;
+  time_table_passing_time ttpt_;
   std::string direction_;
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;

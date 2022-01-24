@@ -29,14 +29,20 @@ void parse_service_journey(xml::xml_document& d,
       keys_days.push_back(key);
     }  // DayTypes
     service_j.keys_day_ = keys_days;
-    std::vector<std::string> ttpt_v;
+    auto ttpt_v = std::vector<time_table_passing_time>{};
     for (auto const& tpt :
          sj.node().select_nodes("//passingTimes/TimetabledPassingTime")) {
-      auto key = std::string(tpt.node()
-                                 .child("StopPointInJourneyPatternRef")
-                                 .attribute("ref")
-                                 .as_string());
-      ttpt_v.push_back(key);
+      auto ttpt = time_table_passing_time{};
+      ttpt.stop_point_ref =
+          std::string(tpt.node()
+                          .child("StopPointInJourneyPatternRef")
+                          .attribute("ref")
+                          .as_string());
+      ttpt.arr_time =
+          std::string(tpt.node().child("DepartureTime").text().as_string());
+      ttpt.dep_time =
+          std::string(tpt.node().child("ArrivalTime").text().as_string());
+      ttpt_v.push_back(ttpt);
 
     }  // TimetablePassingTime
     service_j.keys_ttpt_ = ttpt_v;

@@ -44,9 +44,9 @@ void get_provider_operator_fbs(std::vector<std::string> const& lines,
         fbb, to_fbs_string(fbb, it->second.operator_.short_name_),
         to_fbs_string(fbb, it->second.operator_.name_),
         to_fbs_string(fbb, it->second.operator_.legal_name_), NULL);
-    // TODO output_rule fehlt
+    // TODO output_rule fehlt, linie oder zugnummer
     auto s = std::string(it->second.transport_mode_);
-    category = CreateCategory(fbb, to_fbs_string(fbb, s), NULL);
+    category = CreateCategory(fbb, to_fbs_string(fbb, s), 0);
   }
 }
 
@@ -78,9 +78,9 @@ void get_station_dir_section(station_dir_section const& s_d_s,
                              fbs64::Offset<Section>& section,
                              fbs64::Offset<Track>& track,
                              fbs64::FlatBufferBuilder& fbb) {
-  auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.key_);
+  auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.ttpt_.stop_point_ref);
   utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
-              s_d_s.key_);
+              s_d_s.ttpt_.stop_point_ref);
   auto const key_sp = std::string(it_sp->second.id_);
   in_allowed = it_sp->second.in_allowed_;
   out_allowed = it_sp->second.out_allowed_;
@@ -103,7 +103,13 @@ void get_station_dir_section(station_dir_section const& s_d_s,
           utl::to_vec(begin(s_d_s.a_v_), end(s_d_s.a_v_),
                       [&](fbs64::Offset<Attribute> const& a) { return a; })),
       direction);
-  track = CreateTrack(fbb, to_fbs_string(fbb, s_d_s.traffic_days), NULL);
+  // TODO bitfield fehlt, gibt an welche gleißangebe bei mehreren gilt
+  if (it->second.stop_point_.quay_.size() == 0) {
+    track = CreateTrack(fbb, to_fbs_string(fbb, s_d_s.traffic_days), NULL);
+  } else {
+    auto const quay = std::string(begin(it->second.stop_point_.quay_)->data());
+    track = CreateTrack(fbb, NULL, to_fbs_string(fbb, quay));
+  }
 }
 
 }  // namespace motis::loader::netex

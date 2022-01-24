@@ -42,7 +42,7 @@ std::vector<std::string> netex_parser::missing_files(fs::path const&) const {
 void netex_parser::parse(fs::path const& p,
                          flatbuffers64::FlatBufferBuilder& fbb) {
   utl::verify(fs::is_regular_file(p), "{} is not a zip file", p);
-  auto const output_services = std::vector<fbs64::Offset<Service>>{};
+  auto output_services = std::vector<fbs64::Offset<Service>>{};
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
   auto const interval = Interval{0, 0};
@@ -52,7 +52,6 @@ void netex_parser::parse(fs::path const& p,
   auto const dataset_name = "test";
   auto const hash = 123;
 
-  auto const zeit_messen = false;
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
@@ -63,7 +62,7 @@ void netex_parser::parse(fs::path const& p,
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
       // parse
-      // 3 noch ok oder in struct?
+      // 4 noch ok oder in struct?
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto d_m = std::map<std::string, direction>{};
@@ -75,6 +74,17 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey(d, sj_m);
       // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
+      for (auto const& ele :
+           d.select_nodes("/PublicationDelivery/dataObjects/"
+                          "CompositeFrame/FrameDefaults/DefaultLocale")) {
+        auto const default_timezone_name =
+            std::string(ele.node().child("TimeZone").text().as_string());
+        // in stunden für motis zu minuten transferieren, siehe docu von delfi
+        auto const default_offset =
+            ele.node().child("SummerTimeZoneOffset").text().as_int() / 60;
+        auto const default_general_offset =
+            ele.node().child("TimeZoneOffset").text().as_int() / 60;
+      }
 
       auto b = build{};
       b.l_m_ = l_m;
@@ -85,7 +95,7 @@ void netex_parser::parse(fs::path const& p,
       b.sj_m_ = sj_m;
       b.days_m_ = days_m;
       b.file_ = z.current_file_name();
-      build_fbs(b, fbb);
+      build_fbs(b, fbs_routes, output_services, fbs_stations, fbb);
 
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
