@@ -3,9 +3,10 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include "date/date.h"
+#include "date/tz.h"
 
 #include "boost/filesystem.hpp"
-
 #include "pugixml.hpp"
 
 #include "utl/get_or_create.h"
@@ -19,6 +20,8 @@
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
 #include "motis/loader/netex/service_journey/service_journey.h"
 #include "motis/loader/netex/service_journey/service_journey_parse.h"
+#include "motis/loader/netex/service_journey_interchange/service_journey_interchange.h"
+#include "motis/loader/netex/service_journey_interchange/service_journey_interchange_parse.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern_parse.h"
 #include "motis/loader/util.h"
@@ -47,7 +50,7 @@ void netex_parser::parse(fs::path const& p,
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
   auto const interval = Interval{0, 0};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
-  auto const rule_services = std::vector<fbs64::Offset<RuleService>>{};
+  auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
@@ -72,6 +75,8 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey_pattern(d, sjp_m);
       auto sj_m = std::map<std::string, service_journey>{};
       parse_service_journey(d, sj_m);
+      auto sji_v = std::vector<service_journey_interchange>{};
+      parse_service_journey_interchange(d, sji_v);
       // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
       for (auto const& ele :
@@ -79,7 +84,15 @@ void netex_parser::parse(fs::path const& p,
                           "CompositeFrame/FrameDefaults/DefaultLocale")) {
         auto const default_timezone_name =
             std::string(ele.node().child("TimeZone").text().as_string());
-        // in stunden für motis zu minuten transferieren, siehe docu von delfi
+        auto current_time = std::chrono::system_clock::now();
+        auto utc = date::zoned_time{"America/Los_Angeles", current_time};
+        auto local = date::zoned_time{default_timezone_name, current_time};
+        auto offset =
+            date::format("%T\n", local.get_local_time() - utc.get_local_time());
+        auto t = offset.substr(0, 3);
+        std::cout << t;
+        // in stunden für motis zu minuten transferieren, siehe docu von
+        // delfi
         auto const default_offset =
             ele.node().child("SummerTimeZoneOffset").text().as_int() / 60;
         auto const default_general_offset =
@@ -93,9 +106,11 @@ void netex_parser::parse(fs::path const& p,
       b.p_m_ = p_m;
       b.sjp_m_ = sjp_m;
       b.sj_m_ = sj_m;
+      b.sji_v_ = sji_v;
       b.days_m_ = days_m;
       b.file_ = z.current_file_name();
-      build_fbs(b, fbs_routes, output_services, fbs_stations, fbb);
+      build_fbs(b, fbs_routes, output_services, fbs_stations, rule_services,
+                fbb);
 
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();

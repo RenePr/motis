@@ -1,7 +1,12 @@
 #include "motis/loader/netex/builder/helper_builder.h"
 
+#include <chrono>
 #include <iostream>
 #include <map>
+#include <sstream>
+#include "date/date.h"
+#include "date/tz.h"
+#include "time.h"
 
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -11,16 +16,52 @@
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
-
-std::string get_valid_day_bits(std::map<std::string, ids> const& days_map,
-                               std::vector<std::string> const& keys) {
-  auto valid_day_bits = std::string{};
+int time_realtive_to_0(std::string const& time, std::string const& start) {
+  auto result = 0;
+  auto tm_start = std::tm{};
+  auto ti_start = std::istringstream(std::string(start));
+  ti_start >> std::get_time(&tm_start, "%h%m%s");
+  auto tm_0 = std::tm{0, 0, 0, 0, 0, 0, 0, 0, 0};
+  auto tm_t = std::tm{};
+  auto ti = std::istringstream(std::string(time));
+  ti >> std::get_time(&tm_t, "%h%m%s");
+  auto const seconds = std::difftime(mktime(&tm_t), mktime(&tm_0));
+  return seconds;
+}
+int time_realtive_to_0_season(std::string const& time,
+                              std::string const& start) {
+  auto result = 0;
+  auto tm_start = std::tm{};
+  auto ti_start = std::istringstream(std::string(start));
+  ti_start >> std::get_time(&tm_start, "%Y-%m-%d%Th%m%s");
+  auto tm_0 = std::tm{0,
+                      0,
+                      0,
+                      tm_start.tm_mday,
+                      tm_start.tm_mon,
+                      tm_start.tm_year,
+                      tm_start.tm_wday,
+                      tm_start.tm_yday,
+                      0};
+  auto tm_t = std::tm{};
+  auto ti = std::istringstream(std::string(time));
+  ti >> std::get_time(&tm_t, "%Y-%m-%d%Th%m%s");
+  auto const seconds = std::difftime(mktime(&tm_t), mktime(&tm_0));
+  return seconds;
+}
+std::pair<std::string, std::string> get_valid_day_bits(
+    std::map<std::string, ids> const& days_map,
+    std::vector<std::string> const& keys) {
+  auto pair = std::pair<std::string, std::string>{};
   for (auto const& dt : keys) {
     auto const it = days_map.lower_bound(dt);
-    auto key_uic = std::string(it->second.uic_id_);
-    valid_day_bits = std::string(it->second.uic_.at(key_uic).valid_day_bits_);
+    auto const key_uic = std::string(it->second.uic_id_);
+    auto const valid_day_bits =
+        std::string(it->second.uic_.at(key_uic).valid_day_bits_);
+    auto const from_date = std::string(it->second.uic_.at(key_uic).from_date_);
+    pair = std::make_pair(valid_day_bits, from_date);
   }
-  return valid_day_bits;
+  return pair;
 }
 
 void get_provider_operator_fbs(std::vector<std::string> const& lines,
@@ -63,21 +104,40 @@ void get_attribute_fbs(std::vector<std::string> const& keys_day,
     notice_assignment_ve.push_back(attribute_info);
   }
   // for attribute
-  auto valid_day_bits = get_valid_day_bits(days_map, keys_day);
-
+  auto const pair_day = get_valid_day_bits(days_map, keys_day);
+  auto const valid_day_bits = pair_day.first;
   attribute = utl::to_vec(
       begin(notice_assignment_ve), end(notice_assignment_ve),
       [&](fbs64::Offset<AttributeInfo> const& ai) {
         return CreateAttribute(fbb, ai, to_fbs_string(fbb, valid_day_bits));
       });
 }
-void get_station_dir_section(station_dir_section const& s_d_s,
-                             uint8_t& in_allowed, uint8_t& out_allowed,
-                             fbs64::Offset<Station>& station,
-                             fbs64::Offset<Direction>& direction,
-                             fbs64::Offset<Section>& section,
-                             fbs64::Offset<Track>& track,
-                             fbs64::FlatBufferBuilder& fbb) {
+void get_station_dir_section(
+    station_dir_section const& s_d_s, std::vector<int>& times_v,
+    uint8_t& in_allowed, uint8_t& out_allowed, fbs64::Offset<Station>& station,
+    fbs64::Offset<Direction>& direction, fbs64::Offset<Section>& section,
+    fbs64::Offset<Track>& track, fbs64::FlatBufferBuilder& fbb) {
+  // TODO in seconds?
+  if (times_v.size() == 0 && std::string_view(s_d_s.ttpt_.arr_time) == "") {
+    // first time
+    times_v.push_back(-1);
+    auto const time =
+        time_realtive_to_0(s_d_s.ttpt_.dep_time, s_d_s.start_time_);
+    times_v.push_back(time);
+  } else if (std::string_view(s_d_s.ttpt_.dep_time) == "") {
+    // berechne arr time to 0
+    auto const time =
+        time_realtive_to_0(s_d_s.ttpt_.arr_time, s_d_s.start_time_);
+    times_v.push_back(time);
+    times_v.push_back(-1);
+  } else {
+    auto const time =
+        time_realtive_to_0(s_d_s.ttpt_.arr_time, s_d_s.start_time_);
+    times_v.push_back(time);
+    auto const time2 =
+        time_realtive_to_0(s_d_s.ttpt_.dep_time, s_d_s.start_time_);
+    times_v.push_back(time2);
+  }
   auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.ttpt_.stop_point_ref);
   utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
               s_d_s.ttpt_.stop_point_ref);
@@ -105,7 +165,8 @@ void get_station_dir_section(station_dir_section const& s_d_s,
       direction);
   // TODO bitfield fehlt, gibt an welche gleißangebe bei mehreren gilt
   if (it->second.stop_point_.quay_.size() == 0) {
-    track = CreateTrack(fbb, to_fbs_string(fbb, s_d_s.traffic_days), NULL);
+    track =
+        CreateTrack(fbb, to_fbs_string(fbb, s_d_s.traffic_days.first), NULL);
   } else {
     auto const quay = std::string(begin(it->second.stop_point_.quay_)->data());
     track = CreateTrack(fbb, NULL, to_fbs_string(fbb, quay));

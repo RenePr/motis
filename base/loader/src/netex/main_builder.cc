@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -14,6 +15,7 @@ namespace motis::loader::netex {
 void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
                std::vector<fbs64::Offset<Service>>& services,
                std::map<std::string, fbs64::Offset<Station>>& stations,
+               std::vector<fbs64::Offset<RuleService>>& rule_services,
                fbs64::FlatBufferBuilder& fbb) {
   // search and build .fbs files
   // TODO dummyweise hier, das rest ermal geht
@@ -23,9 +25,12 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
   // - dataObjects/CompositeFrame/ValidBetween/FromDate in days
   // gmt_offset winterzeit, offset sommerzeit
   // minutes_after_midnight von local timezone?
+  // auto const minutes_a_m_f_d = time_realtive_to_0();
   auto const season = CreateSeason(fbb, 0, 0, 0, 0, 0);
   // general_offset vs offset? Unterschied?
   auto const timezone = CreateTimezone(fbb, 0, season);
+  auto stations_sji_m = std::map<std::string, fbs64::Offset<Station>>{};
+  auto service_sji_m = std::map<std::string, fbs64::Offset<Service>>{};
   for (auto const& sj : b.sj_m_) {
     std::cout << sj.second.key_sjp_ << sj.first << std::endl;
     auto const it_sjp = b.sjp_m_.lower_bound(sj.second.key_sjp_);
@@ -39,12 +44,19 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     get_provider_operator_fbs(lines, b.l_m_, category, provider, name, fbb);
     auto const traffic_days =
         get_valid_day_bits(b.days_m_, sj.second.keys_day_);
+    auto const minutes_a_m_f_d =
+        time_realtive_to_0_season(traffic_days.first, traffic_days.first);
+    // TODO change auf last
+    auto const minutes_a_m_l_d =
+        time_realtive_to_0_season(traffic_days.first, traffic_days.first);
     auto stations_v = std::vector<fbs64::Offset<Station>>{};
-    auto sections_v = std::vector<fbs64::Offset<Section>>{};
     // TODO
     auto in_allowed_v = std::vector<uint8_t>{};
     auto out_allowed_v = std::vector<uint8_t>{};
+    auto sections_v = std::vector<fbs64::Offset<Section>>{};
     auto track_v = std::vector<fbs64::Offset<Track>>{};
+    auto times_v = std::vector<int>{};
+    auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       auto s_d_s = station_dir_section{};
       s_d_s.l_m_ = b.l_m_;
@@ -55,6 +67,7 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
       s_d_s.category_ = category;
       s_d_s.timezone_ = timezone;
       s_d_s.ttpt_ = ttpt;
+      s_d_s.start_time_ = start_time;
       s_d_s.direction_ = it_sjp->second.direction_;
       s_d_s.s_p_m_ = it_sjp->second.stop_point_map;
       auto station = fbs64::Offset<Station>{};
@@ -64,7 +77,7 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
       // TODO is uint8_t richtig?
       auto in_allowed = uint8_t{};
       auto out_allowed = uint8_t{};
-      get_station_dir_section(s_d_s, in_allowed, out_allowed, station,
+      get_station_dir_section(s_d_s, times_v, in_allowed, out_allowed, station,
                               direction, section, track, fbb);
       stations_v.push_back(station);
       // TODO eventuell ändern
@@ -73,6 +86,11 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
       in_allowed_v.push_back(in_allowed);
       out_allowed_v.push_back(out_allowed);
       track_v.push_back(track);
+
+      auto const key = std::string(
+          it_sjp->second.stop_point_map.lower_bound(ttpt.stop_point_ref)
+              ->second.id_);
+      stations_sji_m.try_emplace(key, station);
     }
     auto const route = CreateRoute(
         fbb,
@@ -100,17 +118,20 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
             utl::to_vec(begin(track_v), end(track_v),
                         [&](fbs64::Offset<Track> const& t) { return t; })));
     track_rules_v.push_back(track_rules);
-    // TODO times
+    // TODO route_key, inital train nummer, rule_participant
     auto const service = CreateService(
-        fbb, route, to_fbs_string(fbb, traffic_days),
+        fbb, route, to_fbs_string(fbb, traffic_days.first),
         fbb.CreateVector(
             utl::to_vec(begin(sections_v), end(sections_v),
                         [&](fbs64::Offset<Section> const& s) { return s; })),
         fbb.CreateVector(
             utl::to_vec(begin(track_rules_v), end(track_rules_v),
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
-        NULL, 0, rule_service_debug, false, 0);
+        fbb.CreateVector(utl::to_vec(begin(times_v), end(times_v),
+                                     [](int const& t) { return t; })),
+        0, rule_service_debug, false, 0);
     services.push_back(service);
+    service_sji_m.try_emplace(sj.first, service);
     // wzl-BUS-1 über passengerassignment,
     // 209-wefra über schedulestoppoint name -> quay
     // gar nicht
@@ -120,5 +141,25 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     // service = CreateService(fbb, route, to_fbs_string(fbb,
     // valid_day_bits), ,);
   }
+  auto rule_service_v = std::vector<fbs64::Offset<Rule>>{};
+  for (auto const& sji : b.sji_v_) {
+    auto const from_service =
+        service_sji_m.lower_bound(sji.from_journey_)->second;
+    auto const to_service = service_sji_m.lower_bound(sji.to_journey_)->second;
+    auto const from_stop =
+        stations_sji_m.lower_bound(sji.from_station_)->second;
+    auto const to_stop = stations_sji_m.lower_bound(sji.to_station_)->second;
+    // TODO ruletype fehlt
+    auto const rule = CreateRule(fbb, static_cast<RuleType>(0.0), from_service,
+                                 to_service, from_stop, to_stop, 0, 0, false);
+    rule_service_v.push_back(rule);
+  }
+  if (!rule_service_v.empty()) {
+  }
+  auto const rule_service = CreateRuleService(
+      fbb, fbb.CreateVector(
+               utl::to_vec(begin(rule_service_v), end(rule_service_v),
+                           [&](fbs64::Offset<Rule> const& r) { return r; })));
+  rule_services.push_back(rule_service);
 }
 }  // namespace motis::loader::netex

@@ -38,10 +38,14 @@ void parse_service_journey(xml::xml_document& d,
                           .child("StopPointInJourneyPatternRef")
                           .attribute("ref")
                           .as_string());
-      ttpt.arr_time =
-          std::string(tpt.node().child("DepartureTime").text().as_string());
-      ttpt.dep_time =
-          std::string(tpt.node().child("ArrivalTime").text().as_string());
+      if (!tpt.node().child("DepartureTime").empty()) {
+        ttpt.arr_time =
+            std::string(tpt.node().child("DepartureTime").text().as_string());
+      }
+      if (!tpt.node().child("ArrivalTime").empty()) {
+        ttpt.dep_time =
+            std::string(tpt.node().child("ArrivalTime").text().as_string());
+      }
       ttpt_v.push_back(ttpt);
 
     }  // TimetablePassingTime
