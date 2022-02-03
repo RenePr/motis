@@ -29,7 +29,8 @@ TEST(service_frame_parse, line) {
     auto l_m = std::map<std::string, line>{};
     auto s_m = std::map<std::string, scheduled_points>{};
     auto d_m = std::map<std::string, direction>{};
-    parse_frame(d, l_m, s_m, d_m);
+    auto p_m = std::map<std::string, passenger_assignments>{};
+    parse_frame(d, l_m, s_m, d_m, p_m);
     std::string_view name = "371";
     std::string_view mode = "bus";
     ASSERT_TRUE(l_m.size() == 1);
@@ -54,7 +55,8 @@ TEST(service_frame_parse, direction) {
     auto l_m = std::map<std::string, line>{};
     auto s_m = std::map<std::string, scheduled_points>{};
     auto d_m = std::map<std::string, direction>{};
-    parse_frame(d, l_m, s_m, d_m);
+    auto p_m = std::map<std::string, passenger_assignments>{};
+    parse_frame(d, l_m, s_m, d_m, p_m);
     std::string_view name = "H";
     std::string_view short_name = "H";
     std::string_view name2 = "R";
@@ -81,7 +83,8 @@ TEST(service_frame_parse, scheduled_points) {
     auto l_m = std::map<std::string, line>{};
     auto s_m = std::map<std::string, scheduled_points>{};
     auto d_m = std::map<std::string, direction>{};
-    parse_frame(d, l_m, s_m, d_m);
+    auto p_m = std::map<std::string, passenger_assignments>{};
+    parse_frame(d, l_m, s_m, d_m, p_m);
     std::string_view short_name =
         "HE GI Allendorf Allendorf Treiser Straße Vtreis";
     std::string_view public_code = "---trstr";

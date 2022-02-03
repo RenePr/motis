@@ -34,13 +34,22 @@ struct build_sec {
   fbs64::Offset<Direction> direction_;
 };
 
-struct stations {
+struct stations_direction {
   std::string id_;
   std::string name_;
-  long lat_;
-  long lng_;
+  double lat_;
+  double lng_;
   fbs64::Offset<Timezone> timezone_;
   std::string timezone_name_;
+  std::string direction_;
+};
+
+struct ttpt_index {
+  stations_direction st_dir_;
+  uint8_t in_allowed_;
+  uint8_t out_allowed_;
+  std::string quay_;
+  std::string stop_point_ref_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&, std::string const&);

@@ -79,7 +79,7 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey_interchange(d, sji_v);
       // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
-      for (auto const& ele :
+      /*for (auto const& ele :
            d.select_nodes("/PublicationDelivery/dataObjects/"
                           "CompositeFrame/FrameDefaults/DefaultLocale")) {
         auto const default_timezone_name =
@@ -97,7 +97,7 @@ void netex_parser::parse(fs::path const& p,
             ele.node().child("SummerTimeZoneOffset").text().as_int() / 60;
         auto const default_general_offset =
             ele.node().child("TimeZoneOffset").text().as_int() / 60;
-      }
+      }*/
 
       auto b = build{};
       b.l_m_ = l_m;
@@ -109,8 +109,38 @@ void netex_parser::parse(fs::path const& p,
       b.sji_v_ = sji_v;
       b.days_m_ = days_m;
       b.file_ = z.current_file_name();
-      build_fbs(b, fbs_routes, output_services, fbs_stations, rule_services,
-                fbb);
+      auto sjpp = std::vector<service_journey_parse>{};
+      build_fbs(b, sjpp, fbb);
+      for (auto const& ele : sjpp) {
+        auto in_allowed_v = std::vector<bool>{};
+        auto out_allowed_v = std::vector<bool>{};
+        auto stations_v = std::vector<fbs64::Offset<Station>>{};
+        for (auto const& sta : ele.ttpt_index_) {
+          auto const station = CreateStation(
+              fbb, to_fbs_string(fbb, sta.st_dir_.name_),
+              to_fbs_string(fbb, sta.st_dir_.name_), sta.st_dir_.lat_,
+              sta.st_dir_.lng_, 0, NULL, sta.st_dir_.timezone_,
+              to_fbs_string(fbb, sta.st_dir_.timezone_name_));
+          // Für route
+          stations_v.push_back(station);
+          in_allowed_v.push_back(sta.in_allowed_);
+          out_allowed_v.push_back(sta.out_allowed_);
+          fbs_stations.try_emplace(sta.stop_point_ref_, station);
+          auto const direction = CreateDirection(
+              fbb, station, to_fbs_string(fbb, sta.st_dir_.direction_));
+        }
+        auto const route = CreateRoute(
+            fbb,
+            fbb.CreateVector(utl::to_vec(
+                begin(stations_v), end(stations_v),
+                [&](fbs64::Offset<Station> const& s) { return s; })),
+            fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
+                                         [](uint8_t const& i) { return i; })),
+            fbb.CreateVector(utl::to_vec(begin(out_allowed_v),
+                                         end(out_allowed_v),
+                                         [](uint8_t const& o) { return o; })));
+        fbs_routes.push_back(route);
+      }
 
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();

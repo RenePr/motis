@@ -38,11 +38,15 @@ struct build {
 
   std::string_view file_;
 };
+struct service_journey_parse {
+  std::vector<int> times_v_;
+  std::vector<ttpt_index> ttpt_index_;
+  std::vector<fbs64::Offset<Attribute>> a_v_;
+  fbs64::Offset<Category> category_;
+  fbs64::Offset<Provider> provider_;
+};
 
-void build_fbs(build const&, std::vector<fbs64::Offset<Route>>&,
-               std::vector<fbs64::Offset<Service>>&,
-               std::map<std::string, fbs64::Offset<Station>>&,
-               std::vector<fbs64::Offset<RuleService>>&,
+void build_fbs(build const&, std::vector<service_journey_parse>&,
                fbs64::FlatBufferBuilder&);
 
 }  // namespace motis::loader::netex
