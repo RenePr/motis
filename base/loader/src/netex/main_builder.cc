@@ -17,17 +17,8 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
                std::map<std::string, fbs64::Offset<Station>>& stations,
                std::vector<fbs64::Offset<RuleService>>& rule_services,
                fbs64::FlatBufferBuilder& fbb) {
-  // search and build .fbs files
   // TODO dummyweise hier, das rest ermal geht
-  // day_idx_first_day und last_day = bitfield index?
-  // bitfield index =
-  // dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/operatingPeriods/UicOperatingPeriod/FromDate
-  // - dataObjects/CompositeFrame/ValidBetween/FromDate in days
-  // gmt_offset winterzeit, offset sommerzeit
-  // minutes_after_midnight von local timezone?
-  // auto const minutes_a_m_f_d = time_realtive_to_0();
   auto const season = CreateSeason(fbb, 0, 0, 0, 0, 0);
-  // general_offset vs offset? Unterschied?
   auto const timezone = CreateTimezone(fbb, 0, season);
   auto stations_sji_m = std::map<std::string, fbs64::Offset<Station>>{};
   auto service_sji_m = std::map<std::string, fbs64::Offset<Service>>{};
@@ -58,19 +49,6 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     auto times_v = std::vector<int>{};
     auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
-      /*auto const it_sp =
-          it_sjp->second.stop_point_map.lower_bound(ttpt.stop_point_ref);
-      utl::verify(it_sp != end(it_sjp->second.stop_point_map),
-                  "missing time_table_passing_time: {}", ttpt.stop_point_ref);
-      auto const key_sp = std::string(it_sp->second.id_);
-      auto const it = b.s_m_.lower_bound(key_sp);
-      auto const station_ttpt = stations{std::string(it->second.short_name_),
-                                         std::string(it->second.short_name_),
-                                         it->second.stop_point_.lat_,
-                                         it->second.stop_point_.lon_,
-                                         0,
-                                         timezone,
-                                         std::stringit->second.stop_point_.timezone_)};*/
       auto s_d = station_dir{
           it_sjp->second.stop_point_map, b.s_m_,          b.l_m_,  traffic_days,
           ttpt.stop_point_ref,           std::string(""), timezone};
@@ -111,8 +89,6 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
                                      [](uint8_t const& o) { return o; })));
     routes.push_back(route);
     // TODO raussuchen, kein int nur strings...
-    // auto start_point = it_sjp->second.name_;
-    // auto stop_point = it_sjp->second.name_;
     auto const rule_service_debug = CreateServiceDebugInfo(
         fbb, to_fbs_string(fbb, std::string(b.file_)), 0, 0);
     // TODO  trackrules noch anpassen in arr und dep
@@ -140,12 +116,6 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
         0, rule_service_debug, false, 0);
     services.push_back(service);
     service_sji_m.try_emplace(sj.first, service);
-    // wzl-BUS-1 über passengerassignment,
-    // 209-wefra über schedulestoppoint name -> quay
-    // gar nicht
-    // TODO trackroules= new over passengerassignment -> quay, times in
-    // siteconnection WalkTransferDuration?, routekey uint?,
-    // rule_participant?, initial_train_nr?, trip id optional ? auto const
   }
   auto rule_service_v = std::vector<fbs64::Offset<Rule>>{};
   for (auto const& sji : b.sji_v_) {

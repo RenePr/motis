@@ -90,9 +90,6 @@ void netex_parser::parse(fs::path const& p,
         auto offset =
             date::format("%T\n", local.get_local_time() - utc.get_local_time());
         auto t = offset.substr(0, 3);
-        std::cout << t;
-        // in stunden für motis zu minuten transferieren, siehe docu von
-        // delfi
         auto const default_offset =
             ele.node().child("SummerTimeZoneOffset").text().as_int() / 60;
         auto const default_general_offset =
