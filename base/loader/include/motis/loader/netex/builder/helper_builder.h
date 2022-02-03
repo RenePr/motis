@@ -17,17 +17,21 @@ namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
 
-struct station_dir_section {
+struct station_dir {
   std::map<std::string, stop_point_in_journey_pattern> s_p_m_;
   std::map<std::string, scheduled_points> s_m_;
   std::map<std::string, line> l_m_;
   std::pair<std::string, std::string> traffic_days;
   std::string stop_point_ref_;
   std::string direction_;
+  fbs64::Offset<Timezone> timezone_;
+};
+struct build_sec {
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;
-  fbs64::Offset<Timezone> timezone_;
   std::vector<fbs64::Offset<Attribute>> a_v_;
+  std::string line_id;
+  fbs64::Offset<Direction> direction_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&, std::string const&);
@@ -47,10 +51,10 @@ void get_attribute_fbs(std::vector<std::string> const&,
                        fbs64::FlatBufferBuilder&);
 void get_service_times(time_table_passing_time const&, std::string const&,
                        std::vector<int>&);
-void get_station_dir_section(station_dir_section const&, uint8_t&, uint8_t&,
-                             fbs64::Offset<Station>&, fbs64::Offset<Direction>&,
-                             fbs64::Offset<Section>&, fbs64::Offset<Track>&,
-                             fbs64::FlatBufferBuilder&);
-// std::vector<fbs64::Offset<AttributeInfo>> get_attribute_info_fbs();
+void get_section_fbs(build_sec const&, fbs64::Offset<Section>&,
+                     fbs64::FlatBufferBuilder&);
+void get_station_dir_fbs(station_dir const&, uint8_t&, uint8_t&,
+                         fbs64::Offset<Station>&, fbs64::Offset<Direction>&,
+                         fbs64::Offset<Track>&, fbs64::FlatBufferBuilder&);
 
 }  // namespace motis::loader::netex

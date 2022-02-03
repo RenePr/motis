@@ -58,29 +58,30 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     auto times_v = std::vector<int>{};
     auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
-      auto s_d_s = station_dir_section{it_sjp->second.stop_point_map,
-                                       b.s_m_,
-                                       b.l_m_,
-                                       traffic_days,
-                                       ttpt.stop_point_ref,
-                                       std::string(""),
-                                       category,
-                                       provider,
-                                       timezone,
-                                       a_v};
+      auto const it_sp =
+          it_sjp->second.stop_point_map.lower_bound(ttpt.stop_point_ref);
+      utl::verify(it_sp != end(it_sjp->second.stop_point_map),
+                  "missing time_table_passing_time: {}", ttpt.stop_point_ref);
+      auto const key_sp = std::string(it_sp->second.id_);
+      auto s_d = station_dir{
+          it_sjp->second.stop_point_map, b.s_m_,          b.l_m_,  traffic_days,
+          ttpt.stop_point_ref,           std::string(""), timezone};
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
-      auto section = fbs64::Offset<Section>{};
       auto track = fbs64::Offset<Track>{};
       // TODO is uint8_t richtig?
       auto in_allowed = uint8_t{};
       auto out_allowed = uint8_t{};
       get_service_times(ttpt, start_time, times_v);
-      get_station_dir_section(s_d_s, in_allowed, out_allowed, station,
-                              direction, section, track, fbb);
+      get_station_dir_fbs(s_d, in_allowed, out_allowed, station, direction,
+                          track, fbb);
       stations_v.push_back(station);
       // TODO eventuell ändern
       stations.try_emplace(ttpt.stop_point_ref, station);
+      auto sec = build_sec{category, provider, a_v,
+                           std::string(begin(b.l_m_)->second.id_), direction};
+      auto section = fbs64::Offset<Section>{};
+      get_section_fbs(sec, section, fbb);
       sections_v.push_back(section);
       in_allowed_v.push_back(in_allowed);
       out_allowed_v.push_back(out_allowed);

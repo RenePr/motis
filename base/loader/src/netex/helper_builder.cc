@@ -133,42 +133,41 @@ void get_service_times(time_table_passing_time const& ttpt,
     times_v.push_back(time2);
   }
 }
-void get_station_dir_section(station_dir_section const& s_d_s,
-                             uint8_t& in_allowed, uint8_t& out_allowed,
-                             fbs64::Offset<Station>& station,
-                             fbs64::Offset<Direction>& direction,
-                             fbs64::Offset<Section>& section,
-                             fbs64::Offset<Track>& track,
-                             fbs64::FlatBufferBuilder& fbb) {
-  auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.stop_point_ref_);
-  utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
-              s_d_s.stop_point_ref_);
+void get_section_fbs(build_sec const& sec, fbs64::Offset<Section>& section,
+                     fbs64::FlatBufferBuilder& fbb) {
+  section = CreateSection(
+      fbb, sec.category_, sec.provider_, NULL, to_fbs_string(fbb, sec.line_id),
+      fbb.CreateVector(
+          utl::to_vec(begin(sec.a_v_), end(sec.a_v_),
+                      [&](fbs64::Offset<Attribute> const& a) { return a; })),
+      sec.direction_);
+}
+
+void get_station_dir_fbs(station_dir const& s_d, uint8_t& in_allowed,
+                         uint8_t& out_allowed, fbs64::Offset<Station>& station,
+                         fbs64::Offset<Direction>& direction,
+                         fbs64::Offset<Track>& track,
+                         fbs64::FlatBufferBuilder& fbb) {
+  auto const it_sp = s_d.s_p_m_.lower_bound(s_d.stop_point_ref_);
+  utl::verify(it_sp != end(s_d.s_p_m_), "missing time_table_passing_time: {}",
+              s_d.stop_point_ref_);
   auto const key_sp = std::string(it_sp->second.id_);
   in_allowed = it_sp->second.in_allowed_;
   out_allowed = it_sp->second.out_allowed_;
-  auto const it = s_d_s.s_m_.lower_bound(key_sp);
+  auto const it = s_d.s_m_.lower_bound(key_sp);
   // external ids = leer
   // TODO interchange time
   station = CreateStation(
       fbb, to_fbs_string(fbb, std::string(it->second.short_name_)),
       to_fbs_string(fbb, std::string(it->second.short_name_)),
       it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0, NULL,
-      s_d_s.timezone_,
+      s_d.timezone_,
       to_fbs_string(fbb, std::string(it->second.stop_point_.timezone_)));
 
-  direction =
-      CreateDirection(fbb, station, to_fbs_string(fbb, s_d_s.direction_));
-  section = CreateSection(
-      fbb, s_d_s.category_, s_d_s.provider_, NULL,
-      to_fbs_string(fbb, std::string(begin(s_d_s.l_m_)->second.id_)),
-      fbb.CreateVector(
-          utl::to_vec(begin(s_d_s.a_v_), end(s_d_s.a_v_),
-                      [&](fbs64::Offset<Attribute> const& a) { return a; })),
-      direction);
+  direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
   // TODO bitfield fehlt, gibt an welche gleißangebe bei mehreren gilt
   if (it->second.stop_point_.quay_.size() == 0) {
-    track =
-        CreateTrack(fbb, to_fbs_string(fbb, s_d_s.traffic_days.first), NULL);
+    track = CreateTrack(fbb, to_fbs_string(fbb, s_d.traffic_days.first), NULL);
   } else {
     auto const quay = std::string(begin(it->second.stop_point_.quay_)->data());
     track = CreateTrack(fbb, NULL, to_fbs_string(fbb, quay));
