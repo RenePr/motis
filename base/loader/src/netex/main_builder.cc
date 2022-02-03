@@ -58,18 +58,16 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     auto times_v = std::vector<int>{};
     auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
-      auto s_d_s = station_dir_section{};
-      s_d_s.l_m_ = b.l_m_;
-      s_d_s.s_m_ = b.s_m_;
-      s_d_s.traffic_days = traffic_days;
-      s_d_s.a_v_ = a_v;
-      s_d_s.provider_ = provider;
-      s_d_s.category_ = category;
-      s_d_s.timezone_ = timezone;
-      s_d_s.ttpt_ = ttpt;
-      s_d_s.start_time_ = start_time;
-      s_d_s.direction_ = it_sjp->second.direction_;
-      s_d_s.s_p_m_ = it_sjp->second.stop_point_map;
+      auto s_d_s = station_dir_section{it_sjp->second.stop_point_map,
+                                       b.s_m_,
+                                       b.l_m_,
+                                       traffic_days,
+                                       ttpt.stop_point_ref,
+                                       std::string(""),
+                                       category,
+                                       provider,
+                                       timezone,
+                                       a_v};
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
       auto section = fbs64::Offset<Section>{};
@@ -77,11 +75,12 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
       // TODO is uint8_t richtig?
       auto in_allowed = uint8_t{};
       auto out_allowed = uint8_t{};
-      get_station_dir_section(s_d_s, times_v, in_allowed, out_allowed, station,
+      get_service_times(ttpt, start_time, times_v);
+      get_station_dir_section(s_d_s, in_allowed, out_allowed, station,
                               direction, section, track, fbb);
       stations_v.push_back(station);
       // TODO eventuell ändern
-      stations.try_emplace(s_d_s.ttpt_.stop_point_ref, station);
+      stations.try_emplace(ttpt.stop_point_ref, station);
       sections_v.push_back(section);
       in_allowed_v.push_back(in_allowed);
       out_allowed_v.push_back(out_allowed);
@@ -103,10 +102,10 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
                                      [](uint8_t const& o) { return o; })));
     routes.push_back(route);
     // TODO raussuchen, kein int nur strings...
-    auto start_point = it_sjp->second.name_;
-    auto stop_point = it_sjp->second.name_;
+    // auto start_point = it_sjp->second.name_;
+    // auto stop_point = it_sjp->second.name_;
     auto const rule_service_debug = CreateServiceDebugInfo(
-        fbb, to_fbs_string(fbb, std::string(b.file_)), start_point, stop_point);
+        fbb, to_fbs_string(fbb, std::string(b.file_)), 0, 0);
     // TODO  trackrules noch anpassen in arr und dep
     auto track_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
     auto const track_rules = CreateTrackRules(
@@ -138,8 +137,6 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     // TODO trackroules= new over passengerassignment -> quay, times in
     // siteconnection WalkTransferDuration?, routekey uint?,
     // rule_participant?, initial_train_nr?, trip id optional ? auto const
-    // service = CreateService(fbb, route, to_fbs_string(fbb,
-    // valid_day_bits), ,);
   }
   auto rule_service_v = std::vector<fbs64::Offset<Rule>>{};
   for (auto const& sji : b.sji_v_) {
@@ -149,7 +146,7 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     auto const from_stop =
         stations_sji_m.lower_bound(sji.from_station_)->second;
     auto const to_stop = stations_sji_m.lower_bound(sji.to_station_)->second;
-    // TODO ruletype fehlt
+    // TODO ruletype fehlt, dayoffset1,dayoffset2, day_switch
     auto const rule = CreateRule(fbb, static_cast<RuleType>(0.0), from_service,
                                  to_service, from_stop, to_stop, 0, 0, false);
     rule_service_v.push_back(rule);

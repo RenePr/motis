@@ -112,35 +112,37 @@ void get_attribute_fbs(std::vector<std::string> const& keys_day,
         return CreateAttribute(fbb, ai, to_fbs_string(fbb, valid_day_bits));
       });
 }
-void get_station_dir_section(
-    station_dir_section const& s_d_s, std::vector<int>& times_v,
-    uint8_t& in_allowed, uint8_t& out_allowed, fbs64::Offset<Station>& station,
-    fbs64::Offset<Direction>& direction, fbs64::Offset<Section>& section,
-    fbs64::Offset<Track>& track, fbs64::FlatBufferBuilder& fbb) {
+void get_service_times(time_table_passing_time const& ttpt,
+                       std::string const& start_time,
+                       std::vector<int>& times_v) {
   // TODO in seconds?
-  if (times_v.size() == 0 && std::string_view(s_d_s.ttpt_.arr_time) == "") {
+  if (times_v.size() == 0 && std::string_view(ttpt.arr_time) == "") {
     // first time
     times_v.push_back(-1);
-    auto const time =
-        time_realtive_to_0(s_d_s.ttpt_.dep_time, s_d_s.start_time_);
+    auto const time = time_realtive_to_0(ttpt.dep_time, start_time);
     times_v.push_back(time);
-  } else if (std::string_view(s_d_s.ttpt_.dep_time) == "") {
+  } else if (std::string_view(ttpt.dep_time) == "") {
     // berechne arr time to 0
-    auto const time =
-        time_realtive_to_0(s_d_s.ttpt_.arr_time, s_d_s.start_time_);
+    auto const time = time_realtive_to_0(ttpt.arr_time, start_time);
     times_v.push_back(time);
     times_v.push_back(-1);
   } else {
-    auto const time =
-        time_realtive_to_0(s_d_s.ttpt_.arr_time, s_d_s.start_time_);
+    auto const time = time_realtive_to_0(ttpt.arr_time, start_time);
     times_v.push_back(time);
-    auto const time2 =
-        time_realtive_to_0(s_d_s.ttpt_.dep_time, s_d_s.start_time_);
+    auto const time2 = time_realtive_to_0(ttpt.dep_time, start_time);
     times_v.push_back(time2);
   }
-  auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.ttpt_.stop_point_ref);
+}
+void get_station_dir_section(station_dir_section const& s_d_s,
+                             uint8_t& in_allowed, uint8_t& out_allowed,
+                             fbs64::Offset<Station>& station,
+                             fbs64::Offset<Direction>& direction,
+                             fbs64::Offset<Section>& section,
+                             fbs64::Offset<Track>& track,
+                             fbs64::FlatBufferBuilder& fbb) {
+  auto const it_sp = s_d_s.s_p_m_.lower_bound(s_d_s.stop_point_ref_);
   utl::verify(it_sp != end(s_d_s.s_p_m_), "missing time_table_passing_time: {}",
-              s_d_s.ttpt_.stop_point_ref);
+              s_d_s.stop_point_ref_);
   auto const key_sp = std::string(it_sp->second.id_);
   in_allowed = it_sp->second.in_allowed_;
   out_allowed = it_sp->second.out_allowed_;
