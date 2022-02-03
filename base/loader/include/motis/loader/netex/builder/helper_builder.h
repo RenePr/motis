@@ -33,6 +33,15 @@ struct build_sec {
   std::string line_id;
   fbs64::Offset<Direction> direction_;
 };
+
+struct stations {
+  std::string id_;
+  std::string name_;
+  long lat_;
+  long lng_;
+  fbs64::Offset<Timezone> timezone_;
+  std::string timezone_name_;
+};
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&, std::string const&);
 // vector, normalerweise nur 1 eintrag.

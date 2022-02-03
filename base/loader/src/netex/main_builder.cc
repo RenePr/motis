@@ -58,11 +58,19 @@ void build_fbs(build const& b, std::vector<fbs64::Offset<Route>>& routes,
     auto times_v = std::vector<int>{};
     auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
-      auto const it_sp =
+      /*auto const it_sp =
           it_sjp->second.stop_point_map.lower_bound(ttpt.stop_point_ref);
       utl::verify(it_sp != end(it_sjp->second.stop_point_map),
                   "missing time_table_passing_time: {}", ttpt.stop_point_ref);
       auto const key_sp = std::string(it_sp->second.id_);
+      auto const it = b.s_m_.lower_bound(key_sp);
+      auto const station_ttpt = stations{std::string(it->second.short_name_),
+                                         std::string(it->second.short_name_),
+                                         it->second.stop_point_.lat_,
+                                         it->second.stop_point_.lon_,
+                                         0,
+                                         timezone,
+                                         std::stringit->second.stop_point_.timezone_)};*/
       auto s_d = station_dir{
           it_sjp->second.stop_point_map, b.s_m_,          b.l_m_,  traffic_days,
           ttpt.stop_point_ref,           std::string(""), timezone};
