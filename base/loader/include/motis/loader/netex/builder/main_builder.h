@@ -48,5 +48,10 @@ struct service_journey_parse {
 
 void build_fbs(build const&, std::vector<service_journey_parse>&,
                fbs64::FlatBufferBuilder&);
+void create_fbs(std::vector<service_journey_parse> const&, std::string const&,
+                std::map<std::string, fbs64::Offset<Station>>&,
+                std::vector<fbs64::Offset<Route>>&,
+                std::vector<fbs64::Offset<Service>>&,
+                fbs64::FlatBufferBuilder&);
 
 }  // namespace motis::loader::netex

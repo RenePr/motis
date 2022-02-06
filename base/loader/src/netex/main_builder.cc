@@ -92,4 +92,80 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     sjp_m.push_back(sjp);
   }
 }
+void create_fbs(std::vector<service_journey_parse> const& sjpp,
+                std::string const& file_name,
+                std::map<std::string, fbs64::Offset<Station>>& fbs_stations,
+                std::vector<fbs64::Offset<Route>>& fbs_routes,
+                std::vector<fbs64::Offset<Service>>& output_services,
+                fbs64::FlatBufferBuilder& fbb) {
+  for (auto const& ele : sjpp) {
+    auto in_allowed_v = std::vector<bool>{};
+    auto out_allowed_v = std::vector<bool>{};
+    auto stations_v = std::vector<fbs64::Offset<Station>>{};
+    auto sections_v = std::vector<fbs64::Offset<Section>>{};
+    auto tracks_v = std::vector<fbs64::Offset<Track>>{};
+    for (auto const& sta : ele.ttpt_index_) {
+      auto const station =
+          CreateStation(fbb, to_fbs_string(fbb, sta.st_dir_.name_),
+                        to_fbs_string(fbb, sta.st_dir_.name_), sta.st_dir_.lat_,
+                        sta.st_dir_.lng_, 0, NULL, sta.st_dir_.timezone_,
+                        to_fbs_string(fbb, sta.st_dir_.timezone_name_));
+      // Für route
+      stations_v.push_back(station);
+      in_allowed_v.push_back(sta.in_allowed_);
+      out_allowed_v.push_back(sta.out_allowed_);
+      fbs_stations.try_emplace(sta.stop_point_ref_, station);
+      auto const direction = CreateDirection(
+          fbb, station, to_fbs_string(fbb, sta.st_dir_.direction_));
+      // TODO Line_id
+      auto const section = CreateSection(
+          fbb, ele.category_, ele.provider_, 0,
+          to_fbs_string(fbb, std::string("")),
+          fbb.CreateVector(utl::to_vec(
+              begin(ele.a_v_), end(ele.a_v_),
+              [&](fbs64::Offset<Attribute> const& a) { return a; })),
+          direction);
+      sections_v.push_back(section);
+      auto const track = CreateTrack(fbb, to_fbs_string(fbb, std::string("")),
+                                     to_fbs_string(fbb, sta.quay_));
+      tracks_v.push_back(track);
+    }
+    auto const route = CreateRoute(
+        fbb,
+        fbb.CreateVector(
+            utl::to_vec(begin(stations_v), end(stations_v),
+                        [&](fbs64::Offset<Station> const& s) { return s; })),
+        fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
+                                     [](uint8_t const& i) { return i; })),
+        fbb.CreateVector(utl::to_vec(begin(out_allowed_v), end(out_allowed_v),
+                                     [](uint8_t const& o) { return o; })));
+    fbs_routes.push_back(route);
+    // TODO line from to
+    auto const service_debug_info =
+        CreateServiceDebugInfo(fbb, to_fbs_string(fbb, file_name), 0, 0);
+    // TODO
+    auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
+    auto const tracks = CreateTrackRules(
+        fbb,
+        fbb.CreateVector(
+            utl::to_vec(begin(tracks_v), end(tracks_v),
+                        [&](fbs64::Offset<Track> const& t) { return t; })),
+        fbb.CreateVector(
+            utl::to_vec(begin(tracks_v), end(tracks_v),
+                        [&](fbs64::Offset<Track> const& t) { return t; })));
+    tracks_rules_v.push_back(tracks);
+    auto const service = CreateService(
+        fbb, route, to_fbs_string(fbb, std::string("123")),
+        fbb.CreateVector(
+            utl::to_vec(begin(sections_v), end(sections_v),
+                        [&](fbs64::Offset<Section> const& s) { return s; })),
+        fbb.CreateVector(
+            utl::to_vec(begin(tracks_rules_v), end(tracks_rules_v),
+                        [&](fbs64::Offset<TrackRules> const& t) { return t; })),
+        fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
+                                     [](int const& t) { return t; })),
+        0, service_debug_info, false, 0);
+    output_services.push_back(service);
+  }
+}
 }  // namespace motis::loader::netex
