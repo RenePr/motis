@@ -71,8 +71,7 @@ void get_service_times(time_table_passing_time const&, std::string const&,
                        std::vector<int>&);
 void get_section_fbs(build_sec const&, fbs64::Offset<Section>&,
                      fbs64::FlatBufferBuilder&);
-void get_station_dir_fbs(station_dir const&, uint8_t&, uint8_t&,
-                         fbs64::Offset<Station>&, fbs64::Offset<Direction>&,
-                         fbs64::Offset<Track>&, fbs64::FlatBufferBuilder&);
+void get_station_dir_fbs(stations_direction const&, fbs64::Offset<Station>&,
+                         fbs64::Offset<Direction>&, fbs64::FlatBufferBuilder&);
 
 }  // namespace motis::loader::netex

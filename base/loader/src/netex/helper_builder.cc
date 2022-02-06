@@ -143,35 +143,19 @@ void get_section_fbs(build_sec const& sec, fbs64::Offset<Section>& section,
       sec.direction_);
 }
 
-void get_station_dir_fbs(station_dir const& s_d, uint8_t& in_allowed,
-                         uint8_t& out_allowed, fbs64::Offset<Station>& station,
+void get_station_dir_fbs(stations_direction const& s_d,
+                         fbs64::Offset<Station>& station,
                          fbs64::Offset<Direction>& direction,
-                         fbs64::Offset<Track>& track,
                          fbs64::FlatBufferBuilder& fbb) {
-  auto const it_sp = s_d.s_p_m_.lower_bound(s_d.stop_point_ref_);
-  utl::verify(it_sp != end(s_d.s_p_m_), "missing time_table_passing_time: {}",
-              s_d.stop_point_ref_);
-  auto const key_sp = std::string(it_sp->second.id_);
-  in_allowed = it_sp->second.in_allowed_;
-  out_allowed = it_sp->second.out_allowed_;
-  auto const it = s_d.s_m_.lower_bound(key_sp);
   // external ids = leer
   // TODO interchange time
-  station = CreateStation(
-      fbb, to_fbs_string(fbb, std::string(it->second.short_name_)),
-      to_fbs_string(fbb, std::string(it->second.short_name_)),
-      it->second.stop_point_.lat_, it->second.stop_point_.lon_, 0, NULL,
-      s_d.timezone_,
-      to_fbs_string(fbb, std::string(it->second.stop_point_.timezone_)));
+  station =
+      CreateStation(fbb, to_fbs_string(fbb, s_d.name_),
+                    to_fbs_string(fbb, s_d.name_), s_d.lat_, s_d.lng_, 0, NULL,
+                    s_d.timezone_, to_fbs_string(fbb, s_d.timezone_name_));
 
   direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
   // TODO bitfield fehlt, gibt an welche gleißangebe bei mehreren gilt
-  if (it->second.stop_point_.quay_.size() == 0) {
-    track = CreateTrack(fbb, to_fbs_string(fbb, s_d.traffic_days.first), NULL);
-  } else {
-    auto const quay = std::string(begin(it->second.stop_point_.quay_)->data());
-    track = CreateTrack(fbb, NULL, to_fbs_string(fbb, quay));
-  }
 }
 
 }  // namespace motis::loader::netex

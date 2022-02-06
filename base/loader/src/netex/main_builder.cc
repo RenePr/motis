@@ -50,12 +50,13 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     // TODO change auf last
     auto const minutes_a_m_l_d =
         time_realtive_to_0_season(traffic_days.first, traffic_days.first);
-    // TODO
+    // TODO times_v und ttpt_v zusammen oder getrennt?
     auto times_v = std::vector<int>{};
-    auto ttpt_v = std::vector<ttpt_index>{};
     auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
-
-    // New
+    for (auto const& ttpt : sj.second.keys_ttpt_) {
+      get_service_times(ttpt, start_time, times_v);
+    }
+    auto ttpt_v = std::vector<ttpt_index>{};
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       auto ttpt_i = ttpt_index{};
       ttpt_i.stop_point_ref_ = ttpt.stop_point_ref;
@@ -74,11 +75,9 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
                              timezone,
                              std::string(it->second.stop_point_.timezone_),
                              std::string("")};
-      auto out_allowed = it_sp->second.out_allowed_;
       ttpt_i.in_allowed_ = it_sp->second.in_allowed_;
       ttpt_i.out_allowed_ = it_sp->second.out_allowed_;
       //  TODO is uint8_t richtig?
-      get_service_times(ttpt, start_time, times_v);
       if (it->second.stop_point_.quay_.size() == 0) {
         ttpt_i.quay_ = traffic_days.first;
       } else {
@@ -105,26 +104,18 @@ void create_fbs(std::vector<service_journey_parse> const& sjpp,
     auto sections_v = std::vector<fbs64::Offset<Section>>{};
     auto tracks_v = std::vector<fbs64::Offset<Track>>{};
     for (auto const& sta : ele.ttpt_index_) {
-      auto const station =
-          CreateStation(fbb, to_fbs_string(fbb, sta.st_dir_.name_),
-                        to_fbs_string(fbb, sta.st_dir_.name_), sta.st_dir_.lat_,
-                        sta.st_dir_.lng_, 0, NULL, sta.st_dir_.timezone_,
-                        to_fbs_string(fbb, sta.st_dir_.timezone_name_));
-      // Für route
+      auto station = fbs64::Offset<Station>{};
+      auto direction = fbs64::Offset<Direction>{};
+      get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
       stations_v.push_back(station);
       in_allowed_v.push_back(sta.in_allowed_);
       out_allowed_v.push_back(sta.out_allowed_);
       fbs_stations.try_emplace(sta.stop_point_ref_, station);
-      auto const direction = CreateDirection(
-          fbb, station, to_fbs_string(fbb, sta.st_dir_.direction_));
       // TODO Line_id
-      auto const section = CreateSection(
-          fbb, ele.category_, ele.provider_, 0,
-          to_fbs_string(fbb, std::string("")),
-          fbb.CreateVector(utl::to_vec(
-              begin(ele.a_v_), end(ele.a_v_),
-              [&](fbs64::Offset<Attribute> const& a) { return a; })),
-          direction);
+      auto const sec = build_sec{ele.category_, ele.provider_, ele.a_v_,
+                                 std::string(""), direction};
+      auto section = fbs64::Offset<Section>{};
+      get_section_fbs(sec, section, fbb);
       sections_v.push_back(section);
       auto const track = CreateTrack(fbb, to_fbs_string(fbb, std::string("")),
                                      to_fbs_string(fbb, sta.quay_));
