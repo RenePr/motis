@@ -17,6 +17,7 @@ void parse_service_journey(xml::xml_document& d,
                       "vehicleJourneys/ServiceJourney")) {
     auto const key_sj = std::string(sj.node().attribute("id").as_string());
     auto service_j = service_journey{};
+    service_j.key_sj_ = key_sj;
     service_j.key_sjp_ = std::string(sj.node()
                                          .child("ServiceJourneyPatternRef")
                                          .attribute("ref")

@@ -18,7 +18,7 @@ namespace xml = pugi;
 namespace fs = boost::filesystem;
 using namespace motis::loader::netex;
 
-TEST(service_journey_parse, service_journey) {
+TEST(service_journey_test, service_journey) {
 
   try {
     const char* file =
@@ -28,6 +28,7 @@ TEST(service_journey_parse, service_journey) {
     auto r = d.load_file(file);
     auto sj_m = std::map<std::string, service_journey>{};
     parse_service_journey(d, sj_m);
+    std::cout << sj_m.at("DE::ServiceJourney:1198650792_0::") << std::endl;
     ASSERT_TRUE(std::string_view("DE::ServiceJourneyPattern:105870562_0::") ==
                 std::string_view(
                     sj_m.at("DE::ServiceJourney:1198650792_0::").key_sjp_));

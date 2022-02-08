@@ -12,6 +12,7 @@
 #include "utl/get_or_create.h"
 #include "utl/verify.h"
 
+#include "motis/core/common/date_time_util.h"
 #include "motis/core/common/logging.h"
 #include "motis/core/common/zip_reader.h"
 #include "motis/loader/netex/builder/main_builder.h"
@@ -45,10 +46,10 @@ std::vector<std::string> netex_parser::missing_files(fs::path const&) const {
 void netex_parser::parse(fs::path const& p,
                          flatbuffers64::FlatBufferBuilder& fbb) {
   utl::verify(fs::is_regular_file(p), "{} is not a zip file", p);
-  auto output_services = std::vector<fbs64::Offset<Service>>{};
+  auto output_services = std::map<std::string, fbs64::Offset<Service>>{};
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
-  auto const interval = Interval{0, 0};
+  auto interval = Interval{0, 0};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
   auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
@@ -106,22 +107,31 @@ void netex_parser::parse(fs::path const& p,
       b.p_m_ = p_m;
       b.sjp_m_ = sjp_m;
       b.sj_m_ = sj_m;
-      b.sji_v_ = sji_v;
       b.days_m_ = days_m;
       b.file_ = z.current_file_name();
       auto sjpp = std::vector<service_journey_parse>{};
       build_fbs(b, sjpp, fbb);
-      create_fbs(sjpp, std::string(z.current_file_name()), fbs_stations,
-                 fbs_routes, output_services, fbb);
-
+      auto services = std::map<std::string, fbs64::Offset<Service>>{};
+      create_stations_routes_services_fbs(
+          sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
+          output_services, fbb);
+      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
+                          fbb);
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
       LOG(error) << "unable to parse message";
     }
   }
+
+  /* <FromDate>2021-10-15T00:00:00</FromDate>
+ <ToDate>2021-12-11T00:00:00</ToDate>*/
+  auto t1 = to_unix_time(2021, 10, 15);
+  auto t2 = to_unix_time(2022, 12, 11);
+  interval = Interval(t1, t2);
+
   fbb.Finish(CreateSchedule(
-      fbb, fbb.CreateVector(output_services),
+      fbb, fbb.CreateVector(values(output_services)),
       fbb.CreateVector(values(fbs_stations)), fbb.CreateVector(fbs_routes),
       &interval, fbb.CreateVector(footpaths), fbb.CreateVector(rule_services),
       fbb.CreateVector(meta_stations), fbb.CreateString(dataset_name), hash));

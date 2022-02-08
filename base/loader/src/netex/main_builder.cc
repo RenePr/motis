@@ -29,6 +29,7 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
   for (auto const& sj : b.sj_m_) {
     std::cout << sj.second.key_sjp_ << sj.first << std::endl;
     auto sjp = service_journey_parse{};
+    sjp.key_sj_ = sj.second.key_sj_;
     auto const it_sjp = b.sjp_m_.lower_bound(sj.second.key_sjp_);
     utl::verify(it_sjp != end(b.sjp_m_), "missing service_journey_pattern: {}",
                 sj.second.key_sjp_);
@@ -59,13 +60,16 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     auto ttpt_v = std::vector<ttpt_index>{};
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       auto ttpt_i = ttpt_index{};
-      ttpt_i.stop_point_ref_ = ttpt.stop_point_ref;
       auto const it_sp =
           it_sjp->second.stop_point_map.lower_bound(ttpt.stop_point_ref);
       utl::verify(it_sp != end(it_sjp->second.stop_point_map),
                   "missing time_table_passing_time: {}", ttpt.stop_point_ref);
       auto const key_sp = std::string(it_sp->second.id_);
       auto const it = b.s_m_.lower_bound(key_sp);
+      utl::verify(it != end(b.s_m_), "missing scheduled_stop_point: {}",
+                  key_sp);
+      // wichtig scheduled_ref
+      ttpt_i.schedulep_point_ref = it->first;
       // TODO direction
       ttpt_i.st_dir_ =
           stations_direction{std::string(it->second.short_name_),
@@ -91,12 +95,13 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     sjp_m.push_back(sjp);
   }
 }
-void create_fbs(std::vector<service_journey_parse> const& sjpp,
-                std::string const& file_name,
-                std::map<std::string, fbs64::Offset<Station>>& fbs_stations,
-                std::vector<fbs64::Offset<Route>>& fbs_routes,
-                std::vector<fbs64::Offset<Service>>& output_services,
-                fbs64::FlatBufferBuilder& fbb) {
+void create_stations_routes_services_fbs(
+    std::vector<service_journey_parse> const& sjpp,
+    std::string const& file_name,
+    std::map<std::string, fbs64::Offset<Station>>& fbs_stations,
+    std::vector<fbs64::Offset<Route>>& fbs_routes,
+    std::map<std::string, fbs64::Offset<Service>>& services,
+    fbs64::FlatBufferBuilder& fbb) {
   for (auto const& ele : sjpp) {
     auto in_allowed_v = std::vector<bool>{};
     auto out_allowed_v = std::vector<bool>{};
@@ -110,7 +115,7 @@ void create_fbs(std::vector<service_journey_parse> const& sjpp,
       stations_v.push_back(station);
       in_allowed_v.push_back(sta.in_allowed_);
       out_allowed_v.push_back(sta.out_allowed_);
-      fbs_stations.try_emplace(sta.stop_point_ref_, station);
+      fbs_stations.try_emplace(sta.schedulep_point_ref, station);
       // TODO Line_id
       auto const sec = build_sec{ele.category_, ele.provider_, ele.a_v_,
                                  std::string(""), direction};
@@ -145,8 +150,11 @@ void create_fbs(std::vector<service_journey_parse> const& sjpp,
             utl::to_vec(begin(tracks_v), end(tracks_v),
                         [&](fbs64::Offset<Track> const& t) { return t; })));
     tracks_rules_v.push_back(tracks);
-    auto const service = CreateService(
-        fbb, route, to_fbs_string(fbb, std::string("123")),
+    auto const st1 = std::string("123");
+    // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
+    // string ctor has invalid argument
+    /*auto const service = CreateService(
+        fbb, route, to_fbs_string(fbb, st1),
         fbb.CreateVector(
             utl::to_vec(begin(sections_v), end(sections_v),
                         [&](fbs64::Offset<Section> const& s) { return s; })),
@@ -155,8 +163,36 @@ void create_fbs(std::vector<service_journey_parse> const& sjpp,
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
-        0, service_debug_info, false, 0);
-    output_services.push_back(service);
+        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));
+    services.try_emplace(ele.key_sj_, service);*/
+  }
+}
+void create_rule_service(
+    std::vector<service_journey_interchange> const& sji_v,
+    std::map<std::string, fbs64::Offset<Service>> const& services,
+    std::map<std::string, fbs64::Offset<Station>> const& fbs_stations,
+    std::vector<fbs64::Offset<RuleService>>& rule_services,
+    fbs64::FlatBufferBuilder& fbb) {
+  auto rule_service_v = std::vector<fbs64::Offset<Rule>>{};
+  for (auto const& sji : sji_v) {
+    auto const from_service = services.lower_bound(sji.from_journey_)->second;
+    auto const to_service = services.lower_bound(sji.to_journey_)->second;
+    // TODO check if scheduledpointref in sji
+    auto const from_stop = fbs_stations.lower_bound(sji.from_station_)->second;
+    auto const to_stop = fbs_stations.lower_bound(sji.to_station_)->second;
+    // TODO ruletype fehlt, dayoffset1,dayoffset2, day_switch
+    auto const rule = CreateRule(fbb, static_cast<RuleType>(0.0), from_service,
+                                 to_service, from_stop, to_stop, 0, 0, false);
+    rule_service_v.push_back(rule);
+  }
+  if (rule_service_v.empty()) {
+
+  } else {
+    auto const rule_service = CreateRuleService(
+        fbb, fbb.CreateVector(
+                 utl::to_vec(begin(rule_service_v), end(rule_service_v),
+                             [&](fbs64::Offset<Rule> const& r) { return r; })));
+    rule_services.push_back(rule_service);
   }
 }
 }  // namespace motis::loader::netex

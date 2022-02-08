@@ -49,7 +49,7 @@ struct ttpt_index {
   uint8_t in_allowed_;
   uint8_t out_allowed_;
   std::string quay_;
-  std::string stop_point_ref_;
+  std::string schedulep_point_ref;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&, std::string const&);

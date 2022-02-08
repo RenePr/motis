@@ -34,7 +34,6 @@ struct build {
 
   std::map<std::string, service_journey_pattern> sjp_m_;
   std::map<std::string, service_journey> sj_m_;
-  std::vector<service_journey_interchange> sji_v_;
 
   std::string_view file_;
 };
@@ -44,14 +43,20 @@ struct service_journey_parse {
   std::vector<fbs64::Offset<Attribute>> a_v_;
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;
+  std::string key_sj_;
 };
 
 void build_fbs(build const&, std::vector<service_journey_parse>&,
                fbs64::FlatBufferBuilder&);
-void create_fbs(std::vector<service_journey_parse> const&, std::string const&,
-                std::map<std::string, fbs64::Offset<Station>>&,
-                std::vector<fbs64::Offset<Route>>&,
-                std::vector<fbs64::Offset<Service>>&,
-                fbs64::FlatBufferBuilder&);
+void create_stations_routes_services_fbs(
+    std::vector<service_journey_parse> const&, std::string const&,
+    std::map<std::string, fbs64::Offset<Station>>&,
+    std::vector<fbs64::Offset<Route>>&,
+    std::map<std::string, fbs64::Offset<Service>>&, fbs64::FlatBufferBuilder&);
+void create_rule_service(std::vector<service_journey_interchange> const&,
+                         std::map<std::string, fbs64::Offset<Service>> const&,
+                         std::map<std::string, fbs64::Offset<Station>> const&,
+                         std::vector<fbs64::Offset<RuleService>>&,
+                         fbs64::FlatBufferBuilder&);
 
 }  // namespace motis::loader::netex

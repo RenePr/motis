@@ -17,11 +17,10 @@ namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
 int time_realtive_to_0(std::string const& time, std::string const& start) {
-  auto result = 0;
   auto tm_start = std::tm{};
   auto ti_start = std::istringstream(std::string(start));
   ti_start >> std::get_time(&tm_start, "%h%m%s");
-  auto tm_0 = std::tm{0, 0, 0, 0, 0, 0, 0, 0, 0};
+  auto tm_0 = std::tm{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   auto tm_t = std::tm{};
   auto ti = std::istringstream(std::string(time));
   ti >> std::get_time(&tm_t, "%h%m%s");
@@ -30,7 +29,6 @@ int time_realtive_to_0(std::string const& time, std::string const& start) {
 }
 int time_realtive_to_0_season(std::string const& time,
                               std::string const& start) {
-  auto result = 0;
   auto tm_start = std::tm{};
   auto ti_start = std::istringstream(std::string(start));
   ti_start >> std::get_time(&tm_start, "%Y-%m-%d%Th%m%s");
@@ -42,6 +40,8 @@ int time_realtive_to_0_season(std::string const& time,
                       tm_start.tm_year,
                       tm_start.tm_wday,
                       tm_start.tm_yday,
+                      0,
+                      0,
                       0};
   auto tm_t = std::tm{};
   auto ti = std::istringstream(std::string(time));
@@ -81,12 +81,14 @@ void get_provider_operator_fbs(std::vector<std::string> const& lines,
       std::cout << e.what() << std::endl;
       continue;
     }
+    auto const test = std::string("1");
     provider = CreateProvider(
         fbb, to_fbs_string(fbb, it->second.operator_.short_name_),
         to_fbs_string(fbb, it->second.operator_.name_),
-        to_fbs_string(fbb, it->second.operator_.legal_name_), NULL);
+        to_fbs_string(fbb, it->second.operator_.legal_name_),
+        to_fbs_string(fbb, test));
     // TODO output_rule fehlt, linie oder zugnummer
-    auto s = std::string(it->second.transport_mode_);
+    auto const s = std::string(it->second.transport_mode_);
     category = CreateCategory(fbb, to_fbs_string(fbb, s), 0);
   }
 }
@@ -136,7 +138,7 @@ void get_service_times(time_table_passing_time const& ttpt,
 void get_section_fbs(build_sec const& sec, fbs64::Offset<Section>& section,
                      fbs64::FlatBufferBuilder& fbb) {
   section = CreateSection(
-      fbb, sec.category_, sec.provider_, NULL, to_fbs_string(fbb, sec.line_id),
+      fbb, sec.category_, sec.provider_, 0, to_fbs_string(fbb, sec.line_id),
       fbb.CreateVector(
           utl::to_vec(begin(sec.a_v_), end(sec.a_v_),
                       [&](fbs64::Offset<Attribute> const& a) { return a; })),
@@ -149,12 +151,18 @@ void get_station_dir_fbs(stations_direction const& s_d,
                          fbs64::FlatBufferBuilder& fbb) {
   // external ids = leer
   // TODO interchange time
-  station =
-      CreateStation(fbb, to_fbs_string(fbb, s_d.name_),
-                    to_fbs_string(fbb, s_d.name_), s_d.lat_, s_d.lng_, 0, NULL,
-                    s_d.timezone_, to_fbs_string(fbb, s_d.timezone_name_));
-
-  direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
+  auto test = std::vector<std::string>{};
+  auto const test1 = std::string("1");
+  test.push_back(test1);
+  station = CreateStation(
+      fbb, to_fbs_string(fbb, s_d.name_), to_fbs_string(fbb, s_d.name_),
+      s_d.lat_, s_d.lng_, 0,
+      fbb.CreateVector(utl::to_vec(
+          begin(test), end(test),
+          [&](std::string const& s) { return fbb.CreateString(s); })),
+      s_d.timezone_, to_fbs_string(fbb, s_d.timezone_name_));
+  auto const dir = std::string("1");
+  direction = CreateDirection(fbb, station, to_fbs_string(fbb, dir));
   // TODO bitfield fehlt, gibt an welche gleißangebe bei mehreren gilt
 }
 
