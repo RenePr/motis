@@ -30,12 +30,12 @@ void parse_service_journey_pattern(
       n_a.public_code_ = std::string(
           n.node().child("Notice").child("PublicCode").text().as_string());
       attribute_vec.push_back(n_a);
-      sjps.start_point_in_journey_pattern_ =
+      n_a.start_point_in_journey_pattern_ =
           std::string(n.node()
                           .child("StartPointInPatternRef")
                           .attribute("ref")
                           .as_string());
-      sjps.stop_point_in_journey_pattern_ = std::string(
+      n_a.stop_point_in_journey_pattern_ = std::string(
           n.node().child("StopPointInPatternRef").attribute("ref").as_string());
 
     }  // NoticeAssignment
@@ -63,7 +63,7 @@ void parse_service_journey_pattern(
           sp.node().child("ForAlighting").text().as_bool();
       stop_point_map.try_emplace(key, stopPointInJourneyPattern);
     }  // StopPointInJourneyPattern
-    sjps.stop_point_map = stop_point_map;
+    sjps.stop_point_map_ = stop_point_map;
     sjp_m.try_emplace(key_sjp, sjps);
   }  // ServiceJourneyPattern
 }

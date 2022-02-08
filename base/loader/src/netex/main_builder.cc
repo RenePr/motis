@@ -61,8 +61,8 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       auto ttpt_i = ttpt_index{};
       auto const it_sp =
-          it_sjp->second.stop_point_map.lower_bound(ttpt.stop_point_ref);
-      utl::verify(it_sp != end(it_sjp->second.stop_point_map),
+          it_sjp->second.stop_point_map_.lower_bound(ttpt.stop_point_ref);
+      utl::verify(it_sp != end(it_sjp->second.stop_point_map_),
                   "missing time_table_passing_time: {}", ttpt.stop_point_ref);
       auto const key_sp = std::string(it_sp->second.id_);
       auto const it = b.s_m_.lower_bound(key_sp);
@@ -78,7 +78,7 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
                              it->second.stop_point_.lon_,
                              timezone,
                              std::string(it->second.stop_point_.timezone_),
-                             std::string("")};
+                             it_sjp->second.direction_};
       ttpt_i.in_allowed_ = it_sp->second.in_allowed_;
       ttpt_i.out_allowed_ = it_sp->second.out_allowed_;
       //  TODO is uint8_t richtig?

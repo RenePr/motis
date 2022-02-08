@@ -161,9 +161,7 @@ void get_station_dir_fbs(stations_direction const& s_d,
           begin(test), end(test),
           [&](std::string const& s) { return fbb.CreateString(s); })),
       s_d.timezone_, to_fbs_string(fbb, s_d.timezone_name_));
-  auto const dir = std::string("1");
-  direction = CreateDirection(fbb, station, to_fbs_string(fbb, dir));
-  // TODO bitfield fehlt, gibt an welche gleißangebe bei mehreren gilt
+  direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
 }
 
 }  // namespace motis::loader::netex

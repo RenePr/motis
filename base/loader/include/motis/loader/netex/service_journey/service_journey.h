@@ -15,6 +15,7 @@ struct time_table_passing_time {
 
 struct service_journey {
   std::string key_sjp_;
+  std::string key_sj_;
   std::vector<std::string> keys_day_;
   std::vector<time_table_passing_time> keys_ttpt_;
 };
