@@ -15,15 +15,6 @@ namespace motis::loader::netex {
 
 void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
                fbs64::FlatBufferBuilder& fbb) {
-  // search and build .fbs files
-  // TODO dummyweise hier, das rest ermal geht
-  // day_idx_first_day und last_day = bitfield index?
-  // bitfield index =
-  // dataObjects/CompositeFrame/frames/ServiceCalendarFrame/ServiceCalendar/operatingPeriods/UicOperatingPeriod/FromDate
-  // - dataObjects/CompositeFrame/ValidBetween/FromDate in days
-  // gmt_offset winterzeit, offset sommerzeit
-  // minutes_after_midnight von local timezone?
-  // auto const minutes_a_m_f_d = time_realtive_to_0();
   for (auto const& sj : b.sj_m_) {
     std::cout << sj.second.key_sjp_ << sj.first << std::endl;
     auto sjp = service_journey_parse{};
@@ -46,7 +37,7 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
         get_valid_day_bits(b.days_m_, sj.second.keys_day_);
     //TODO mehr als ein key möglich
     auto const day_type = sj.second.keys_day_.front();
-    auto it_sea =b.seasons_m_.lower_bound(day_type);
+    auto const it_sea =b.seasons_m_.lower_bound(day_type);
     utl::verify(it_sea != end(b.seasons_m_), "missing seasons: {}",
                 day_type);
     auto const ttpt_start = begin(sj.second.keys_ttpt_);
@@ -66,38 +57,8 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
       get_service_times(ttpt, start_time, times_v);
     }
     auto ttpt_v = std::vector<ttpt_index>{};
-    for (auto const& ttpt : sj.second.keys_ttpt_) {
-      auto ttpt_i = ttpt_index{};
-      auto const it_sp =
-          it_sjp->second.stop_point_map_.lower_bound(ttpt.stop_point_ref);
-      utl::verify(it_sp != end(it_sjp->second.stop_point_map_),
-                  "missing time_table_passing_time: {}", ttpt.stop_point_ref);
-      auto const key_sp = std::string(it_sp->second.id_);
-      auto const it = b.s_m_.lower_bound(key_sp);
-      utl::verify(it != end(b.s_m_), "missing scheduled_stop_point: {}",
-                  key_sp);
-      // wichtig scheduled_ref
-      ttpt_i.schedulep_point_ref = it->first;
-      // TODO direction
-      ttpt_i.st_dir_ =
-          stations_direction{std::string(it->second.short_name_),
-                             std::string(it->second.short_name_),
-                             it->second.stop_point_.lat_,
-                             it->second.stop_point_.lon_,
-                             timezone,
-                             std::string(it->second.stop_point_.timezone_),
-                             it_sjp->second.direction_};
-      ttpt_i.in_allowed_ = it_sp->second.in_allowed_;
-      ttpt_i.out_allowed_ = it_sp->second.out_allowed_;
-      //  TODO is uint8_t richtig?
-      if (it->second.stop_point_.quay_.size() == 0) {
-        ttpt_i.quay_ = traffic_days.first;
-      } else {
-        ttpt_i.quay_ = begin(it->second.stop_point_.quay_)->data();
-      }
-      ttpt_v.push_back(ttpt_i);
-      // TODO eventuell ändern
-    }
+    auto const ttpt_ne = ttpt_need{sj.second.keys_ttpt_, it_sjp->second.direction_, traffic_days.first, b.s_m_, it_sjp->second.stop_point_map_, timezone};
+    get_ttpts(ttpt_ne, ttpt_v);
     sjp.times_v_ = times_v;
     sjp.ttpt_index_ = ttpt_v;
     sjp_m.push_back(sjp);
@@ -123,7 +84,7 @@ void create_stations_routes_services_fbs(
       stations_v.push_back(station);
       in_allowed_v.push_back(sta.in_allowed_);
       out_allowed_v.push_back(sta.out_allowed_);
-      fbs_stations.try_emplace(sta.schedulep_point_ref, station);
+      fbs_stations.try_emplace(sta.schedulep_point_ref_, station);
       // TODO Line_id
       auto const sec = build_sec{ele.category_, ele.provider_, ele.a_v_,
                                  std::string(""), direction};

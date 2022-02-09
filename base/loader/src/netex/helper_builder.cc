@@ -53,6 +53,41 @@ std::pair<std::string, std::string> get_valid_day_bits(
   return pair;
 }
 
+void get_ttpts(ttpt_need const& ttpt_need, std::vector<ttpt_index>& ttpt_v){
+  for (auto const& ttpt : ttpt_need.keys_ttpt_) {
+    auto ttpt_i = ttpt_index{};
+    auto const it_sp =
+        ttpt_need.stop_point_map_.lower_bound(ttpt.stop_point_ref);
+    utl::verify(it_sp != end(ttpt_need.stop_point_map_),
+                "missing time_table_passing_time: {}", ttpt.stop_point_ref);
+    auto const key_sp = std::string(it_sp->second.id_);
+    auto const it = ttpt_need.s_m_.lower_bound(key_sp);
+    utl::verify(it != end(ttpt_need.s_m_), "missing scheduled_stop_point: {}",
+                key_sp);
+    // wichtig scheduled_ref
+    ttpt_i.schedulep_point_ref_ = it->first;
+    // TODO direction
+    ttpt_i.st_dir_ =
+        stations_direction{std::string(it->second.short_name_),
+                           std::string(it->second.short_name_),
+                           it->second.stop_point_.lat_,
+                           it->second.stop_point_.lon_,
+                           ttpt_need.timezone_,
+                           std::string(it->second.stop_point_.timezone_),
+                           ttpt_need.direction_};
+    ttpt_i.in_allowed_ = it_sp->second.in_allowed_;
+    ttpt_i.out_allowed_ = it_sp->second.out_allowed_;
+    //  TODO is uint8_t richtig?
+    if (it->second.stop_point_.quay_.size() == 0) {
+      ttpt_i.quay_ = ttpt_need.traffic_days_;
+    } else {
+      ttpt_i.quay_ = begin(it->second.stop_point_.quay_)->data();
+    }
+    ttpt_v.push_back(ttpt_i);
+    // TODO eventuell ändern
+  }
+}
+
 void get_provider_operator_fbs(std::vector<std::string> const& lines,
                                std::map<std::string, line> const& l_m,
                                fbs64::Offset<Category>& category,

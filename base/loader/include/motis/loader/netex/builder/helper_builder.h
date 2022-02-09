@@ -49,11 +49,20 @@ struct ttpt_index {
   uint8_t in_allowed_;
   uint8_t out_allowed_;
   std::string quay_;
-  std::string schedulep_point_ref;
+  std::string schedulep_point_ref_;
+};
+struct ttpt_need {
+  std::vector<time_table_passing_time> keys_ttpt_;
+  std::string direction_;
+  std::string traffic_days_;
+  std::map<std::string, scheduled_points> s_m_;
+  std::map<std::string, stop_point_in_journey_pattern> stop_point_map_;
+  fbs64::Offset<Timezone> timezone_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&, std::string const&);
 // vector, normalerweise nur 1 eintrag.
+void get_ttpts(ttpt_need const&, std::vector<ttpt_index>&);
 std::pair<std::string, std::string> get_valid_day_bits(
     std::map<std::string, ids> const&, std::vector<std::string> const&);
 // 3 const noch ok oder auch über struct?
