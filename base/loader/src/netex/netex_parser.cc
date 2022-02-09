@@ -82,51 +82,7 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey_interchange(d, sji_v);
       // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
-      auto season_m = std::map<std::string, season>{};
-      for(auto const& ele : days_m) {
-        auto const it_uic = ele.second.uic_.lower_bound(ele.second.uic_id_);
-        utl::verify(it_uic != end(ele.second.uic_),
-                    "missing time_table_passing_time: {}", ele.second.uic_id_);
-        auto const valid_day_bits = std::string(it_uic->second.valid_day_bits_).c_str();
-        auto start = -1;
-        auto end = -1;
-        auto sea = season{};
-        for(auto i = 0; i< strlen(valid_day_bits); i++) {
-          if(valid_day_bits[i] == '1' && i == 0) {
-            start = i;
-          } else if(valid_day_bits[i] == '1' && i == (strlen(valid_day_bits) - 1)) {
-            end = i;
-          } else {
-            if(start == -1 && valid_day_bits[i] == '1') {
-              start = i;
-            } else if(end == -1 && valid_day_bits[i] == '1') {
-              end = i;
-            }
-          }
-        }
-        sea.day_idx_first_day_ = start;
-        sea.day_idx_last_day_ = end;
-        season_m.try_emplace(ele.first, sea);
-      }
-      /*for (auto const& ele :
-           d.select_nodes("/PublicationDelivery/dataObjects/"
-                          "CompositeFrame/FrameDefaults/DefaultLocale")) {
-        auto const default_timezone_name =
-            std::string(ele.node().child("TimeZone").text().as_string());
-        auto current_time = std::chrono::system_clock::now();
-        auto utc = date::zoned_time{"America/Los_Angeles", current_time};
-        auto local = date::zoned_time{default_timezone_name, current_time};
-        auto offset =
-            date::format("%T\n", local.get_local_time() - utc.get_local_time());
-        auto t = offset.substr(0, 3);
-        std::cout << t;
-        // in stunden für motis zu minuten transferieren, siehe docu von
-        // delfi
-        auto const default_offset =
-            ele.node().child("SummerTimeZoneOffset").text().as_int() / 60;
-        auto const default_general_offset =
-            ele.node().child("TimeZoneOffset").text().as_int() / 60;
-      }*/
+      auto const season_m = get_season_times(days_m);
 
       auto b = build{};
       b.l_m_ = l_m;
