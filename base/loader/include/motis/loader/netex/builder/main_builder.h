@@ -31,7 +31,7 @@ struct build {
   std::map<std::string, passenger_assignments> p_m_;
 
   std::map<std::string, ids> days_m_;
-
+  std::map<std::string, season> seasons_m_;
   std::map<std::string, service_journey_pattern> sjp_m_;
   std::map<std::string, service_journey> sj_m_;
 

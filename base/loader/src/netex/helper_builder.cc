@@ -16,17 +16,6 @@
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
-int time_realtive_to_0(std::string const& time, std::string const& start) {
-  auto tm_start = std::tm{};
-  auto ti_start = std::istringstream(std::string(start));
-  ti_start >> std::get_time(&tm_start, "%h%m%s");
-  auto tm_0 = std::tm{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  auto tm_t = std::tm{};
-  auto ti = std::istringstream(std::string(time));
-  ti >> std::get_time(&tm_t, "%h%m%s");
-  auto const seconds = std::difftime(mktime(&tm_t), mktime(&tm_0));
-  return seconds;
-}
 int time_realtive_to_0_season(std::string const& time,
                               std::string const& start) {
   auto tm_start = std::tm{};
@@ -121,17 +110,17 @@ void get_service_times(time_table_passing_time const& ttpt,
   if (times_v.size() == 0 && std::string_view(ttpt.arr_time) == "") {
     // first time
     times_v.push_back(-1);
-    auto const time = time_realtive_to_0(ttpt.dep_time, start_time);
+    auto const time = time_realtive_to_0_season(ttpt.dep_time, start_time);
     times_v.push_back(time);
   } else if (std::string_view(ttpt.dep_time) == "") {
     // berechne arr time to 0
-    auto const time = time_realtive_to_0(ttpt.arr_time, start_time);
+    auto const time = time_realtive_to_0_season(ttpt.arr_time, start_time);
     times_v.push_back(time);
     times_v.push_back(-1);
   } else {
-    auto const time = time_realtive_to_0(ttpt.arr_time, start_time);
+    auto const time = time_realtive_to_0_season(ttpt.arr_time, start_time);
     times_v.push_back(time);
-    auto const time2 = time_realtive_to_0(ttpt.dep_time, start_time);
+    auto const time2 = time_realtive_to_0_season(ttpt.dep_time, start_time);
     times_v.push_back(time2);
   }
 }

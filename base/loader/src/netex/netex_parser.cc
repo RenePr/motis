@@ -3,6 +3,8 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <sstream>
+#include <string.h>
 #include "date/date.h"
 #include "date/tz.h"
 
@@ -55,7 +57,7 @@ void netex_parser::parse(fs::path const& p,
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
-
+ // --import.data_dir /Users/reneprinz/Downloads --import.paths schedule:/Users/reneprinz/Downloads/20211029_fahrplaene_gesamtdeutschland.zip --dataset.write_serialized=false
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
@@ -80,6 +82,32 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey_interchange(d, sji_v);
       // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
+      auto season_m = std::map<std::string, season>{};
+      for(auto const& ele : days_m) {
+        auto const it_uic = ele.second.uic_.lower_bound(ele.second.uic_id_);
+        utl::verify(it_uic != end(ele.second.uic_),
+                    "missing time_table_passing_time: {}", ele.second.uic_id_);
+        auto const valid_day_bits = std::string(it_uic->second.valid_day_bits_).c_str();
+        auto start = -1;
+        auto end = -1;
+        auto sea = season{};
+        for(auto i = 0; i< strlen(valid_day_bits); i++) {
+          if(valid_day_bits[i] == '1' && i == 0) {
+            start = i;
+          } else if(valid_day_bits[i] == '1' && i == (strlen(valid_day_bits) - 1)) {
+            end = i;
+          } else {
+            if(start == -1 && valid_day_bits[i] == '1') {
+              start = i;
+            } else if(end == -1 && valid_day_bits[i] == '1') {
+              end = i;
+            }
+          }
+        }
+        sea.day_idx_first_day_ = start;
+        sea.day_idx_last_day_ = end;
+        season_m.try_emplace(ele.first, sea);
+      }
       /*for (auto const& ele :
            d.select_nodes("/PublicationDelivery/dataObjects/"
                           "CompositeFrame/FrameDefaults/DefaultLocale")) {
@@ -108,6 +136,7 @@ void netex_parser::parse(fs::path const& p,
       b.sjp_m_ = sjp_m;
       b.sj_m_ = sj_m;
       b.days_m_ = days_m;
+      b.seasons_m_ = season_m;
       b.file_ = z.current_file_name();
       auto sjpp = std::vector<service_journey_parse>{};
       build_fbs(b, sjpp, fbb);
