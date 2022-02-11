@@ -13,8 +13,26 @@
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
-int time_realtive_to_0_season(std::string const& time,
-                              std::string const& start) {
+int time_realtive_to_0_season(std::string const& start) {
+  if (std::string_view(start) == "") {
+    return 0;
+  } else {
+    auto const sec = time(NULL);
+    auto const timeinfo = localtime(&sec);
+    auto tm_start = *timeinfo;
+    auto is_start = std::istringstream(std::string(start));
+    is_start >> std::get_time(&tm_start, "%H:%M:%S");
+    auto const t_start = std::mktime(&tm_start);
+    auto tm_0 = *timeinfo;
+    tm_0.tm_sec = 0;
+    tm_0.tm_min = 0;
+    tm_0.tm_hour = 0;
+    auto const t_0 = std::mktime(&tm_0);
+    return std::difftime(t_start, t_0);
+  }
+}
+// TODO anpassen
+int time_realtive_to_0(std::string const& time, std::string const& start) {
   auto tm_start = std::tm{};
   auto ti_start = std::istringstream(std::string(start));
   ti_start >> std::get_time(&tm_start, "%Y-%m-%d%Th%m%s");
@@ -141,9 +159,9 @@ void get_service_times(time_table_passing_time const& ttpt,
   if (times_v.size() == 0 && std::string_view(ttpt.arr_time_) == "") {
     // first time
     times_v.push_back(-1);
-    auto const time = time_realtive_to_0_season(ttpt.dep_time_, start_time);
-    times_v.push_back(time);
-  } else if (std::string_view(ttpt.dep_time_) == "") {
+    // auto const time = time_realtive_to_0_season(ttpt.dep_time_, start_time);
+    // times_v.push_back(time);
+  } /*else if (std::string_view(ttpt.dep_time_) == "") {
     // berechne arr time to 0
     auto const time = time_realtive_to_0_season(ttpt.arr_time_, start_time);
     times_v.push_back(time);
@@ -153,7 +171,7 @@ void get_service_times(time_table_passing_time const& ttpt,
     times_v.push_back(time);
     auto const time2 = time_realtive_to_0_season(ttpt.dep_time_, start_time);
     times_v.push_back(time2);
-  }
+  }*/
 }
 void get_section_fbs(build_sec const& sec, fbs64::Offset<Section>& section,
                      fbs64::FlatBufferBuilder& fbb) {

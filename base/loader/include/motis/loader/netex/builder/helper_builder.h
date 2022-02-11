@@ -60,7 +60,7 @@ struct ttpt_need {
   fbs64::Offset<Timezone> timezone_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
-int time_realtive_to_0_season(std::string const&, std::string const&);
+int time_realtive_to_0_season(std::string const&);
 // vector, normalerweise nur 1 eintrag.
 void get_ttpts(ttpt_need const&, std::vector<ttpt_index>&);
 std::pair<std::string, std::string> get_valid_day_bits(

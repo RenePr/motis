@@ -42,9 +42,9 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     auto const ttpt_start = begin(sj.second.keys_ttpt_);
     auto const ttpt_stop = end(sj.second.keys_ttpt_);
     auto const minutes_a_m_f_d =
-        time_realtive_to_0_season(ttpt_start->dep_time_, ttpt_start->dep_time_);
+        time_realtive_to_0_season(ttpt_start->dep_time_);
     auto const minutes_a_m_l_d =
-        time_realtive_to_0_season(ttpt_stop->arr_time_, ttpt_stop->arr_time_);
+        time_realtive_to_0_season(ttpt_stop->arr_time_);
     auto const season =
         CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d,
                      it_sea->second.minutes_after_midnight_first_day_,
@@ -97,7 +97,8 @@ void create_stations_routes_services_fbs(
       auto section = fbs64::Offset<Section>{};
       get_section_fbs(sec, section, fbb);
       sections_v.push_back(section);
-      auto const track = CreateTrack(fbb, to_fbs_string(fbb, std::string("")),
+      auto const test = std::string("");
+      auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
                                      to_fbs_string(fbb, sta.quay_));
       tracks_v.push_back(track);
     }
