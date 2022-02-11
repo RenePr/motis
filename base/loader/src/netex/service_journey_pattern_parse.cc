@@ -29,7 +29,6 @@ void parse_service_journey_pattern(
           n.node().child("Notice").child("Text").text().as_string());
       n_a.public_code_ = std::string(
           n.node().child("Notice").child("PublicCode").text().as_string());
-      attribute_vec.push_back(n_a);
       n_a.start_point_in_journey_pattern_ =
           std::string(n.node()
                           .child("StartPointInPatternRef")
@@ -37,7 +36,7 @@ void parse_service_journey_pattern(
                           .as_string());
       n_a.stop_point_in_journey_pattern_ = std::string(
           n.node().child("EndPointInPatternRef").attribute("ref").as_string());
-
+      attribute_vec.push_back(n_a);
     }  // NoticeAssignment
     sjps.notice_assignments_ = attribute_vec;
     auto l_m = std::vector<std::string>{};

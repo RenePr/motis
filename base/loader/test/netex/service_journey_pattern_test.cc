@@ -45,10 +45,6 @@ TEST(service_journey_pattern_parse, service_journey_p) {
         std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
                              .notice_assignments_.front()
                              .text_));
-    std::cout << sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
-                     .notice_assignments_.front()
-                     .start_point_in_journey_pattern_
-              << std::endl;
     ASSERT_TRUE(
         std::string_view("DE::StopPointInJourneyPattern:105870562_1_0::") ==
         std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
@@ -61,6 +57,10 @@ TEST(service_journey_pattern_parse, service_journey_p) {
                              .stop_point_in_journey_pattern_));
     ASSERT_TRUE(
         1 == sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").lines_.size());
+    ASSERT_TRUE(
+        std::string_view("DE::Line:138143::") ==
+        std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                             .lines_.front()));
     // TODO checken
     /*ASSERT_TRUE(371 ==
                 sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").name_);*/
