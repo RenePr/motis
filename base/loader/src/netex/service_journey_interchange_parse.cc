@@ -15,7 +15,8 @@ namespace motis::loader::netex {
 void parse_service_journey_interchange(
     xml::xml_document& d, std::vector<service_journey_interchange>& sji_m) {
   for (auto const sji :
-       d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/"
+       d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/"
+                      "TimetableFrame/"
                       "journeyInterchanges/ServiceJourneyInterchange")) {
     auto sji_this = service_journey_interchange{};
     // TODO is_seated?

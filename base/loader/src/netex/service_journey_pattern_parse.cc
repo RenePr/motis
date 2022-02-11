@@ -23,7 +23,7 @@ void parse_service_journey_pattern(
         sjp.node().child("DirectionRef").attribute("ref").as_string());
     auto attribute_vec = std::vector<notice_assignment>{};
     for (auto const& n :
-         sjp.node().select_nodes("//noticeAssignments/NoticeAssignment")) {
+         sjp.node().select_nodes(".//noticeAssignments/NoticeAssignment")) {
       auto n_a = notice_assignment{};
       n_a.text_ = std::string(
           n.node().child("Notice").child("Text").text().as_string());
@@ -36,12 +36,12 @@ void parse_service_journey_pattern(
                           .attribute("ref")
                           .as_string());
       n_a.stop_point_in_journey_pattern_ = std::string(
-          n.node().child("StopPointInPatternRef").attribute("ref").as_string());
+          n.node().child("EndPointInPatternRef").attribute("ref").as_string());
 
     }  // NoticeAssignment
     sjps.notice_assignments_ = attribute_vec;
     auto l_m = std::vector<std::string>{};
-    for (auto const& l : sjp.node().select_nodes("//RouteView/LineRef")) {
+    for (auto const& l : sjp.node().select_nodes(".//RouteView/LineRef")) {
       auto const key_l = std::string(l.node().attribute("ref").as_string());
       l_m.push_back(key_l);
     }
@@ -49,7 +49,7 @@ void parse_service_journey_pattern(
     auto stop_point_map =
         std::map<std::string, stop_point_in_journey_pattern>{};
     for (auto const& sp : sjp.node().select_nodes(
-             "//pointsInSequence/StopPointInJourneyPattern")) {
+             ".//pointsInSequence/StopPointInJourneyPattern")) {
       auto const key = std::string(sp.node().attribute("id").as_string());
       auto stopPointInJourneyPattern = stop_point_in_journey_pattern{};
       stopPointInJourneyPattern.id_ =

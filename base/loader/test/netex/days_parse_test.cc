@@ -44,6 +44,13 @@ TEST(days_parse, test1) {
     ASSERT_FALSE(days.at("DE::DayType:128682::").uic_.at(key2).to_date_ == valid_bits);
 
     ASSERT_TRUE(days.at("DE::DayType:128682::").uic_.size() == days.at("DE::DayType:128682::").day_.size());
+
+    auto const seasons_m = get_season_times(days);
+    ASSERT_TRUE(11 == seasons_m.size());
+    ASSERT_TRUE(seasons_m.at("DE::DayType:128682::").day_idx_first_day_ == 0);
+    ASSERT_TRUE(seasons_m.at("DE::DayType:128682::").day_idx_last_day_ == 56);
+    ASSERT_TRUE(seasons_m.at("DE::DayType:128682::").minutes_after_midnight_last_day_ == 0);
+    ASSERT_TRUE(seasons_m.at("DE::DayType:128682::").minutes_after_midnight_first_day_ == 0);
   }
   catch(std::exception const& e) {
 

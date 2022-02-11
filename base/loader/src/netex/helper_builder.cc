@@ -1,11 +1,8 @@
 #include "motis/loader/netex/builder/helper_builder.h"
 
-#include <chrono>
 #include <iostream>
 #include <map>
 #include <sstream>
-#include "date/date.h"
-#include "date/tz.h"
 #include "time.h"
 
 #include "motis/schedule-format/Schedule_generated.h"
@@ -53,13 +50,13 @@ std::pair<std::string, std::string> get_valid_day_bits(
   return pair;
 }
 
-void get_ttpts(ttpt_need const& ttpt_need, std::vector<ttpt_index>& ttpt_v){
+void get_ttpts(ttpt_need const& ttpt_need, std::vector<ttpt_index>& ttpt_v) {
   for (auto const& ttpt : ttpt_need.keys_ttpt_) {
     auto ttpt_i = ttpt_index{};
     auto const it_sp =
-        ttpt_need.stop_point_map_.lower_bound(ttpt.stop_point_ref);
+        ttpt_need.stop_point_map_.lower_bound(ttpt.stop_point_ref_);
     utl::verify(it_sp != end(ttpt_need.stop_point_map_),
-                "missing time_table_passing_time: {}", ttpt.stop_point_ref);
+                "missing time_table_passing_time: {}", ttpt.stop_point_ref_);
     auto const key_sp = std::string(it_sp->second.id_);
     auto const it = ttpt_need.s_m_.lower_bound(key_sp);
     utl::verify(it != end(ttpt_need.s_m_), "missing scheduled_stop_point: {}",
@@ -84,7 +81,6 @@ void get_ttpts(ttpt_need const& ttpt_need, std::vector<ttpt_index>& ttpt_v){
       ttpt_i.quay_ = begin(it->second.stop_point_.quay_)->data();
     }
     ttpt_v.push_back(ttpt_i);
-    // TODO eventuell ändern
   }
 }
 
@@ -142,20 +138,20 @@ void get_service_times(time_table_passing_time const& ttpt,
                        std::string const& start_time,
                        std::vector<int>& times_v) {
   // TODO in seconds?
-  if (times_v.size() == 0 && std::string_view(ttpt.arr_time) == "") {
+  if (times_v.size() == 0 && std::string_view(ttpt.arr_time_) == "") {
     // first time
     times_v.push_back(-1);
-    auto const time = time_realtive_to_0_season(ttpt.dep_time, start_time);
+    auto const time = time_realtive_to_0_season(ttpt.dep_time_, start_time);
     times_v.push_back(time);
-  } else if (std::string_view(ttpt.dep_time) == "") {
+  } else if (std::string_view(ttpt.dep_time_) == "") {
     // berechne arr time to 0
-    auto const time = time_realtive_to_0_season(ttpt.arr_time, start_time);
+    auto const time = time_realtive_to_0_season(ttpt.arr_time_, start_time);
     times_v.push_back(time);
     times_v.push_back(-1);
   } else {
-    auto const time = time_realtive_to_0_season(ttpt.arr_time, start_time);
+    auto const time = time_realtive_to_0_season(ttpt.arr_time_, start_time);
     times_v.push_back(time);
-    auto const time2 = time_realtive_to_0_season(ttpt.dep_time, start_time);
+    auto const time2 = time_realtive_to_0_season(ttpt.dep_time_, start_time);
     times_v.push_back(time2);
   }
 }

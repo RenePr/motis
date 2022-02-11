@@ -1,10 +1,12 @@
 #include "motis/loader/netex/netex_parser.h"
 
+#include <string.h>
+#include <chrono>
 #include <cstring>
 #include <iostream>
-#include <vector>
 #include <sstream>
-#include <string.h>
+#include <thread>
+#include <vector>
 #include "date/date.h"
 #include "date/tz.h"
 
@@ -27,6 +29,7 @@
 #include "motis/loader/netex/service_journey_interchange/service_journey_interchange_parse.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern_parse.h"
+#include "motis/loader/netex/verfiry_netex_checker.h"
 #include "motis/loader/util.h"
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -57,7 +60,13 @@ void netex_parser::parse(fs::path const& p,
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
- // --import.data_dir /Users/reneprinz/Downloads --import.paths schedule:/Users/reneprinz/Downloads/20211029_fahrplaene_gesamtdeutschland.zip --dataset.write_serialized=false
+  // --import.data_dir /Users/reneprinz/Downloads --import.paths
+  // schedule:/Users/reneprinz/Downloads/20211029_fahrplaene_gesamtdeutschland.zip
+  // --dataset.write_serialized=false
+  //--import.data_dir /Users/reneprinz/Downloads /Applications/motis
+  //--import.paths
+  // schedule:/Users/reneprinz/Downloads/NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029.zip
+  //--dataset.write_serialized=false
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
@@ -67,8 +76,8 @@ void netex_parser::parse(fs::path const& p,
                                    file->size());
 
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      // parse
-      // 4 noch ok oder in struct?
+      // TODO noch implementieren
+      verfiy_xml_header(d);
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto d_m = std::map<std::string, direction>{};
@@ -94,6 +103,7 @@ void netex_parser::parse(fs::path const& p,
       b.days_m_ = days_m;
       b.seasons_m_ = season_m;
       b.file_ = z.current_file_name();
+      verfiy_build(b);
       auto sjpp = std::vector<service_journey_parse>{};
       build_fbs(b, sjpp, fbb);
       auto services = std::map<std::string, fbs64::Offset<Service>>{};
@@ -102,6 +112,8 @@ void netex_parser::parse(fs::path const& p,
           output_services, fbb);
       create_rule_service(sji_v, output_services, fbs_stations, rule_services,
                           fbb);
+      std::this_thread::sleep_until(std::chrono::system_clock::now() +
+                                    std::chrono::seconds(1));
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {

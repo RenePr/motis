@@ -32,29 +32,54 @@ TEST(service_journey_pattern_parse, service_journey_p) {
         std::string_view("DE::Direction:H::") ==
         std::string_view(
             sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").direction_));
+    ASSERT_TRUE(1 == sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                         .notice_assignments_.size());
     ASSERT_TRUE(
-        1 ==
-            sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").notice_assignments_.size());
+        std::string_view("DIPURL") ==
+        std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                             .notice_assignments_.front()
+                             .public_code_));
     ASSERT_TRUE(
-        1 ==
-        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").lines_.size());
-    //TODO checken
+        std::string_view(
+            "DELFI-Anreicherungs-URL : https://www.rmv.de/delfi-passive") ==
+        std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                             .notice_assignments_.front()
+                             .text_));
+    std::cout << sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                     .notice_assignments_.front()
+                     .start_point_in_journey_pattern_
+              << std::endl;
     ASSERT_TRUE(
-        371 ==
-        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").name_);
+        std::string_view("DE::StopPointInJourneyPattern:105870562_1_0::") ==
+        std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                             .notice_assignments_.front()
+                             .start_point_in_journey_pattern_));
+    ASSERT_TRUE(
+        std::string_view("DE::StopPointInJourneyPattern:105870562_1_11::") ==
+        std::string_view(sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                             .notice_assignments_.front()
+                             .stop_point_in_journey_pattern_));
+    ASSERT_TRUE(
+        1 == sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").lines_.size());
+    // TODO checken
+    /*ASSERT_TRUE(371 ==
+                sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").name_);*/
 
-    ASSERT_TRUE(
-        1 ==
-        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").stop_point_map_.size());
+    ASSERT_TRUE(12 == sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                          .stop_point_map_.size());
     ASSERT_TRUE(
         std::string_view("DE::ScheduledStopPoint:100764207_123_::") ==
-        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").stop_point_map_.at("DE::StopPointInJourneyPattern:105870567_1_0::").id_);
-    ASSERT_TRUE(
-        true ==
-        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").stop_point_map_.at("DE::StopPointInJourneyPattern:105870567_1_0::").in_allowed_);
-    ASSERT_TRUE(
-        true ==
-        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::").stop_point_map_.at("DE::StopPointInJourneyPattern:105870567_1_0::").out_allowed_);
+        sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+            .stop_point_map_.at("DE::StopPointInJourneyPattern:105870567_1_0::")
+            .id_);
+    ASSERT_TRUE(true == sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                            .stop_point_map_
+                            .at("DE::StopPointInJourneyPattern:105870567_1_0::")
+                            .in_allowed_);
+    ASSERT_TRUE(true == sjp_m.at("DE::ServiceJourneyPattern:105870562_0::")
+                            .stop_point_map_
+                            .at("DE::StopPointInJourneyPattern:105870567_1_0::")
+                            .out_allowed_);
   } catch (std::exception& e) {
   }
 }

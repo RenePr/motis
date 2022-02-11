@@ -17,7 +17,7 @@ std::map<std::string, line> parse_line(
     std::map<std::string, Operator_Authority> const& operator_map) {
   auto line_map = std::map<std::string, line>{};
   for (auto const& line_get :
-       service_jorney.node().select_nodes("//lines/Line")) {
+       service_jorney.node().select_nodes(".//lines/Line")) {
     auto const id = std::string(line_get.node().attribute("id").as_string());
     auto const operator_id = std::string(
         line_get.node().child("AuthorityRef").attribute("ref").as_string());
@@ -42,7 +42,8 @@ std::map<std::string, line> parse_line(
 std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d) {
   auto operator_map = std::map<std::string, Operator_Authority>{};
   for (auto const& operator_get :
-       d.select_nodes("//dataObjects/CompositeFrame/frames/ResourceFrame/"
+       d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/"
+                      "ResourceFrame/"
                       "organisations/Operator")) {
     auto const id =
         std::string(operator_get.node().attribute("id").as_string());
@@ -65,7 +66,7 @@ std::map<std::string, direction> parse_direction(
     xml::xpath_node const& service_jorney) {
   auto direction_map = std::map<std::string, direction>{};
   for (auto const& direction_get :
-       service_jorney.node().select_nodes("//directions/Direction")) {
+       service_jorney.node().select_nodes(".//directions/Direction")) {
     auto const id =
         std::string(direction_get.node().attribute("id").as_string());
     auto dir = direction{};
@@ -83,7 +84,7 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
       std::map<std::string, passenger_assignments>{};
   auto p_a = passenger_assignments{};
   for (auto const& passenger_assignments : service_jorney.node().select_nodes(
-           "//stopAssignments/PassengerStopAssignment")) {
+           ".//stopAssignments/PassengerStopAssignment")) {
     auto const scheduled_place = passenger_assignments.node()
                                      .child("ScheduledStopPointRef")
                                      .attribute("ref")
@@ -107,7 +108,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
   // hinzufügen
   auto scheduled_stops_map = std::map<std::string, scheduled_points>{};
   for (auto const& scheduled_points_get : service_jorney.node().select_nodes(
-           "//scheduledStopPoints/ScheduledStopPoint")) {
+           ".//scheduledStopPoints/ScheduledStopPoint")) {
     auto const id =
         std::string(scheduled_points_get.node().attribute("id").as_string());
     auto points = scheduled_points{};
@@ -154,7 +155,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
                            .text()
                            .as_string();
       auto quay_v = std::vector<std::string>{};
-      for (auto const& quay : stop_points.node().select_nodes("//Quay")) {
+      for (auto const& quay : stop_points.node().select_nodes(".//Quay")) {
         auto const quay_id =
             std::string_view(quay.node().attribute("id").as_string());
         auto const name =

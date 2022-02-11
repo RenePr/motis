@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <map>
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -16,7 +16,7 @@ namespace motis::loader::netex {
 void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
                fbs64::FlatBufferBuilder& fbb) {
   for (auto const& sj : b.sj_m_) {
-    std::cout << sj.second.key_sjp_ << sj.first << std::endl;
+    // std::cout << sj.second.key_sjp_ << sj.first << std::endl;
     auto sjp = service_journey_parse{};
     sjp.key_sj_ = sj.second.key_sj_;
     auto const it_sjp = b.sjp_m_.lower_bound(sj.second.key_sjp_);
@@ -35,29 +35,35 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     sjp.provider_ = provider;
     auto const traffic_days =
         get_valid_day_bits(b.days_m_, sj.second.keys_day_);
-    //TODO mehr als ein key möglich
+    // TODO mehr als ein key möglich
     auto const day_type = sj.second.keys_day_.front();
-    auto const it_sea =b.seasons_m_.lower_bound(day_type);
-    utl::verify(it_sea != end(b.seasons_m_), "missing seasons: {}",
-                day_type);
+    auto const it_sea = b.seasons_m_.lower_bound(day_type);
+    utl::verify(it_sea != end(b.seasons_m_), "missing seasons: {}", day_type);
     auto const ttpt_start = begin(sj.second.keys_ttpt_);
     auto const ttpt_stop = end(sj.second.keys_ttpt_);
     auto const minutes_a_m_f_d =
-        time_realtive_to_0_season(ttpt_start->dep_time, ttpt_start->dep_time);
-    // TODO change auauff last
+        time_realtive_to_0_season(ttpt_start->dep_time_, ttpt_start->dep_time_);
     auto const minutes_a_m_l_d =
-        time_realtive_to_0_season(ttpt_stop->arr_time, ttpt_stop->arr_time);
-    auto const season = CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d, it_sea->second.minutes_after_midnight_first_day_, it_sea->second.minutes_after_midnight_last_day_);
-    // general_offset vs offset? Unterschied?
+        time_realtive_to_0_season(ttpt_stop->arr_time_, ttpt_stop->arr_time_);
+    auto const season =
+        CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d,
+                     it_sea->second.minutes_after_midnight_first_day_,
+                     it_sea->second.minutes_after_midnight_last_day_);
+    // TODO generell offset = winterzeit unterschied zu gmt so korrekt
     auto const timezone = CreateTimezone(fbb, 120, season);
     // TODO times_v und ttpt_v zusammen oder getrennt?
     auto times_v = std::vector<int>{};
-    auto start_time = begin(sj.second.keys_ttpt_)->arr_time;
+    auto start_time = begin(sj.second.keys_ttpt_)->arr_time_;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       get_service_times(ttpt, start_time, times_v);
     }
     auto ttpt_v = std::vector<ttpt_index>{};
-    auto const ttpt_ne = ttpt_need{sj.second.keys_ttpt_, it_sjp->second.direction_, traffic_days.first, b.s_m_, it_sjp->second.stop_point_map_, timezone};
+    auto const ttpt_ne = ttpt_need{sj.second.keys_ttpt_,
+                                   it_sjp->second.direction_,
+                                   traffic_days.first,
+                                   b.s_m_,
+                                   it_sjp->second.stop_point_map_,
+                                   timezone};
     get_ttpts(ttpt_ne, ttpt_v);
     sjp.times_v_ = times_v;
     sjp.ttpt_index_ = ttpt_v;
@@ -122,7 +128,7 @@ void create_stations_routes_services_fbs(
     auto const st1 = std::string("123");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
     // string ctor has invalid argument
-    auto const service = CreateService(
+    /*auto const service = CreateService(
         fbb, route, to_fbs_string(fbb, st1),
         fbb.CreateVector(
             utl::to_vec(begin(sections_v), end(sections_v),
@@ -132,8 +138,8 @@ void create_stations_routes_services_fbs(
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
-        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));
-    services.try_emplace(ele.key_sj_, service);
+        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));*/
+    // services.try_emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(

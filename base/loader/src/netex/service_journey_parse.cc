@@ -12,9 +12,9 @@ namespace motis::loader::netex {
 
 void parse_service_journey(xml::xml_document& d,
                            std::map<std::string, service_journey>& sj_m) {
-  for (auto const& sj :
-       d.select_nodes("//dataObjects/CompositeFrame/frames/TimetableFrame/"
-                      "vehicleJourneys/ServiceJourney")) {
+  for (auto const& sj : d.select_nodes("/PublicationDelivery/dataObjects/"
+                                       "CompositeFrame/frames/TimetableFrame/"
+                                       "vehicleJourneys/ServiceJourney")) {
     auto const key_sj = std::string(sj.node().attribute("id").as_string());
     auto service_j = service_journey{};
     service_j.key_sj_ = key_sj;
@@ -25,28 +25,24 @@ void parse_service_journey(xml::xml_document& d,
 
     std::vector<std::string> keys_days;
     // TODO auslagern
-    for (auto const& d : sj.node().select_nodes("//dayTypes/DayTypeRef")) {
+    for (auto const& d : sj.node().select_nodes(".//dayTypes/DayTypeRef")) {
       auto const key = std::string(d.node().attribute("ref").as_string());
       keys_days.push_back(key);
     }  // DayTypes
     service_j.keys_day_ = keys_days;
     auto ttpt_v = std::vector<time_table_passing_time>{};
     for (auto const& tpt :
-         sj.node().select_nodes("//passingTimes/TimetabledPassingTime")) {
+         sj.node().select_nodes(".//passingTimes/TimetabledPassingTime")) {
       auto ttpt = time_table_passing_time{};
-      ttpt.stop_point_ref =
+      ttpt.stop_point_ref_ =
           std::string(tpt.node()
                           .child("StopPointInJourneyPatternRef")
                           .attribute("ref")
                           .as_string());
-      if (!tpt.node().child("DepartureTime").empty()) {
-        ttpt.arr_time =
-            std::string(tpt.node().child("DepartureTime").text().as_string());
-      }
-      if (!tpt.node().child("ArrivalTime").empty()) {
-        ttpt.dep_time =
-            std::string(tpt.node().child("ArrivalTime").text().as_string());
-      }
+      ttpt.arr_time_ =
+          std::string(tpt.node().child("ArrivalTime").text().as_string());
+      ttpt.dep_time_ =
+          std::string(tpt.node().child("DepartureTime").text().as_string());
       ttpt_v.push_back(ttpt);
 
     }  // TimetablePassingTime

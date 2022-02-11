@@ -8,9 +8,9 @@ namespace motis::loader::netex {
 struct station_sj {};
 
 struct time_table_passing_time {
-  std::string stop_point_ref;
-  std::string dep_time;
-  std::string arr_time;
+  std::string stop_point_ref_;
+  std::string dep_time_;
+  std::string arr_time_;
 };
 
 struct service_journey {
