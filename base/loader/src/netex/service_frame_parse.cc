@@ -27,12 +27,9 @@ std::map<std::string, line> parse_line(
         line_get.node().child("ShortName").text().as_string();
     line_parse.transport_mode_ =
         line_get.node().child("TransportMode").text().as_string();
-
     line_parse.id_ = id;
     if (operator_map.find(operator_id) != operator_map.end()) {
       line_parse.operator_ = operator_map.at(operator_id);
-    } else {
-      // keine Ref gefunden
     }
     line_map.try_emplace(id, line_parse);
   }
@@ -48,9 +45,7 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d) {
     auto const id =
         std::string(operator_get.node().attribute("id").as_string());
     auto operator_parse = Operator_Authority{};
-    // childs: PublicCode, Name, Shortname, LegalName, ContactDetails child Url,
-    // Organisation Type, Address
-    operator_parse.name_ = operator_get.node().child("Name").text().get();
+    operator_parse.name_ = operator_get.node().child("Name").text().as_string();
     operator_parse.short_name_ =
         operator_get.node().child("ShortName").text().as_string();
     operator_parse.legal_name_ =
@@ -89,14 +84,14 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
                                      .child("ScheduledStopPointRef")
                                      .attribute("ref")
                                      .as_string();
-    p_a.stop_point_id_ = std::string(passenger_assignments.node()
-                                         .child("StopPlaceRef")
-                                         .attribute("ref")
-                                         .as_string());
-    p_a.quay_id_ = std::string(passenger_assignments.node()
-                                   .child("QuayRef")
-                                   .attribute("ref")
-                                   .as_string());
+    p_a.stop_point_id_ = passenger_assignments.node()
+                             .child("StopPlaceRef")
+                             .attribute("ref")
+                             .as_string();
+    p_a.quay_id_ = passenger_assignments.node()
+                       .child("QuayRef")
+                       .attribute("ref")
+                       .as_string();
     passengers_assignment_map.try_emplace(scheduled_place, p_a);
   }
   return passengers_assignment_map;
@@ -104,8 +99,6 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
 
 std::map<std::string, scheduled_points> parse_scheduled_points(
     xml::xpath_node const& service_jorney, xml::xml_document& d) {
-  // TODO über PassengerStopAssignment -> StopPlace für latidude altidude
-  // hinzufügen
   auto scheduled_stops_map = std::map<std::string, scheduled_points>{};
   for (auto const& scheduled_points_get : service_jorney.node().select_nodes(
            ".//scheduledStopPoints/ScheduledStopPoint")) {

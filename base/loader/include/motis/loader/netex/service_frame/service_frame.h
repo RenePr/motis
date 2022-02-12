@@ -14,17 +14,16 @@ struct Operator_Authority {
 };
 struct line {
   int name_;
-  std::string_view short_name_;
+  std::string short_name_;
   // Todo Mabye enum?
-  std::string_view transport_mode_;
+  std::string transport_mode_;
   Operator_Authority operator_;
-
-  std::string_view id_;
+  std::string id_;
 };
 
 struct direction {
-  std::string_view name_;
-  std::string_view short_name_;
+  std::string name_;
+  std::string short_name_;
 };
 
 struct passenger_assignments {
@@ -33,27 +32,26 @@ struct passenger_assignments {
 };
 
 struct stop_point {
-  std::string_view key_;
-  std::string_view value_;
-  std::string_view name_;
+  std::string key_;
+  std::string value_;
+  std::string name_;
   double lon_;
   double lat_;
-  std::string_view timezone_;
+  std::string timezone_;
 
   std::vector<std::string> quay_;
 };
 
 struct scheduled_points {
-  std::string_view short_name_;
-  std::string_view public_code_;
-  std::string_view stop_type_;
-
+  std::string short_name_;
+  std::string public_code_;
+  std::string stop_type_;
   stop_point stop_point_;
 };
 
 struct notice {
-  std::string_view text_;
-  std::string_view code_;
+  std::string text_;
+  std::string code_;
 };
 
 }  // namespace motis::loader::netex

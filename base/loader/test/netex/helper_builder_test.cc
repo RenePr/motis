@@ -58,3 +58,39 @@ TEST(helper_builder_test, time_relative_to_0_season_same_wrong_format) {
     std::cout << e.what() << std::endl;
   }
 }
+
+TEST(helper_builder_test, time_relative_to_0) {
+  try {
+    auto const time = std::string("06:01:00");
+    auto const start_time = std::string("06:00:00");
+    auto const sec = time_realtive_to_0(time, start_time);
+    ASSERT_TRUE(sec == 60);
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+  }
+}
+
+TEST(helper_builder_test, get_service_times) {
+  try {
+    auto ttpt = time_table_passing_time{};
+    ttpt.dep_time_ = std::string("06:01:00");
+    auto ttpt2 = time_table_passing_time{};
+    ttpt2.dep_time_ = std::string("06:05:00");
+    ttpt2.arr_time_ = std::string("06:05:00");
+    auto ttpt3 = time_table_passing_time{};
+    ttpt3.arr_time_ = std::string("06:10:00");
+    auto times_v = std::vector<int>{};
+    get_service_times(ttpt, ttpt.dep_time_, times_v);
+    get_service_times(ttpt2, ttpt.dep_time_, times_v);
+    get_service_times(ttpt3, ttpt.dep_time_, times_v);
+
+    ASSERT_TRUE(times_v.at(0) == -1);
+    ASSERT_TRUE(times_v.at(1) == 0);
+    ASSERT_TRUE(times_v.at(2) == 240);
+    ASSERT_TRUE(times_v.at(3) == 240);
+    ASSERT_TRUE(times_v.at(4) == 540);
+    ASSERT_TRUE(times_v.at(5) == -1);
+  } catch (std::exception& e) {
+    std::cout << e.what() << std::endl;
+  }
+}

@@ -18,10 +18,10 @@ void parse_service_journey(xml::xml_document& d,
     auto const key_sj = std::string(sj.node().attribute("id").as_string());
     auto service_j = service_journey{};
     service_j.key_sj_ = key_sj;
-    service_j.key_sjp_ = std::string(sj.node()
-                                         .child("ServiceJourneyPatternRef")
-                                         .attribute("ref")
-                                         .as_string());
+    service_j.key_sjp_ = sj.node()
+                             .child("ServiceJourneyPatternRef")
+                             .attribute("ref")
+                             .as_string();
 
     std::vector<std::string> keys_days;
     // TODO auslagern
@@ -34,15 +34,12 @@ void parse_service_journey(xml::xml_document& d,
     for (auto const& tpt :
          sj.node().select_nodes(".//passingTimes/TimetabledPassingTime")) {
       auto ttpt = time_table_passing_time{};
-      ttpt.stop_point_ref_ =
-          std::string(tpt.node()
-                          .child("StopPointInJourneyPatternRef")
-                          .attribute("ref")
-                          .as_string());
-      ttpt.arr_time_ =
-          std::string(tpt.node().child("ArrivalTime").text().as_string());
-      ttpt.dep_time_ =
-          std::string(tpt.node().child("DepartureTime").text().as_string());
+      ttpt.stop_point_ref_ = tpt.node()
+                                 .child("StopPointInJourneyPatternRef")
+                                 .attribute("ref")
+                                 .as_string();
+      ttpt.arr_time_ = tpt.node().child("ArrivalTime").text().as_string();
+      ttpt.dep_time_ = tpt.node().child("DepartureTime").text().as_string();
       ttpt_v.push_back(ttpt);
 
     }  // TimetablePassingTime

@@ -35,8 +35,10 @@ TEST(service_frame_parse, line) {
     std::string_view mode = "bus";
     ASSERT_TRUE(l_m.size() == 1);
     ASSERT_TRUE(l_m.at("DE::Line:138143::").name_ == 371);
-    ASSERT_TRUE(l_m.at("DE::Line:138143::").short_name_ == name);
-    ASSERT_TRUE(l_m.at("DE::Line:138143::").transport_mode_ == mode);
+    ASSERT_TRUE(std::string_view(l_m.at("DE::Line:138143::").short_name_) ==
+                name);
+    ASSERT_TRUE(std::string_view(l_m.at("DE::Line:138143::").transport_mode_) ==
+                mode);
 
   } catch (std::exception const& e) {
   }
@@ -62,10 +64,12 @@ TEST(service_frame_parse, direction) {
     std::string_view name2 = "R";
     std::string_view short_name2 = "R";
     ASSERT_TRUE(d_m.size() == 2);
-    ASSERT_TRUE(d_m.at("DE::Direction:H::").name_ == name);
-    ASSERT_TRUE(d_m.at("DE::Direction:H::").short_name_ == short_name);
-    ASSERT_TRUE(d_m.at("DE::Direction:R::").name_ == name2);
-    ASSERT_TRUE(d_m.at("DE::Direction:R::").short_name_ == short_name2);
+    ASSERT_TRUE(std::string_view(d_m.at("DE::Direction:H::").name_) == name);
+    ASSERT_TRUE(std::string_view(d_m.at("DE::Direction:H::").short_name_) ==
+                short_name);
+    ASSERT_TRUE(std::string_view(d_m.at("DE::Direction:R::").name_) == name2);
+    ASSERT_TRUE(std::string_view(d_m.at("DE::Direction:R::").short_name_) ==
+                short_name2);
   } catch (std::exception const& e) {
   }
 }
@@ -90,12 +94,17 @@ TEST(service_frame_parse, scheduled_points) {
     std::string_view public_code = "---trstr";
     std::string_view stop_type = "busStation";
     ASSERT_TRUE(s_m.size() == 103);
-    ASSERT_TRUE(s_m.at("DE::ScheduledStopPoint:100343104_123_::").short_name_ ==
-                short_name);
-    ASSERT_TRUE(s_m.at("DE::ScheduledStopPoint:100343104_123_::").stop_type_ ==
-                stop_type);
     ASSERT_TRUE(
-        s_m.at("DE::ScheduledStopPoint:100343104_123_::").public_code_ ==
+        std::string_view(
+            s_m.at("DE::ScheduledStopPoint:100343104_123_::").short_name_) ==
+        short_name);
+    ASSERT_TRUE(
+        std::string_view(
+            s_m.at("DE::ScheduledStopPoint:100343104_123_::").stop_type_) ==
+        stop_type);
+    ASSERT_TRUE(
+        std::string_view(
+            s_m.at("DE::ScheduledStopPoint:100343104_123_::").public_code_) ==
         public_code);
   } catch (std::exception const& e) {
   }

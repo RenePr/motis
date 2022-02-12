@@ -20,38 +20,47 @@ namespace xml = pugi;
 
 namespace motis::loader::netex {
 void verfiy_xml_header(xml::xml_document& d) {}
-void verfiy_build(build const& b) {
+bool verfiy_build(build const& b) {
   if (b.seasons_m_.empty()) {
     LOG(error) << "daytype empty: ";
     // throw std::exception("daytype empty: ");
+    return true;
   }
   if (b.days_m_.empty()) {
     LOG(error) << "daytype empty: ";
     // throw std::exception("daytype empty: ");
+    return true;
   }
   if (b.sj_m_.empty()) {
     LOG(error) << "no service journey: ";
     // throw std::exception("no service journey: ");
+    return true;
   }
   if (b.sjp_m_.empty()) {
     LOG(error) << "no service journey pattern ";
     // throw std::exception("no service journey pattern ");
+    return true;
   }
   if (b.l_m_.empty()) {
     LOG(error) << "no lines ";
     // throw std::exception("no lines ");
+    return true;
   }
   if (b.s_m_.empty()) {
     LOG(error) << "no scheduled point ";
     // throw std::exception("no scheduled point ");
+    return true;
   }
   if (b.p_m_.empty()) {
     LOG(error) << "no service journey pattern ";
     // throw std::exception("no service journey pattern ");
+    return true;
   }
   if (b.d_m_.empty()) {
     LOG(error) << "no direction ";
     // throw "no direction ";
+    return true;
   }
+  return false;
 }
 }  // namespace motis::loader::netex

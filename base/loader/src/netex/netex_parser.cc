@@ -74,7 +74,6 @@ void netex_parser::parse(fs::path const& p,
       xml::xml_document d;
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
-
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
       // TODO noch implementieren
       verfiy_xml_header(d);
@@ -92,7 +91,6 @@ void netex_parser::parse(fs::path const& p,
       // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
       auto const season_m = get_season_times(days_m);
-
       auto b = build{};
       b.l_m_ = l_m;
       b.s_m_ = s_m;
@@ -103,17 +101,23 @@ void netex_parser::parse(fs::path const& p,
       b.days_m_ = days_m;
       b.seasons_m_ = season_m;
       b.file_ = z.current_file_name();
-      verfiy_build(b);
-      auto sjpp = std::vector<service_journey_parse>{};
-      build_fbs(b, sjpp, fbb);
-      auto services = std::map<std::string, fbs64::Offset<Service>>{};
-      create_stations_routes_services_fbs(
-          sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
-          output_services, fbb);
-      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
-                          fbb);
-      std::this_thread::sleep_until(std::chrono::system_clock::now() +
-                                    std::chrono::seconds(1));
+      // std::cout << "After parse" << verfiy_build(b) << std::endl;
+      //  if (!verfiy_build(b)) {
+      if (false) {
+        auto sjpp = std::vector<service_journey_parse>{};
+        build_fbs(b, sjpp, fbb);
+        std::cout << "After build fbs" << std::endl;
+        auto services = std::map<std::string, fbs64::Offset<Service>>{};
+        create_stations_routes_services_fbs(
+            sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
+            output_services, fbb);
+        std::cout << "After create s_r_s fbs" << std::endl;
+        create_rule_service(sji_v, output_services, fbs_stations, rule_services,
+                            fbb);
+        std::cout << "After create fbs" << std::endl;
+        std::this_thread::sleep_until(std::chrono::system_clock::now() +
+                                      std::chrono::seconds(5));
+      }
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {

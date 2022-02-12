@@ -12,7 +12,6 @@ namespace xml = pugi;
 
 namespace motis::loader::netex {
 
-// TODO void noch verändern
 std::map<std::string, line> parse_line(
     xml::xpath_node const&, std::map<std::string, Operator_Authority> const&);
 

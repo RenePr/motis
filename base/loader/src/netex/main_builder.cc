@@ -69,6 +69,7 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     sjp.ttpt_index_ = ttpt_v;
     sjp_m.push_back(sjp);
   }
+  std::cout << "Here?" << std::endl;
 }
 void create_stations_routes_services_fbs(
     std::vector<service_journey_parse> const& sjpp,
@@ -129,7 +130,7 @@ void create_stations_routes_services_fbs(
     auto const st1 = std::string("123");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
     // string ctor has invalid argument
-    /*auto const service = CreateService(
+    auto const service = CreateService(
         fbb, route, to_fbs_string(fbb, st1),
         fbb.CreateVector(
             utl::to_vec(begin(sections_v), end(sections_v),
@@ -139,8 +140,8 @@ void create_stations_routes_services_fbs(
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
-        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));*/
-    // services.try_emplace(ele.key_sj_, service);
+        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));
+    services.try_emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(

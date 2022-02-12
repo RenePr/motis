@@ -32,26 +32,20 @@ int time_realtive_to_0_season(std::string const& start) {
   }
 }
 // TODO anpassen
-int time_realtive_to_0(std::string const& time, std::string const& start) {
-  auto tm_start = std::tm{};
+int time_realtive_to_0(std::string const& now_time, std::string const& start) {
+  if (std::string_view(now_time) == std::string_view(std::string("")) ||
+      std::string_view(start) == std::string_view(std::string(""))) {
+    return 0;
+  }
+  auto const sec = time(NULL);
+  auto const timeinfo = localtime(&sec);
+  auto tm_start = *timeinfo;
   auto ti_start = std::istringstream(std::string(start));
-  ti_start >> std::get_time(&tm_start, "%Y-%m-%d%Th%m%s");
-  auto tm_0 = std::tm{0,
-                      0,
-                      0,
-                      tm_start.tm_mday,
-                      tm_start.tm_mon,
-                      tm_start.tm_year,
-                      tm_start.tm_wday,
-                      tm_start.tm_yday,
-                      0,
-                      0,
-                      0};
-  auto tm_t = std::tm{};
-  auto ti = std::istringstream(std::string(time));
-  ti >> std::get_time(&tm_t, "%Y-%m-%d%Th%m%s");
-  auto const seconds = std::difftime(mktime(&tm_t), mktime(&tm_0));
-  return seconds;
+  ti_start >> std::get_time(&tm_start, "%H:%M:%S");
+  auto tm_t = *timeinfo;
+  auto ti = std::istringstream(std::string(now_time));
+  ti >> std::get_time(&tm_t, "%H:%M:%S");
+  return std::difftime(mktime(&tm_t), mktime(&tm_start));
 }
 std::pair<std::string, std::string> get_valid_day_bits(
     std::map<std::string, ids> const& days_map,
@@ -159,19 +153,19 @@ void get_service_times(time_table_passing_time const& ttpt,
   if (times_v.size() == 0 && std::string_view(ttpt.arr_time_) == "") {
     // first time
     times_v.push_back(-1);
-    // auto const time = time_realtive_to_0_season(ttpt.dep_time_, start_time);
-    // times_v.push_back(time);
-  } /*else if (std::string_view(ttpt.dep_time_) == "") {
+    auto const time = time_realtive_to_0(ttpt.dep_time_, start_time);
+    times_v.push_back(time);
+  } else if (std::string_view(ttpt.dep_time_) == "") {
     // berechne arr time to 0
-    auto const time = time_realtive_to_0_season(ttpt.arr_time_, start_time);
+    auto const time = time_realtive_to_0(ttpt.arr_time_, start_time);
     times_v.push_back(time);
     times_v.push_back(-1);
   } else {
-    auto const time = time_realtive_to_0_season(ttpt.arr_time_, start_time);
+    auto const time = time_realtive_to_0(ttpt.arr_time_, start_time);
     times_v.push_back(time);
-    auto const time2 = time_realtive_to_0_season(ttpt.dep_time_, start_time);
+    auto const time2 = time_realtive_to_0(ttpt.dep_time_, start_time);
     times_v.push_back(time2);
-  }*/
+  }
 }
 void get_section_fbs(build_sec const& sec, fbs64::Offset<Section>& section,
                      fbs64::FlatBufferBuilder& fbb) {

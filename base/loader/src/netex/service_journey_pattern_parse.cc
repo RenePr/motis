@@ -19,23 +19,19 @@ void parse_service_journey_pattern(
                       "ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
     auto const key_sjp = std::string(sjp.node().attribute("id").as_string());
     auto sjps = service_journey_pattern{};
-    sjps.direction_ = std::string(
-        sjp.node().child("DirectionRef").attribute("ref").as_string());
+    sjps.direction_ =
+        sjp.node().child("DirectionRef").attribute("ref").as_string();
     auto attribute_vec = std::vector<notice_assignment>{};
     for (auto const& n :
          sjp.node().select_nodes(".//noticeAssignments/NoticeAssignment")) {
       auto n_a = notice_assignment{};
-      n_a.text_ = std::string(
-          n.node().child("Notice").child("Text").text().as_string());
-      n_a.public_code_ = std::string(
-          n.node().child("Notice").child("PublicCode").text().as_string());
+      n_a.text_ = n.node().child("Notice").child("Text").text().as_string();
+      n_a.public_code_ =
+          n.node().child("Notice").child("PublicCode").text().as_string();
       n_a.start_point_in_journey_pattern_ =
-          std::string(n.node()
-                          .child("StartPointInPatternRef")
-                          .attribute("ref")
-                          .as_string());
-      n_a.stop_point_in_journey_pattern_ = std::string(
-          n.node().child("EndPointInPatternRef").attribute("ref").as_string());
+          n.node().child("StartPointInPatternRef").attribute("ref").as_string();
+      n_a.stop_point_in_journey_pattern_ =
+          n.node().child("EndPointInPatternRef").attribute("ref").as_string();
       attribute_vec.push_back(n_a);
     }  // NoticeAssignment
     sjps.notice_assignments_ = attribute_vec;
@@ -52,10 +48,7 @@ void parse_service_journey_pattern(
       auto const key = std::string(sp.node().attribute("id").as_string());
       auto stopPointInJourneyPattern = stop_point_in_journey_pattern{};
       stopPointInJourneyPattern.id_ =
-          std::string_view(sp.node()
-                               .child("ScheduledStopPointRef")
-                               .attribute("ref")
-                               .as_string());
+          sp.node().child("ScheduledStopPointRef").attribute("ref").as_string();
       stopPointInJourneyPattern.in_allowed_ =
           sp.node().child("ForBoarding").text().as_bool();
       stopPointInJourneyPattern.out_allowed_ =

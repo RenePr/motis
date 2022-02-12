@@ -19,7 +19,6 @@ namespace fs = boost::filesystem;
 using namespace motis::loader::netex;
 
 TEST(service_journey_pattern_parse, service_journey_p) {
-
   try {
     const char* file =
         "base/loader/test_resources/netex_schedules/"

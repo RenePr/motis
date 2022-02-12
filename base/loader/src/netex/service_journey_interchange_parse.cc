@@ -21,13 +21,11 @@ void parse_service_journey_interchange(
     auto sji_this = service_journey_interchange{};
     // TODO is_seated?
     sji_this.from_journey_ =
-        std::string(sji.node().child("FromJourneyRef").text().as_string());
-    sji_this.to_journey_ =
-        std::string(sji.node().child("ToJourneyRef").text().as_string());
+        sji.node().child("FromJourneyRef").text().as_string();
+    sji_this.to_journey_ = sji.node().child("ToJourneyRef").text().as_string();
     sji_this.from_station_ =
-        std::string(sji.node().child("FromPointRef").text().as_string());
-    sji_this.to_station_ =
-        std::string(sji.node().child("ToPointRef").text().as_string());
+        sji.node().child("FromPointRef").text().as_string();
+    sji_this.to_station_ = sji.node().child("ToPointRef").text().as_string();
     sji_m.push_back(sji_this);
   }
 }
