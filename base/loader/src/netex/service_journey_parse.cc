@@ -2,9 +2,8 @@
 
 #include <map>
 
-#include "pugixml.hpp"
-
 #include "motis/loader/netex/service_journey/service_journey.h"
+#include "pugixml.hpp"
 
 namespace xml = pugi;
 
@@ -24,7 +23,6 @@ void parse_service_journey(xml::xml_document& d,
                              .as_string();
 
     std::vector<std::string> keys_days;
-    // TODO auslagern
     for (auto const& d : sj.node().select_nodes(".//dayTypes/DayTypeRef")) {
       auto const key = std::string(d.node().attribute("ref").as_string());
       keys_days.push_back(key);
