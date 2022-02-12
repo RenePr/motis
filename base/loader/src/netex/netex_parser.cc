@@ -88,7 +88,6 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey(d, sj_m);
       auto sji_v = std::vector<service_journey_interchange>{};
       parse_service_journey_interchange(d, sji_v);
-      // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
       auto const days_m = combine_daytyps_uic_opertions(d);
       auto const season_m = get_season_times(days_m);
       auto b = build{};
@@ -101,7 +100,6 @@ void netex_parser::parse(fs::path const& p,
       b.days_m_ = days_m;
       b.seasons_m_ = season_m;
       b.file_ = z.current_file_name();
-      // std::cout << "After parse" << verfiy_build(b) << std::endl;
       //  if (!verfiy_build(b)) {
       if (false) {
         auto sjpp = std::vector<service_journey_parse>{};
