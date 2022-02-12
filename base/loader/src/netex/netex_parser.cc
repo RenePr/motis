@@ -60,13 +60,6 @@ void netex_parser::parse(fs::path const& p,
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
-  // --import.data_dir /Users/reneprinz/Downloads --import.paths
-  // schedule:/Users/reneprinz/Downloads/20211029_fahrplaene_gesamtdeutschland.zip
-  // --dataset.write_serialized=false
-  //--import.data_dir /Users/reneprinz/Downloads /Applications/motis
-  //--import.paths
-  // schedule:/Users/reneprinz/Downloads/NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029.zip
-  //--dataset.write_serialized=false
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
