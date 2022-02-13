@@ -30,6 +30,8 @@ std::map<std::string, line> parse_line(
     line_parse.id_ = id;
     if (operator_map.find(operator_id) != operator_map.end()) {
       line_parse.operator_ = operator_map.at(operator_id);
+    } else {
+      line_parse.operator_ = Operator_Authority{std::string("")};
     }
     line_map.try_emplace(id, line_parse);
   }
@@ -115,8 +117,6 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
     for (auto const& stop_points :
          d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/"
                         "frames/SiteFrame/stopPlaces/StopPlace")) {
-      auto const id_stop_point =
-          std::string_view(stop_points.node().attribute("id").as_string());
       stop.key_ = stop_points.node()
                       .child("keyList")
                       .child("KeyValue")
@@ -155,7 +155,13 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
             std::string(quay.node().child("Name").text().as_string());
         quay_v.push_back(name);
       }
-      stop.quay_ = quay_v;
+      if (quay_v.size() == 0) {
+        auto const empty = std::string("");
+        quay_v.push_back(empty);
+        stop.quay_ = quay_v;
+      } else {
+        stop.quay_ = quay_v;
+      }
       points.stop_point_ = stop;
     }
     scheduled_stops_map.try_emplace(id, points);

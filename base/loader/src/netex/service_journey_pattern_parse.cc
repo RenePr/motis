@@ -34,11 +34,19 @@ void parse_service_journey_pattern(
           n.node().child("EndPointInPatternRef").attribute("ref").as_string();
       attribute_vec.push_back(n_a);
     }  // NoticeAssignment
+    if (sjps.notice_assignments_.size() == 0) {
+      auto n_a = notice_assignment{std::string("")};
+      attribute_vec.push_back(n_a);
+    }
     sjps.notice_assignments_ = attribute_vec;
     auto l_m = std::vector<std::string>{};
     for (auto const& l : sjp.node().select_nodes(".//RouteView/LineRef")) {
       auto const key_l = std::string(l.node().attribute("ref").as_string());
       l_m.push_back(key_l);
+    }
+    if (sjps.lines_.size() == 0) {
+      auto const empty = std::string("");
+      l_m.push_back(empty);
     }
     sjps.lines_ = l_m;
     auto stop_point_map =
@@ -55,6 +63,12 @@ void parse_service_journey_pattern(
           sp.node().child("ForAlighting").text().as_bool();
       stop_point_map.try_emplace(key, stopPointInJourneyPattern);
     }  // StopPointInJourneyPattern
+    if (sjps.stop_point_map_.size() == 0) {
+      auto stopPointInJourneyPattern =
+          stop_point_in_journey_pattern{std::string("")};
+      auto const key = std::string("");
+      stop_point_map.try_emplace(key, stopPointInJourneyPattern);
+    }
     sjps.stop_point_map_ = stop_point_map;
     sjp_m.try_emplace(key_sjp, sjps);
   }  // ServiceJourneyPattern

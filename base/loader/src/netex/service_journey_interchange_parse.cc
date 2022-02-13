@@ -26,6 +26,7 @@ void parse_service_journey_interchange(
     sji_this.from_station_ =
         sji.node().child("FromPointRef").text().as_string();
     sji_this.to_station_ = sji.node().child("ToPointRef").text().as_string();
+    sji_this.stay_seated_ = sji.node().child("StaySeated").text().as_bool();
     sji_m.push_back(sji_this);
   }
 }

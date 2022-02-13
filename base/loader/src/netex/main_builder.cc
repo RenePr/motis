@@ -41,19 +41,21 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     utl::verify(it_sea != end(b.seasons_m_), "missing seasons: {}", day_type);
     auto const ttpt_start = begin(sj.second.keys_ttpt_);
     auto const ttpt_stop = end(sj.second.keys_ttpt_);
-    auto const minutes_a_m_f_d =
-        time_realtive_to_0_season(ttpt_start->dep_time_);
-    auto const minutes_a_m_l_d =
-        time_realtive_to_0_season(ttpt_stop->arr_time_);
+    auto const dep_time = ttpt_start->dep_time_;
+    auto const minutes_a_m_f_d = time_realtive_to_0_season(dep_time);
+    auto const arr_time = ttpt_start->arr_time_;
+    auto const minutes_a_m_l_d = time_realtive_to_0_season(arr_time);
     auto const season =
         CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d,
                      it_sea->second.minutes_after_midnight_first_day_,
                      it_sea->second.minutes_after_midnight_last_day_);
-    // TODO generell offset = winterzeit unterschied zu gmt so korrekt
+    // auto const season = CreateSeason(fbb, 60, 0, 0, 0, 0);
+    //  TODO generell offset = winterzeit unterschied zu gmt so korrekt
     auto const timezone = CreateTimezone(fbb, 120, season);
-    // TODO times_v und ttpt_v zusammen oder getrennt?
+    // std::cout << "sj" << std::endl;
+    //  TODO times_v und ttpt_v zusammen oder getrennt?
     auto times_v = std::vector<int>{};
-    auto start_time = begin(sj.second.keys_ttpt_)->arr_time_;
+    auto start_time = begin(sj.second.keys_ttpt_)->dep_time_;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       get_service_times(ttpt, start_time, times_v);
     }
@@ -68,8 +70,9 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     sjp.times_v_ = times_v;
     sjp.ttpt_index_ = ttpt_v;
     sjp_m.push_back(sjp);
+    // std::cout << "sj end" << std::endl;
   }
-  std::cout << "Here?" << std::endl;
+  // std::cout << "Here?2" << std::endl;
 }
 void create_stations_routes_services_fbs(
     std::vector<service_journey_parse> const& sjpp,
@@ -157,14 +160,18 @@ void create_rule_service(
     // TODO check if scheduledpointref in sji
     auto const from_stop = fbs_stations.lower_bound(sji.from_station_)->second;
     auto const to_stop = fbs_stations.lower_bound(sji.to_station_)->second;
-    // TODO ruletype fehlt, dayoffset1,dayoffset2, day_switch
-    auto const rule = CreateRule(fbb, static_cast<RuleType>(0.0), from_service,
-                                 to_service, from_stop, to_stop, 0, 0, false);
+    // TODO dayoffset1,dayoffset2, day_switch
+    auto rule = fbs64::Offset<Rule>{};
+    if (sji.stay_seated_) {
+      rule = CreateRule(fbb, static_cast<RuleType>(0.0), from_service,
+                        to_service, from_stop, to_stop, 0, 0, false);
+    } else {
+      rule = CreateRule(fbb, static_cast<RuleType>(1.0), from_service,
+                        to_service, from_stop, to_stop, 0, 0, false);
+    }
     rule_service_v.push_back(rule);
   }
-  if (rule_service_v.empty()) {
-
-  } else {
+  if (!rule_service_v.empty()) {
     auto const rule_service = CreateRuleService(
         fbb, fbb.CreateVector(
                  utl::to_vec(begin(rule_service_v), end(rule_service_v),
