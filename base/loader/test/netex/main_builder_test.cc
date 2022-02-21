@@ -48,7 +48,7 @@ TEST(main_builder_test, main_builder_empty) {
     auto sji_v = std::vector<service_journey_interchange>{};
     parse_service_journey_interchange(d, sji_v);
     // ServiceCalendarFrame, so ist ja coby Rückgabe und eher schlecht?
-    auto const days_m = combine_daytyps_uic_opertions(d);
+    auto const days_m = parse_daytypes_uicoperation(d);
     auto const season_m = get_season_times(days_m);
 
     auto b = build{};

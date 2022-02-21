@@ -1,4 +1,5 @@
 #include "motis/loader/netex/service_journey_interchange/service_journey_interchange.h"
+
 #include <vector>
 
 #include "pugixml.hpp"

@@ -58,5 +58,4 @@ void parse_service_journey_pattern(
     sjp_m.try_emplace(key_sjp, sjps);
   }  // ServiceJourneyPattern
 }
-
 }  // namespace motis::loader::netex

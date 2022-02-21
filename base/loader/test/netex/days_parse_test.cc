@@ -8,16 +8,14 @@
 #include "motis/loader/netex/days_parse.h"
 
 TEST(days_parse, test1) {
-
   try {
-    /// Users/reneprinz/Documents/motis
     const char* file =
         "base/loader/test_resources/netex_schedules/"
-        "NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029_daytpye_ref.xml";
+        "NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029.xml";
     xml::xml_document d;
     auto r = d.load_file(file);
     utl::verify(r, "netex parser: invalid xml in {}", file);
-    auto const& days = motis::loader::netex::combine_daytyps_uic_opertions(d);
+    auto const& days = motis::loader::netex::parse_daytypes_uicoperation(d);
     std::string_view valid_bits{
         "11111001111100111110011111001111100111110011111"};
     std::string_view from_date{"2021-10-25T00:00:00"};
