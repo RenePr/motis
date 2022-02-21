@@ -18,6 +18,7 @@ std::map<std::string, line> parse_line(
   auto line_map = std::map<std::string, line>{};
   for (auto const& line_get :
        service_jorney.node().select_nodes(".//lines/Line")) {
+    std::cout << "Here" << std::endl;
     auto const id = std::string(line_get.node().attribute("id").as_string());
     auto const operator_id = std::string(
         line_get.node().child("AuthorityRef").attribute("ref").as_string());
@@ -39,7 +40,7 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d) {
   for (auto const& operator_get :
        d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/"
                       "ResourceFrame/"
-                      "organisations/Operator")) {
+                      "organisations/Operator/")) {
     auto const id =
         std::string(operator_get.node().attribute("id").as_string());
     auto operator_parse = Operator_Authority{};
@@ -112,7 +113,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
     auto stop = stop_point{};
     for (auto const& stop_points :
          d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/"
-                        "frames/SiteFrame/stopPlaces/StopPlace")) {
+                        "frames/SiteFrame/stopPlaces/StopPlace/")) {
       stop.key_ = stop_points.node()
                       .child("keyList")
                       .child("KeyValue")
@@ -164,7 +165,7 @@ void parse_frame(xml::xml_document& d, std::map<std::string, line>& l_m,
                  std::map<std::string, passenger_assignments>& p_m) {
   auto o = parse_operator(d);
   for (auto const& sf : d.select_nodes("/PublicationDelivery/dataObjects/"
-                                       "CompositeFrame/frames/ServiceFrame")) {
+                                       "CompositeFrame/frames/ServiceFrame/")) {
     l_m = parse_line(sf, o);
     s_m = parse_scheduled_points(sf, d);
     d_m = parse_direction(sf);

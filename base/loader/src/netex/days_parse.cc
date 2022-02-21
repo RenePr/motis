@@ -82,11 +82,6 @@ std::map<std::string, ids> parse_daytypes_uicoperation(xml::xml_document& d) {
         ret_unmap.insert(pair);
       }
     }
-    /*if (assignment.node().child("DayTypeRef").text().as_bool()) {
-      // true
-    } else {
-      // false
-    }*/
   }
   return ret_unmap;
 }

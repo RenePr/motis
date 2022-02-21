@@ -19,7 +19,6 @@ namespace xml = pugi;
 using namespace motis::loader::netex;
 
 TEST(service_frame_parse, line) {
-
   try {
     const char* file =
         "base/loader/test_resources/netex_schedules/"
@@ -45,9 +44,6 @@ TEST(service_frame_parse, line) {
 }
 
 TEST(service_frame_parse, direction) {
-  // TODO how can I start this test, is this even right?
-  // Users/reneprinz/Documents/motis
-
   try {
     const char* file =
         "base/loader/test_resources/netex_schedules/"
@@ -75,9 +71,6 @@ TEST(service_frame_parse, direction) {
 }
 
 TEST(service_frame_parse, scheduled_points) {
-  // TODO how can I start this test, is this even right?
-  // Users/reneprinz/Documents/motis
-
   try {
     const char* file =
         "base/loader/test_resources/netex_schedules/"
