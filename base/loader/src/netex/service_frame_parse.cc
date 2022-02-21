@@ -28,11 +28,7 @@ std::map<std::string, line> parse_line(
     line_parse.transport_mode_ =
         line_get.node().child("TransportMode").text().as_string();
     line_parse.id_ = id;
-    if (operator_map.find(operator_id) != operator_map.end()) {
-      line_parse.operator_ = operator_map.at(operator_id);
-    } else {
-      line_parse.operator_ = Operator_Authority{std::string("")};
-    }
+    line_parse.operator_ = operator_map.at(operator_id);
     line_map.try_emplace(id, line_parse);
   }
   return line_map;
@@ -155,13 +151,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
             std::string(quay.node().child("Name").text().as_string());
         quay_v.push_back(name);
       }
-      if (quay_v.size() == 0) {
-        auto const empty = std::string("");
-        quay_v.push_back(empty);
-        stop.quay_ = quay_v;
-      } else {
-        stop.quay_ = quay_v;
-      }
+      stop.quay_ = quay_v;
       points.stop_point_ = stop;
     }
     scheduled_stops_map.try_emplace(id, points);

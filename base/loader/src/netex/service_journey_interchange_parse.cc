@@ -1,12 +1,8 @@
-#include "motis/loader/netex/service_frame/service_frame_parse.h"
-
-#include <map>
-#include <string_view>
+#include "motis/loader/netex/service_journey_interchange/service_journey_interchange.h"
 #include <vector>
 
 #include "pugixml.hpp"
 
-#include "motis/loader/netex/service_journey_interchange/service_journey_interchange.h"
 #include "motis/loader/netex/service_journey_interchange/service_journey_interchange_parse.h"
 
 namespace xml = pugi;
@@ -19,13 +15,14 @@ void parse_service_journey_interchange(
                       "TimetableFrame/"
                       "journeyInterchanges/ServiceJourneyInterchange")) {
     auto sji_this = service_journey_interchange{};
-    // TODO is_seated?
     sji_this.from_journey_ =
-        sji.node().child("FromJourneyRef").text().as_string();
-    sji_this.to_journey_ = sji.node().child("ToJourneyRef").text().as_string();
+        sji.node().child("FromJourneyRef").attribute("ref").as_string();
+    sji_this.to_journey_ =
+        sji.node().child("ToJourneyRef").attribute("ref").as_string();
     sji_this.from_station_ =
-        sji.node().child("FromPointRef").text().as_string();
-    sji_this.to_station_ = sji.node().child("ToPointRef").text().as_string();
+        sji.node().child("FromPointRef").attribute("ref").as_string();
+    sji_this.to_station_ =
+        sji.node().child("ToPointRef").attribute("ref").as_string();
     sji_this.stay_seated_ = sji.node().child("StaySeated").text().as_bool();
     sji_m.push_back(sji_this);
   }

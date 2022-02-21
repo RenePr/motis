@@ -5,7 +5,6 @@
 
 #include "utl/verify.h"
 
-#include "motis/loader/netex/days.h"
 #include "motis/loader/netex/days_parse.h"
 
 TEST(days_parse, test1) {

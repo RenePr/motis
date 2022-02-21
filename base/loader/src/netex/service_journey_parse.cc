@@ -2,8 +2,9 @@
 
 #include <map>
 
-#include "motis/loader/netex/service_journey/service_journey.h"
 #include "pugixml.hpp"
+
+#include "motis/loader/netex/service_journey/service_journey.h"
 
 namespace xml = pugi;
 
@@ -27,13 +28,7 @@ void parse_service_journey(xml::xml_document& d,
       auto const key = std::string(d.node().attribute("ref").as_string());
       keys_days.push_back(key);
     }  // DayTypes
-    if (keys_days.size() == 0) {
-      auto const empty = std::string("");
-      keys_days.push_back(empty);
-      service_j.keys_day_ = keys_days;
-    } else {
-      service_j.keys_day_ = keys_days;
-    }
+    service_j.keys_day_ = keys_days;
     auto ttpt_v = std::vector<time_table_passing_time>{};
     for (auto const& tpt :
          sj.node().select_nodes(".//passingTimes/TimetabledPassingTime")) {
@@ -45,17 +40,9 @@ void parse_service_journey(xml::xml_document& d,
       ttpt.arr_time_ = tpt.node().child("ArrivalTime").text().as_string();
       ttpt.dep_time_ = tpt.node().child("DepartureTime").text().as_string();
       ttpt_v.push_back(ttpt);
-
     }  // TimetablePassingTime
-    if (service_j.keys_ttpt_.size() == 0) {
-      auto ttpt = time_table_passing_time{std::string("")};
-      ttpt_v.push_back(ttpt);
-      service_j.keys_ttpt_ = ttpt_v;
-    } else {
-      service_j.keys_ttpt_ = ttpt_v;
-    }
+    service_j.keys_ttpt_ = ttpt_v;
     sj_m.try_emplace(key_sj, service_j);
   }
 }
-
 }  // namespace motis::loader::netex
