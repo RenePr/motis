@@ -22,14 +22,12 @@ TEST(service_journey_test, service_journey) {
   try {
     const char* file =
         "base/loader/test_resources/netex_schedules/"
-        "NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029_line.xml";
+        "NX-PI-01_DE_NAP_LINE_123-ERLBUS-371_20211029.xml";
     xml::xml_document d;
     auto r = d.load_file(file);
     auto sj_m = std::map<std::string, service_journey>{};
     parse_service_journey(d, sj_m);
-
-    std::cout << sj_m.size() << "Here?" << std::endl;
-    //  ASSERT_TRUE(== sj_m.size());
+    ASSERT_TRUE(146 == sj_m.size());
     ASSERT_TRUE(
         std::string_view("DE::ServiceJourney:1198650792_0::") ==
         std::string_view(sj_m.at("DE::ServiceJourney:1198650792_0::").key_sj_));

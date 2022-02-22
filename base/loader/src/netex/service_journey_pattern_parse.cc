@@ -14,7 +14,7 @@ void parse_service_journey_pattern(
     xml::xml_document& d,
     std::map<std::string, service_journey_pattern>& sjp_m) {
   for (auto const& sjp :
-       d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/"
+       d.select_nodes("PublicationDelivery/dataObjects/CompositeFrame/frames/"
                       "ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
     auto const key_sjp = std::string(sjp.node().attribute("id").as_string());
     auto sjps = service_journey_pattern{};

@@ -14,7 +14,7 @@ void parse_service_journey(xml::xml_document& d,
                            std::map<std::string, service_journey>& sj_m) {
   for (auto const& sj : d.select_nodes("/PublicationDelivery/dataObjects/"
                                        "CompositeFrame/frames/TimetableFrame/"
-                                       "vehicleJourneys/ServiceJourney/")) {
+                                       "vehicleJourneys/ServiceJourney")) {
     auto const key_sj = std::string(sj.node().attribute("id").as_string());
     auto service_j = service_journey{};
     service_j.key_sj_ = key_sj;
