@@ -27,7 +27,8 @@ TEST(service_journey_test, service_journey) {
     auto r = d.load_file(file);
     auto sj_m = std::map<std::string, service_journey>{};
     parse_service_journey(d, sj_m);
-    // std::cout << sj_m.size() << "Here?" << std::endl;
+
+    std::cout << sj_m.size() << "Here?" << std::endl;
     //  ASSERT_TRUE(== sj_m.size());
     ASSERT_TRUE(
         std::string_view("DE::ServiceJourney:1198650792_0::") ==
@@ -58,5 +59,6 @@ TEST(service_journey_test, service_journey) {
                                      .arr_time_));
 
   } catch (std::exception& e) {
+    std::cout << e.what();
   }
 }

@@ -27,6 +27,7 @@ TEST(service_journey_pattern_parse, service_journey_p) {
     auto r = d.load_file(file);
     auto sjp_m = std::map<std::string, service_journey_pattern>{};
     parse_service_journey_pattern(d, sjp_m);
+    std::cout << sjp_m.size() << std::endl;
     ASSERT_TRUE(
         std::string_view("DE::Direction:H::") ==
         std::string_view(
@@ -80,5 +81,6 @@ TEST(service_journey_pattern_parse, service_journey_p) {
                             .at("DE::StopPointInJourneyPattern:105870567_1_0::")
                             .out_allowed_);
   } catch (std::exception& e) {
+    std::cout << e.what();
   }
 }

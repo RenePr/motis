@@ -18,10 +18,12 @@ std::map<std::string, line> parse_line(
   auto line_map = std::map<std::string, line>{};
   for (auto const& line_get :
        service_jorney.node().select_nodes(".//lines/Line")) {
-    std::cout << "Here" << std::endl;
     auto const id = std::string(line_get.node().attribute("id").as_string());
-    auto const operator_id = std::string(
-        line_get.node().child("AuthorityRef").attribute("ref").as_string());
+    auto const operator_id = std::string(line_get.node()
+                                             .child("additionalOperators")
+                                             .child("OperatorRef")
+                                             .attribute("ref")
+                                             .as_string());
     auto line_parse = line{};
     line_parse.name_ = line_get.node().child("Name").text().as_int();
     line_parse.short_name_ =
@@ -39,8 +41,7 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d) {
   auto operator_map = std::map<std::string, Operator_Authority>{};
   for (auto const& operator_get :
        d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/"
-                      "ResourceFrame/"
-                      "organisations/Operator/")) {
+                      "ResourceFrame/organisations/Operator")) {
     auto const id =
         std::string(operator_get.node().attribute("id").as_string());
     auto operator_parse = Operator_Authority{};
@@ -95,9 +96,53 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
   }
   return passengers_assignment_map;
 }
-
+std::map<std::string, stop_point> parse_stop_place(xml::xml_document& d) {
+  auto stops = std::map<std::string, stop_point>{};
+  for (auto const& stop_points :
+       d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/"
+                      "frames/SiteFrame/stopPlaces/StopPlace")) {
+    auto const id = std::string(stop_points.node().attribute("id").as_string());
+    auto stop = stop_point{};
+    stop.key_ = stop_points.node()
+                    .child("keyList")
+                    .child("KeyValue")
+                    .child("Key")
+                    .text()
+                    .as_string();
+    stop.value_ = stop_points.node()
+                      .child("keyList")
+                      .child("KeyValue")
+                      .child("Value")
+                      .text()
+                      .as_string();
+    stop.name_ = stop_points.node().child("Name").text().as_string();
+    stop.lon_ = stop_points.node()
+                    .child("Centroid")
+                    .child("Location")
+                    .child("Longitude")
+                    .text()
+                    .as_double();
+    stop.lat_ = stop_points.node()
+                    .child("Centroid")
+                    .child("Location")
+                    .child("Latitude")
+                    .text()
+                    .as_double();
+    stop.timezone_ =
+        stop_points.node().child("Locale").child("TimeZone").text().as_string();
+    auto quay_v = std::vector<std::string>{};
+    for (auto const& quay : stop_points.node().select_nodes(".//Quay")) {
+      auto const name =
+          std::string(quay.node().child("Name").text().as_string());
+      quay_v.push_back(name);
+    }
+    stop.quay_ = quay_v;
+    stops.try_emplace(id, stop);
+  }
+  return stops;
+}
 std::map<std::string, scheduled_points> parse_scheduled_points(
-    xml::xpath_node const& service_jorney, xml::xml_document& d) {
+    xml::xpath_node const& service_jorney) {
   auto scheduled_stops_map = std::map<std::string, scheduled_points>{};
   for (auto const& scheduled_points_get : service_jorney.node().select_nodes(
            ".//scheduledStopPoints/ScheduledStopPoint")) {
@@ -110,64 +155,22 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
         scheduled_points_get.node().child("PublicCode").text().as_string();
     points.stop_type_ =
         scheduled_points_get.node().child("StopType").text().as_string();
-    auto stop = stop_point{};
-    for (auto const& stop_points :
-         d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/"
-                        "frames/SiteFrame/stopPlaces/StopPlace/")) {
-      stop.key_ = stop_points.node()
-                      .child("keyList")
-                      .child("KeyValue")
-                      .child("Key")
-                      .text()
-                      .as_string();
-      stop.value_ = stop_points.node()
-                        .child("keyList")
-                        .child("KeyValue")
-                        .child("Value")
-                        .text()
-                        .as_string();
-      stop.name_ = stop_points.node().child("Name").text().as_string();
-      stop.lon_ = stop_points.node()
-                      .child("Centroid")
-                      .child("Location")
-                      .child("Longitude")
-                      .text()
-                      .as_double();
-      stop.lat_ = stop_points.node()
-                      .child("Centroid")
-                      .child("Location")
-                      .child("Latitude")
-                      .text()
-                      .as_double();
-      stop.timezone_ = stop_points.node()
-                           .child("Locale")
-                           .child("TimeZone")
-                           .text()
-                           .as_string();
-      auto quay_v = std::vector<std::string>{};
-      for (auto const& quay : stop_points.node().select_nodes(".//Quay")) {
-        auto const quay_id =
-            std::string_view(quay.node().attribute("id").as_string());
-        auto const name =
-            std::string(quay.node().child("Name").text().as_string());
-        quay_v.push_back(name);
-      }
-      stop.quay_ = quay_v;
-      points.stop_point_ = stop;
-    }
+
     scheduled_stops_map.try_emplace(id, points);
   }
   return scheduled_stops_map;
 }
 void parse_frame(xml::xml_document& d, std::map<std::string, line>& l_m,
                  std::map<std::string, scheduled_points>& s_m,
+                 std::map<std::string, stop_point>& s_p_m,
                  std::map<std::string, direction>& d_m,
                  std::map<std::string, passenger_assignments>& p_m) {
   auto o = parse_operator(d);
+  s_p_m = parse_stop_place(d);
   for (auto const& sf : d.select_nodes("/PublicationDelivery/dataObjects/"
-                                       "CompositeFrame/frames/ServiceFrame/")) {
+                                       "CompositeFrame/frames/ServiceFrame")) {
     l_m = parse_line(sf, o);
-    s_m = parse_scheduled_points(sf, d);
+    s_m = parse_scheduled_points(sf);
     d_m = parse_direction(sf);
     p_m = parse_passenger_assignment(sf);
   }

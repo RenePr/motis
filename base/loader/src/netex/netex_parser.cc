@@ -68,11 +68,13 @@ void netex_parser::parse(fs::path const& p,
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
+      std::cout << d.first_child().first_child() << std::endl;
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
+      auto s_p_m = std::map<std::string, stop_point>{};
       auto d_m = std::map<std::string, direction>{};
       auto p_m = std::map<std::string, passenger_assignments>{};
-      parse_frame(d, l_m, s_m, d_m, p_m);
+      parse_frame(d, l_m, s_m, s_p_m, d_m, p_m);
       auto sjp_m = std::map<std::string, service_journey_pattern>{};
       parse_service_journey_pattern(d, sjp_m);
       auto sj_m = std::map<std::string, service_journey>{};

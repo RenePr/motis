@@ -29,6 +29,7 @@ TEST(service_journey_interchange_test, service_journey_interchange_empty) {
     parse_service_journey_interchange(d, sji_v);
     ASSERT_TRUE(0 == sji_v.size());
   } catch (std::exception& e) {
+    std::cout << e.what();
   }
 }
 
@@ -52,5 +53,6 @@ TEST(service_journey_interchange_test, service_journey_interchange) {
                 std::string_view(sji_v.front().to_journey_));
     ASSERT_TRUE(true == sji_v.front().stay_seated_);
   } catch (std::exception& e) {
+    std::cout << e.what();
   }
 }

@@ -65,5 +65,6 @@ TEST(days_parse, test1) {
     ASSERT_TRUE(seasons_m.at("DE::DayType:128682::")
                     .minutes_after_midnight_first_day_ == 0);
   } catch (std::exception const& e) {
+    std::cout << e.what();
   }
 }
