@@ -1,7 +1,6 @@
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
 
 #include <map>
-#include <string_view>
 #include <vector>
 
 #include "pugixml.hpp"
