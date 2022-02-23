@@ -21,4 +21,10 @@ struct ids {
   std::map<std::string, uic_opertion_period> uic_;
   std::map<std::string, daytype> day_;
 };
+struct season {
+  int minutes_after_midnight_first_day_;
+  int minutes_after_midnight_last_day_;
+  int day_idx_first_day_;
+  int day_idx_last_day_;
+};
 }  // namespace motis::loader::netex

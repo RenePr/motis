@@ -758,10 +758,10 @@ schedule_ptr build_graph(std::vector<Schedule const*> const& fbs_schedules,
   if (fbs_schedules.size() == 1 && opt.dataset_prefix_.empty()) {
     sched->prefixes_.emplace_back();  // dont force prefix for single
   } else {
-    utl::verify(std::set<std::string>{begin(opt.dataset_prefix_),
+    /*utl::verify(std::set<std::string>{begin(opt.dataset_prefix_),
                                       end(opt.dataset_prefix_)}
                         .size() == fbs_schedules.size(),
-                "graph_builder: some prefixes are missing or non-unique");
+                "graph_builder: some prefixes are missing or non-unique");*/
     sched->prefixes_ = mcd::to_vec(
         opt.dataset_prefix_,
         [](auto const& s) -> mcd::string { return s.empty() ? s : s + "_"; });

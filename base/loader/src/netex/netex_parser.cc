@@ -46,16 +46,15 @@ bool netex_parser::applicable(fs::path const& p) {
 std::vector<std::string> netex_parser::missing_files(fs::path const&) const {
   return {};
 }
-
 void netex_parser::parse(fs::path const& p,
                          flatbuffers64::FlatBufferBuilder& fbb) {
   utl::verify(fs::is_regular_file(p), "{} is not a zip file", p);
-  auto const output_services = std::map<std::string, fbs64::Offset<Service>>{};
-  auto const fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
-  auto const fbs_routes = std::vector<fbs64::Offset<Route>>{};
-  auto const interval = Interval{0, 0};
+  auto output_services = std::map<std::string, fbs64::Offset<Service>>{};
+  auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
+  auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
+  auto interval = Interval{0, 0};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
-  auto const rule_services = std::vector<fbs64::Offset<RuleService>>{};
+  auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
@@ -80,12 +79,30 @@ void netex_parser::parse(fs::path const& p,
       auto sji_v = std::vector<service_journey_interchange>{};
       parse_service_journey_interchange(d, sji_v);
       auto const days_m = parse_daytypes_uicoperation(d);
+      auto const season_m = get_season_times(days_m);
+      auto const stations_m = get_stations(s_m, s_p_m, p_m);
+      auto const b =
+          build{l_m,      d_m,  stations_m,
+                days_m, season_m, sjp_m, sj_m, z.current_file_name()};
+      auto sjpp = std::vector<service_journey_parse>{};
+      build_fbs(b, sjpp, fbb);
+      auto services = std::map<std::string, fbs64::Offset<Service>>{};
+      create_stations_routes_services_fbs(
+          sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
+          output_services, fbb);
+      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
+                          fbb);
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
       LOG(error) << "unable to parse message";
     }
   }
+  /* <FromDate>2021-10-15T00:00:00</FromDate>
+<ToDate>2021-12-11T00:00:00</ToDate>*/
+  auto t1 = to_unix_time(2020, 10, 15);
+  auto t2 = to_unix_time(2022, 12, 11);
+  interval = Interval(t1, t2);
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(values(output_services)),
       fbb.CreateVector(values(fbs_stations)), fbb.CreateVector(fbs_routes),

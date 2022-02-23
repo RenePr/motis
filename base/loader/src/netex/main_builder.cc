@@ -63,9 +63,9 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     auto const ttpt_ne = ttpt_need{sj.second.keys_ttpt_,
                                    it_sjp->second.direction_,
                                    traffic_days.first,
-                                   b.s_m_,
                                    it_sjp->second.stop_point_map_,
-                                   timezone};
+                                   timezone,
+                                   b.s_d_m_};
     get_ttpts(ttpt_ne, ttpt_v);
     sjp.times_v_ = times_v;
     sjp.ttpt_index_ = ttpt_v;
@@ -141,7 +141,7 @@ void create_stations_routes_services_fbs(
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
         0, service_debug_info, false, 0, to_fbs_string(fbb, st1));
-    services.try_emplace(ele.key_sj_, service);
+    services.emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(

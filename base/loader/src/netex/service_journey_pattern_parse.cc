@@ -55,7 +55,7 @@ void parse_service_journey_pattern(
       stop_point_map.try_emplace(key, stopPointInJourneyPattern);
     }  // StopPointInJourneyPattern
     sjps.stop_point_map_ = stop_point_map;
-    sjp_m.try_emplace(key_sjp, sjps);
+    sjp_m.emplace(key_sjp, sjps);
   }  // ServiceJourneyPattern
 }
 }  // namespace motis::loader::netex

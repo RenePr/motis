@@ -70,27 +70,22 @@ void get_ttpts(ttpt_need const& ttpt_need, std::vector<ttpt_index>& ttpt_v) {
     utl::verify(it_sp != end(ttpt_need.stop_point_map_),
                 "missing time_table_passing_time: {}", ttpt.stop_point_ref_);
     auto const key_sp = std::string(it_sp->second.id_);
-    auto const it = ttpt_need.s_m_.lower_bound(key_sp);
-    utl::verify(it != end(ttpt_need.s_m_), "missing scheduled_stop_point: {}",
+    auto const it = ttpt_need.s_d_m_.lower_bound(key_sp);
+    utl::verify(it != end(ttpt_need.s_d_m_), "missing scheduled_stop_point: {}",
                 key_sp);
-    // wichtig scheduled_ref
     ttpt_i.schedulep_point_ref_ = it->first;
+    auto st_dir = it->second;
+    st_dir.timezone_ = ttpt_need.timezone_;
+    st_dir.direction_ = ttpt_need.direction_;
     // TODO direction
-    ttpt_i.st_dir_ =
-        stations_direction{std::string(it->second.short_name_),
-                           std::string(it->second.short_name_),
-                           it->second.stop_point_.lat_,
-                           it->second.stop_point_.lon_,
-                           ttpt_need.timezone_,
-                           std::string(it->second.stop_point_.timezone_),
-                           ttpt_need.direction_};
+    ttpt_i.st_dir_ =st_dir;
     ttpt_i.in_allowed_ = it_sp->second.in_allowed_;
     ttpt_i.out_allowed_ = it_sp->second.out_allowed_;
     //  TODO is uint8_t richtig?
-    if (it->second.stop_point_.quay_.size() == 0) {
+    if (it->second.quays_.size() == 0) {
       ttpt_i.quay_ = ttpt_need.traffic_days_;
     } else {
-      ttpt_i.quay_ = begin(it->second.stop_point_.quay_)->data();
+      ttpt_i.quay_ = begin(it->second.quays_)->data();
     }
     ttpt_v.push_back(ttpt_i);
   }
@@ -184,7 +179,7 @@ void get_station_dir_fbs(stations_direction const& s_d,
   auto const test1 = std::string("1");
   test.push_back(test1);
   station = CreateStation(
-      fbb, to_fbs_string(fbb, s_d.name_), to_fbs_string(fbb, s_d.name_),
+      fbb, to_fbs_string(fbb, s_d.id_), to_fbs_string(fbb, s_d.name_),
       s_d.lat_, s_d.lng_, 0,
       fbb.CreateVector(utl::to_vec(
           begin(test), end(test),
@@ -192,5 +187,31 @@ void get_station_dir_fbs(stations_direction const& s_d,
       s_d.timezone_, to_fbs_string(fbb, s_d.timezone_name_));
   direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
 }
-
+auto counter = 0;
+std::map<std::string, stations_direction> get_stations( std::map<std::string, scheduled_points> const& s_m,
+                  std::map<std::string, stop_point> const& s_p_m,
+                  std::map<std::string, passenger_assignments> const& p_m) {
+  auto s_d_m = std::map<std::string, stations_direction>{};
+  //auto counter = 0;
+  for(auto const& p_a : p_m) {
+    auto const it_s = s_m.lower_bound(p_a.second.scheduled_place_id_);
+    utl::verify(it_s != end(s_m), "missing scheduled_point: {}", p_a.second.scheduled_place_id_);
+    auto const it_s_p = s_p_m.lower_bound(p_a.second.stop_point_id_);
+    utl::verify(it_s_p != end(s_p_m), "missing stop_point: {}", p_a.second.stop_point_id_);
+    auto st = stations_direction{};
+    st.name_ = it_s_p->second.name_;
+    st.lat_ = it_s_p->second.lat_;
+    st.lng_ = it_s_p->second.lon_;
+    st.timezone_name_ = it_s_p->second.timezone_;
+    st.quays_ = it_s_p->second.quay_;
+    st.stop_point_id_ = it_s_p->first;
+    std::stringstream stringStream;
+    stringStream << counter;
+    st.id_ = std::string( stringStream.str());
+    //st.id_ = it_s->first;
+    counter++;
+    s_d_m.emplace(it_s->first, st);
+  }
+  return s_d_m;
+}
 }  // namespace motis::loader::netex

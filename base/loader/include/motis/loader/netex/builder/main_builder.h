@@ -13,7 +13,7 @@
 #include "motis/schedule-format/Station_generated.h"
 
 #include "motis/loader/netex/builder/helper_builder.h"
-#include "motis/loader/netex/days.h"
+#include "motis/loader/netex/days/days.h"
 #include "motis/loader/netex/service_frame/service_frame.h"
 #include "motis/loader/netex/service_journey/service_journey.h"
 #include "motis/loader/netex/service_journey_interchange/service_journey_interchange.h"
@@ -26,10 +26,8 @@ namespace motis::loader::netex {
 
 struct build {
   std::map<std::string, line> l_m_;
-  std::map<std::string, scheduled_points> s_m_;
-  std::map<std::string, stop_point> s_p_m_;
   std::map<std::string, direction> d_m_;
-  std::map<std::string, passenger_assignments> p_m_;
+  std::map<std::string, stations_direction> s_d_m_;
 
   std::map<std::string, ids> days_m_;
   std::map<std::string, season> seasons_m_;

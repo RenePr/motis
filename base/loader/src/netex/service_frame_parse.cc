@@ -31,7 +31,7 @@ std::map<std::string, line> parse_line(
         line_get.node().child("TransportMode").text().as_string();
     line_parse.id_ = id;
     line_parse.operator_ = operator_map.at(operator_id);
-    line_map.try_emplace(id, line_parse);
+    line_map.emplace(id, line_parse);
   }  // Line
   return line_map;
 }
@@ -51,7 +51,7 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d) {
         operator_get.node().child("LegalName").text().as_string();
     operator_parse.public_code_ =
         operator_get.node().child("PublicCode").text().as_string();
-    operator_map.try_emplace(id, operator_parse);
+    operator_map.emplace(id, operator_parse);
   }  // Operator
   return operator_map;
 }
@@ -67,7 +67,7 @@ std::map<std::string, direction> parse_direction(
     dir.name_ = direction_get.node().child("Name").text().as_string();
     dir.short_name_ =
         direction_get.node().child("ShortName").text().as_string();
-    direction_map.try_emplace(id, dir);
+    direction_map.emplace(id, dir);
   }  // Direction
   return direction_map;
 }
@@ -93,7 +93,7 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
                        .child("QuayRef")
                        .attribute("ref")
                        .as_string();
-    passengers_assignment_map.try_emplace(key, p_a);
+    passengers_assignment_map.emplace(key, p_a);
   }  // PassengerStopAssignment
   return passengers_assignment_map;
 }
@@ -138,7 +138,7 @@ std::map<std::string, stop_point> parse_stop_place(xml::xml_document& d) {
       quay_v.push_back(name);
     }  // Quay
     stop.quay_ = quay_v;
-    stops.try_emplace(id, stop);
+    stops.emplace(id, stop);
   }  // StopPlace
   return stops;
 }
@@ -157,7 +157,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
     points.stop_type_ =
         scheduled_points_get.node().child("StopType").text().as_string();
 
-    scheduled_stops_map.try_emplace(id, points);
+    scheduled_stops_map.emplace(id, points);
   }  // ScheduledStopPoint
   return scheduled_stops_map;
 }
