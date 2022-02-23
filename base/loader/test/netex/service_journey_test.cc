@@ -2,20 +2,12 @@
 
 #include <functional>
 
-#include "utl/verify.h"
-
-#include "boost/filesystem.hpp"
-
 #include "pugixml.hpp"
 
 #include "motis/loader/netex/service_journey/service_journey.h"
 #include "motis/loader/netex/service_journey/service_journey_parse.h"
 
-#include "motis/schedule-format/Schedule_generated.h"
-
-namespace fbs64 = flatbuffers64;
 namespace xml = pugi;
-namespace fs = boost::filesystem;
 using namespace motis::loader::netex;
 
 TEST(service_journey_test, service_journey) {

@@ -4,18 +4,12 @@
 
 #include "utl/verify.h"
 
-#include "boost/filesystem.hpp"
-
 #include "pugixml.hpp"
 
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern_parse.h"
 
-#include "motis/schedule-format/Schedule_generated.h"
-
-namespace fbs64 = flatbuffers64;
 namespace xml = pugi;
-namespace fs = boost::filesystem;
 using namespace motis::loader::netex;
 
 TEST(service_journey_pattern_parse, service_journey_pattern) {

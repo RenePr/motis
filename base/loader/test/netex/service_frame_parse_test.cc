@@ -2,19 +2,11 @@
 
 #include <functional>
 
-#include "utl/verify.h"
-
-#include "boost/filesystem.hpp"
-
 #include "pugixml.hpp"
 
 #include "motis/loader/netex/service_frame/service_frame.h"
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
 
-#include "motis/schedule-format/Schedule_generated.h"
-
-namespace fbs64 = flatbuffers64;
-namespace fs = boost::filesystem;
 namespace xml = pugi;
 using namespace motis::loader::netex;
 
