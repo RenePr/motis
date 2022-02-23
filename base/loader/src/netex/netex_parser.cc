@@ -1,14 +1,8 @@
 #include "motis/loader/netex/netex_parser.h"
 
-#include <string.h>
-#include <chrono>
-#include <cstring>
 #include <iostream>
-#include <sstream>
-#include <thread>
+#include <string>
 #include <vector>
-#include "date/date.h"
-#include "date/tz.h"
 
 #include "boost/filesystem.hpp"
 #include "pugixml.hpp"
@@ -16,11 +10,9 @@
 #include "utl/get_or_create.h"
 #include "utl/verify.h"
 
-#include "motis/core/common/date_time_util.h"
 #include "motis/core/common/logging.h"
 #include "motis/core/common/zip_reader.h"
-#include "motis/loader/netex/builder/main_builder.h"
-#include "motis/loader/netex/days_parse.h"
+#include "motis/loader/netex/days/days_parse.h"
 #include "motis/loader/netex/service_frame/service_frame.h"
 #include "motis/loader/netex/service_frame/service_frame_parse.h"
 #include "motis/loader/netex/service_journey/service_journey.h"
@@ -29,7 +21,6 @@
 #include "motis/loader/netex/service_journey_interchange/service_journey_interchange_parse.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern.h"
 #include "motis/loader/netex/service_journey_pattern/service_journey_pattern_parse.h"
-#include "motis/loader/netex/verfiry_netex_checker.h"
 #include "motis/loader/util.h"
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -51,12 +42,12 @@ std::vector<std::string> netex_parser::missing_files(fs::path const&) const {
 void netex_parser::parse(fs::path const& p,
                          flatbuffers64::FlatBufferBuilder& fbb) {
   utl::verify(fs::is_regular_file(p), "{} is not a zip file", p);
-  auto output_services = std::map<std::string, fbs64::Offset<Service>>{};
-  auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
-  auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
-  auto interval = Interval{0, 0};
+  auto const output_services = std::map<std::string, fbs64::Offset<Service>>{};
+  auto const fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
+  auto const fbs_routes = std::vector<fbs64::Offset<Route>>{};
+  auto const interval = Interval{0, 0};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
-  auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
+  auto const rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
@@ -81,36 +72,16 @@ void netex_parser::parse(fs::path const& p,
       auto sji_v = std::vector<service_journey_interchange>{};
       parse_service_journey_interchange(d, sji_v);
       auto const days_m = parse_daytypes_uicoperation(d);
-      auto const season_m = get_season_times(days_m);
-      auto const b =
-          build{l_m,    s_m,      s_p_m, d_m,  p_m,
-                days_m, season_m, sjp_m, sj_m, z.current_file_name()};
-      /*auto sjpp = std::vector<service_journey_parse>{};
-      build_fbs(b, sjpp, fbb);
-      auto services = std::map<std::string, fbs64::Offset<Service>>{};
-      create_stations_routes_services_fbs(
-          sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
-          output_services, fbb);
-      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
-                          fbb);*/
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
       LOG(error) << "unable to parse message";
     }
   }
-
-  /* <FromDate>2021-10-15T00:00:00</FromDate>
- <ToDate>2021-12-11T00:00:00</ToDate>*/
-  auto t1 = to_unix_time(2010, 10, 15);
-  auto t2 = to_unix_time(2022, 12, 11);
-  interval = Interval(t1, t2);
-
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(values(output_services)),
       fbb.CreateVector(values(fbs_stations)), fbb.CreateVector(fbs_routes),
       &interval, fbb.CreateVector(footpaths), fbb.CreateVector(rule_services),
       fbb.CreateVector(meta_stations), fbb.CreateString(dataset_name), hash));
 }
-
 }  // namespace motis::loader::netex

@@ -80,10 +80,12 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
   auto p_a = passenger_assignments{};
   for (auto const& passenger_assignments : service_jorney.node().select_nodes(
            ".//stopAssignments/PassengerStopAssignment")) {
-    auto const scheduled_place = passenger_assignments.node()
-                                     .child("ScheduledStopPointRef")
-                                     .attribute("ref")
-                                     .as_string();
+    auto const key =
+        std::string(passenger_assignments.node().attribute("id").as_string());
+    p_a.scheduled_place_id_ = passenger_assignments.node()
+                                  .child("ScheduledStopPointRef")
+                                  .attribute("ref")
+                                  .as_string();
     p_a.stop_point_id_ = passenger_assignments.node()
                              .child("StopPlaceRef")
                              .attribute("ref")
@@ -92,7 +94,7 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
                        .child("QuayRef")
                        .attribute("ref")
                        .as_string();
-    passengers_assignment_map.try_emplace(scheduled_place, p_a);
+    passengers_assignment_map.try_emplace(key, p_a);
   }  // PassengerStopAssignment
   return passengers_assignment_map;
 }

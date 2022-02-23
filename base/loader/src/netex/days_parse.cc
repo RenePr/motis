@@ -1,6 +1,6 @@
-#include "motis/loader/netex/days_parse.h"
+#include "motis/loader/netex/days/days_parse.h"
 
-#include "motis/loader/netex/days.h"
+#include "motis/loader/netex/days/days.h"
 #include <map>
 #include <vector>
 #include "utl/verify.h"
@@ -84,37 +84,5 @@ std::map<std::string, ids> parse_daytypes_uicoperation(xml::xml_document& d) {
     }
   }
   return ret_unmap;
-}
-std::map<std::string, season> get_season_times(
-    std::map<std::string, ids> const& days_m) {
-  auto seasons_m = std::map<std::string, season>{};
-  for (auto const& ele : days_m) {
-    auto const it_uic = ele.second.uic_.lower_bound(ele.second.uic_id_);
-    utl::verify(it_uic != end(ele.second.uic_),
-                "missing time_table_passing_time: {}", ele.second.uic_id_);
-    auto const vdb = std::string(it_uic->second.valid_day_bits_);
-    auto const valid_day_bits = vdb.c_str();
-    auto start = -1;
-    auto end = -1;
-    auto sea = season{};
-    for (auto i = 0; i < strlen(valid_day_bits); i++) {
-      if (valid_day_bits[i] == '1' && i == 0) {
-        start = i;
-      } else if (valid_day_bits[i] == '1' &&
-                 i == (strlen(valid_day_bits) - 1)) {
-        end = i;
-      } else {
-        if (start == -1 && valid_day_bits[i] == '1') {
-          start = i;
-        } else if (end == -1 && valid_day_bits[i] == '1') {
-          end = i;
-        }
-      }
-    }
-    sea.day_idx_first_day_ = start;
-    sea.day_idx_last_day_ = end;
-    seasons_m.try_emplace(ele.first, sea);
-  }
-  return seasons_m;
 }
 }  // namespace motis::loader::netex

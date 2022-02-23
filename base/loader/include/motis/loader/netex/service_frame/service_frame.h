@@ -27,6 +27,7 @@ struct direction {
 };
 
 struct passenger_assignments {
+  std::string scheduled_place_id_;
   std::string stop_point_id_;
   std::string quay_id_;
 };

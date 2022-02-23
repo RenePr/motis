@@ -148,14 +148,17 @@ TEST(service_frame_parse, passenger_assignments) {
     auto d_m = std::map<std::string, direction>{};
     auto p_m = std::map<std::string, passenger_assignments>{};
     parse_frame(d, l_m, s_m, s_p_m, d_m, p_m);
-    std::string_view stop_point = "DE::ScheduledStopPoint:12466101_126_::";
-    std::string_view quay_id = "DE::StopPlace:300024661_1000::";
+    std::string_view scheduled_stop = "DE::ScheduledStopPoint:12466101_126_::";
+    std::string_view quay_id = "";
+    std::string_view stop_point = "DE::StopPlace:300024661_1000::";
     ASSERT_TRUE(p_m.size() == 24);
     ASSERT_TRUE(std::string_view(p_m.at("DE::PassengerStopAssignment:965366::")
                                      .stop_point_id_) == stop_point);
     ASSERT_TRUE(std::string_view(
                     p_m.at("DE::PassengerStopAssignment:965366::").quay_id_) ==
                 quay_id);
+    ASSERT_TRUE(std::string_view(p_m.at("DE::PassengerStopAssignment:965366::")
+                                     .scheduled_place_id_) == scheduled_stop);
   } catch (std::exception const& e) {
     std::cout << e.what();
   }
