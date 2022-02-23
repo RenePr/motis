@@ -33,7 +33,7 @@ std::map<std::string, line> parse_line(
     line_parse.id_ = id;
     line_parse.operator_ = operator_map.at(operator_id);
     line_map.try_emplace(id, line_parse);
-  }
+  }  // Line
   return line_map;
 }
 
@@ -53,7 +53,7 @@ std::map<std::string, Operator_Authority> parse_operator(xml::xml_document& d) {
     operator_parse.public_code_ =
         operator_get.node().child("PublicCode").text().as_string();
     operator_map.try_emplace(id, operator_parse);
-  }
+  }  // Operator
   return operator_map;
 }
 
@@ -69,7 +69,7 @@ std::map<std::string, direction> parse_direction(
     dir.short_name_ =
         direction_get.node().child("ShortName").text().as_string();
     direction_map.try_emplace(id, dir);
-  }
+  }  // Direction
   return direction_map;
 }
 
@@ -93,7 +93,7 @@ std::map<std::string, passenger_assignments> parse_passenger_assignment(
                        .attribute("ref")
                        .as_string();
     passengers_assignment_map.try_emplace(scheduled_place, p_a);
-  }
+  }  // PassengerStopAssignment
   return passengers_assignment_map;
 }
 std::map<std::string, stop_point> parse_stop_place(xml::xml_document& d) {
@@ -135,10 +135,10 @@ std::map<std::string, stop_point> parse_stop_place(xml::xml_document& d) {
       auto const name =
           std::string(quay.node().child("Name").text().as_string());
       quay_v.push_back(name);
-    }
+    }  // Quay
     stop.quay_ = quay_v;
     stops.try_emplace(id, stop);
-  }
+  }  // StopPlace
   return stops;
 }
 std::map<std::string, scheduled_points> parse_scheduled_points(
@@ -157,7 +157,7 @@ std::map<std::string, scheduled_points> parse_scheduled_points(
         scheduled_points_get.node().child("StopType").text().as_string();
 
     scheduled_stops_map.try_emplace(id, points);
-  }
+  }  // ScheduledStopPoint
   return scheduled_stops_map;
 }
 void parse_frame(xml::xml_document& d, std::map<std::string, line>& l_m,
@@ -173,6 +173,6 @@ void parse_frame(xml::xml_document& d, std::map<std::string, line>& l_m,
     s_m = parse_scheduled_points(sf);
     d_m = parse_direction(sf);
     p_m = parse_passenger_assignment(sf);
-  }
+  }  // ServiceFrame
 }
 }  // namespace motis::loader::netex

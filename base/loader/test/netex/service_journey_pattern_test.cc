@@ -18,7 +18,7 @@ namespace xml = pugi;
 namespace fs = boost::filesystem;
 using namespace motis::loader::netex;
 
-TEST(service_journey_pattern_parse, service_journey_p) {
+TEST(service_journey_pattern_parse, service_journey_pattern) {
   try {
     const char* file =
         "base/loader/test_resources/netex_schedules/"

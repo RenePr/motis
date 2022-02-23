@@ -68,7 +68,6 @@ void netex_parser::parse(fs::path const& p,
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
       utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      std::cout << d.first_child().first_child() << std::endl;
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto s_p_m = std::map<std::string, stop_point>{};
@@ -83,17 +82,17 @@ void netex_parser::parse(fs::path const& p,
       parse_service_journey_interchange(d, sji_v);
       auto const days_m = parse_daytypes_uicoperation(d);
       auto const season_m = get_season_times(days_m);
-      auto const b = build{l_m,   s_m,    d_m,
-                           p_m,   days_m, season_m,
-                           sjp_m, sj_m,   z.current_file_name()};
-      auto sjpp = std::vector<service_journey_parse>{};
+      auto const b =
+          build{l_m,    s_m,      s_p_m, d_m,  p_m,
+                days_m, season_m, sjp_m, sj_m, z.current_file_name()};
+      /*auto sjpp = std::vector<service_journey_parse>{};
       build_fbs(b, sjpp, fbb);
       auto services = std::map<std::string, fbs64::Offset<Service>>{};
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);
       create_rule_service(sji_v, output_services, fbs_stations, rule_services,
-                          fbb);
+                          fbb);*/
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
     } catch (...) {
@@ -103,7 +102,7 @@ void netex_parser::parse(fs::path const& p,
 
   /* <FromDate>2021-10-15T00:00:00</FromDate>
  <ToDate>2021-12-11T00:00:00</ToDate>*/
-  auto t1 = to_unix_time(2021, 10, 15);
+  auto t1 = to_unix_time(2010, 10, 15);
   auto t2 = to_unix_time(2022, 12, 11);
   interval = Interval(t1, t2);
 

@@ -15,6 +15,8 @@ namespace motis::loader::netex {
 
 void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
                fbs64::FlatBufferBuilder& fbb) {
+  // TODO wichtig
+  //  s_m ,s_p_m und p_m zusammenkonvertieren zu 1 !!
   for (auto const& sj : b.sj_m_) {
     // std::cout << sj.second.key_sjp_ << sj.first << std::endl;
     auto sjp = service_journey_parse{};
@@ -49,10 +51,8 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
         CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d,
                      it_sea->second.minutes_after_midnight_first_day_,
                      it_sea->second.minutes_after_midnight_last_day_);
-    // auto const season = CreateSeason(fbb, 60, 0, 0, 0, 0);
     //  TODO generell offset = winterzeit unterschied zu gmt so korrekt
     auto const timezone = CreateTimezone(fbb, 120, season);
-    // std::cout << "sj" << std::endl;
     //  TODO times_v und ttpt_v zusammen oder getrennt?
     auto times_v = std::vector<int>{};
     auto start_time = begin(sj.second.keys_ttpt_)->dep_time_;
@@ -70,9 +70,7 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     sjp.times_v_ = times_v;
     sjp.ttpt_index_ = ttpt_v;
     sjp_m.push_back(sjp);
-    // std::cout << "sj end" << std::endl;
   }
-  // std::cout << "Here?2" << std::endl;
 }
 void create_stations_routes_services_fbs(
     std::vector<service_journey_parse> const& sjpp,
@@ -132,7 +130,6 @@ void create_stations_routes_services_fbs(
     tracks_rules_v.push_back(tracks);
     auto const st1 = std::string("123");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
-    // string ctor has invalid argument
     auto const service = CreateService(
         fbb, route, to_fbs_string(fbb, st1),
         fbb.CreateVector(

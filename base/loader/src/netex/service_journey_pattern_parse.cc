@@ -38,7 +38,7 @@ void parse_service_journey_pattern(
     for (auto const& l : sjp.node().select_nodes(".//RouteView/LineRef")) {
       auto const key_l = std::string(l.node().attribute("ref").as_string());
       l_m.push_back(key_l);
-    }
+    }  // LineRef
     sjps.lines_ = l_m;
     auto stop_point_map =
         std::map<std::string, stop_point_in_journey_pattern>{};

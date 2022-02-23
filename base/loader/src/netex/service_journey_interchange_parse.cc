@@ -26,6 +26,6 @@ void parse_service_journey_interchange(
         sji.node().child("ToPointRef").attribute("ref").as_string();
     sji_this.stay_seated_ = sji.node().child("StaySeated").text().as_bool();
     sji_m.push_back(sji_this);
-  }
+  }  // ServiceJourneyInterchange
 }
 }  // namespace motis::loader::netex

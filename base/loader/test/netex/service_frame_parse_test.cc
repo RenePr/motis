@@ -135,3 +135,28 @@ TEST(service_frame_parse, stop_points) {
     std::cout << e.what();
   }
 }
+TEST(service_frame_parse, passenger_assignments) {
+  try {
+    const char* file =
+        "base/loader/test_resources/netex_schedules/"
+        "NX-PI-01_DE_NAP_LINE_126-HEAGTRAM-2_20220104.xml";
+    xml::xml_document d;
+    auto r = d.load_file(file);
+    auto l_m = std::map<std::string, line>{};
+    auto s_m = std::map<std::string, scheduled_points>{};
+    auto s_p_m = std::map<std::string, stop_point>{};
+    auto d_m = std::map<std::string, direction>{};
+    auto p_m = std::map<std::string, passenger_assignments>{};
+    parse_frame(d, l_m, s_m, s_p_m, d_m, p_m);
+    std::string_view stop_point = "DE::ScheduledStopPoint:12466101_126_::";
+    std::string_view quay_id = "DE::StopPlace:300024661_1000::";
+    ASSERT_TRUE(p_m.size() == 24);
+    ASSERT_TRUE(std::string_view(p_m.at("DE::PassengerStopAssignment:965366::")
+                                     .stop_point_id_) == stop_point);
+    ASSERT_TRUE(std::string_view(
+                    p_m.at("DE::PassengerStopAssignment:965366::").quay_id_) ==
+                quay_id);
+  } catch (std::exception const& e) {
+    std::cout << e.what();
+  }
+}

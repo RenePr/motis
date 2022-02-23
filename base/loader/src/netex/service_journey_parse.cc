@@ -43,6 +43,6 @@ void parse_service_journey(xml::xml_document& d,
     }  // TimetablePassingTime
     service_j.keys_ttpt_ = ttpt_v;
     sj_m.try_emplace(key_sj, service_j);
-  }
+  }  // ServiceJourney
 }
 }  // namespace motis::loader::netex

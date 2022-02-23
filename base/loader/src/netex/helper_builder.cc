@@ -151,12 +151,10 @@ void get_service_times(time_table_passing_time const& ttpt,
                        std::vector<int>& times_v) {
   // TODO in seconds?
   if (times_v.size() == 0 && std::string_view(ttpt.arr_time_) == "") {
-    // first time
     times_v.push_back(-1);
     auto const time = time_realtive_to_0(ttpt.dep_time_, start_time);
     times_v.push_back(time);
   } else if (std::string_view(ttpt.dep_time_) == "") {
-    // berechne arr time to 0
     auto const time = time_realtive_to_0(ttpt.arr_time_, start_time);
     times_v.push_back(time);
     times_v.push_back(-1);
@@ -181,8 +179,7 @@ void get_station_dir_fbs(stations_direction const& s_d,
                          fbs64::Offset<Station>& station,
                          fbs64::Offset<Direction>& direction,
                          fbs64::FlatBufferBuilder& fbb) {
-  // external ids = leer
-  // TODO interchange time
+  // TODO interchange time, external ids vorerst leer
   auto test = std::vector<std::string>{};
   auto const test1 = std::string("1");
   test.push_back(test1);

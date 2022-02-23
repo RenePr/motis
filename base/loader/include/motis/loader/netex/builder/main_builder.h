@@ -27,6 +27,7 @@ namespace motis::loader::netex {
 struct build {
   std::map<std::string, line> l_m_;
   std::map<std::string, scheduled_points> s_m_;
+  std::map<std::string, stop_point> s_p_m_;
   std::map<std::string, direction> d_m_;
   std::map<std::string, passenger_assignments> p_m_;
 
