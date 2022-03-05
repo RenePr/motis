@@ -9,6 +9,7 @@
 
 #include "motis/loader/netex/days/days.h"
 #include "motis/loader/util.h"
+#include "utl/get_or_create.h"
 
 namespace fbs64 = flatbuffers64;
 
@@ -176,11 +177,11 @@ void get_station_dir_fbs(stations_direction const& s_d,
                          fbs64::FlatBufferBuilder& fbb) {
   // TODO interchange time, external ids vorerst leer
   auto test = std::vector<std::string>{};
-  auto const test1 = std::string("1");
+  auto const test1 = std::string("Ha");
   test.push_back(test1);
-  station = CreateStation(
-      fbb, to_fbs_string(fbb, s_d.id_), to_fbs_string(fbb, s_d.name_),
-      s_d.lat_, s_d.lng_, 0,
+  station =  CreateStation(
+      fbb, to_fbs_string(fbb, s_d.stop_point_id_), to_fbs_string(fbb, s_d.name_),
+      s_d.lat_, s_d.lng_, 1,
       fbb.CreateVector(utl::to_vec(
           begin(test), end(test),
           [&](std::string const& s) { return fbb.CreateString(s); })),
@@ -193,6 +194,9 @@ std::map<std::string, stations_direction> get_stations( std::map<std::string, sc
                   std::map<std::string, passenger_assignments> const& p_m) {
   auto s_d_m = std::map<std::string, stations_direction>{};
   //auto counter = 0;
+  if(s_m.size() == s_p_m.size()) {
+    std::cout << "not equal" << std::endl;
+  }
   for(auto const& p_a : p_m) {
     auto const it_s = s_m.lower_bound(p_a.second.scheduled_place_id_);
     utl::verify(it_s != end(s_m), "missing scheduled_point: {}", p_a.second.scheduled_place_id_);
@@ -205,12 +209,16 @@ std::map<std::string, stations_direction> get_stations( std::map<std::string, sc
     st.timezone_name_ = it_s_p->second.timezone_;
     st.quays_ = it_s_p->second.quay_;
     st.stop_point_id_ = it_s_p->first;
-    std::stringstream stringStream;
-    stringStream << counter;
-    st.id_ = std::string( stringStream.str());
-    //st.id_ = it_s->first;
+    st.id_ = it_s_p->first;
+    if(st.quays_.size() == 0) {
+      s_d_m.emplace(it_s->first, st);
+    } else {
+      std::stringstream stringStream;
+      stringStream << st.id_ << counter;
+      s_d_m.emplace(stringStream.str(), st);
+    }
+    s_d_m.emplace(p_a.second.scheduled_place_id_, st);
     counter++;
-    s_d_m.emplace(it_s->first, st);
   }
   return s_d_m;
 }

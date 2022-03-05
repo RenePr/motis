@@ -14,7 +14,7 @@ void parse_service_journey_pattern(
     xml::xml_document& d,
     std::map<std::string, service_journey_pattern>& sjp_m) {
   for (auto const& sjp :
-       d.select_nodes("PublicationDelivery/dataObjects/CompositeFrame/frames/"
+       d.select_nodes("/PublicationDelivery/dataObjects/CompositeFrame/frames/"
                       "ServiceFrame/journeyPatterns/ServiceJourneyPattern")) {
     auto const key_sjp = std::string(sjp.node().attribute("id").as_string());
     auto sjps = service_journey_pattern{};
@@ -52,7 +52,7 @@ void parse_service_journey_pattern(
           sp.node().child("ForBoarding").text().as_bool();
       stopPointInJourneyPattern.out_allowed_ =
           sp.node().child("ForAlighting").text().as_bool();
-      stop_point_map.try_emplace(key, stopPointInJourneyPattern);
+      stop_point_map.emplace(key, stopPointInJourneyPattern);
     }  // StopPointInJourneyPattern
     sjps.stop_point_map_ = stop_point_map;
     sjp_m.emplace(key_sjp, sjps);

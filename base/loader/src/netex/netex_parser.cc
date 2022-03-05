@@ -65,7 +65,7 @@ void netex_parser::parse(fs::path const& p,
       xml::xml_document d;
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
-      utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
+      //utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto s_p_m = std::map<std::string, stop_point>{};
@@ -90,10 +90,13 @@ void netex_parser::parse(fs::path const& p,
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);
-      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
-                          fbb);
+      /*create_rule_service(sji_v, output_services, fbs_stations, rule_services,
+                          fbb);*/
+      std::cout << fbs_routes.size() << std::endl;
+      std::cout << fbs_stations.size() << std::endl;
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
+      std::cout << e.what();
     } catch (...) {
       LOG(error) << "unable to parse message";
     }

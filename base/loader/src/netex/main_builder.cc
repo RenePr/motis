@@ -79,20 +79,25 @@ void create_stations_routes_services_fbs(
     std::vector<fbs64::Offset<Route>>& fbs_routes,
     std::map<std::string, fbs64::Offset<Service>>& services,
     fbs64::FlatBufferBuilder& fbb) {
+  auto counter = 0;
   for (auto const& ele : sjpp) {
-    auto in_allowed_v = std::vector<bool>{};
-    auto out_allowed_v = std::vector<bool>{};
+    auto in_allowed_v = std::vector<uint8_t>{};
+    auto out_allowed_v = std::vector<uint8_t>{};
     auto stations_v = std::vector<fbs64::Offset<Station>>{};
     auto sections_v = std::vector<fbs64::Offset<Section>>{};
     auto tracks_v = std::vector<fbs64::Offset<Track>>{};
     for (auto const& sta : ele.ttpt_index_) {
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
+      /*if(fbs_stations.lower_bound(sta.st_dir_.stop_point_id_) != end(fbs_stations)) {
+        std::cout << "Here?";
+        continue;
+      }*/
       get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
       stations_v.push_back(station);
-      in_allowed_v.push_back(sta.in_allowed_);
-      out_allowed_v.push_back(sta.out_allowed_);
-      fbs_stations.try_emplace(sta.schedulep_point_ref_, station);
+      in_allowed_v.push_back(reinterpret_cast<uint8_t>(sta.in_allowed_));
+      out_allowed_v.push_back(reinterpret_cast<uint8_t>(sta.out_allowed_));
+      fbs_stations.emplace(sta.st_dir_.stop_point_id_, station);
       // TODO Line_id
       auto const sec = build_sec{ele.category_, ele.provider_, ele.a_v_,
                                  std::string(""), direction};
@@ -101,7 +106,7 @@ void create_stations_routes_services_fbs(
       sections_v.push_back(section);
       auto const test = std::string("");
       auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
-                                     to_fbs_string(fbb, sta.quay_));
+                                     to_fbs_string(fbb, test));
       tracks_v.push_back(track);
     }
     auto const route = CreateRoute(
@@ -115,8 +120,10 @@ void create_stations_routes_services_fbs(
                                      [](uint8_t const& o) { return o; })));
     fbs_routes.push_back(route);
     // TODO line from to
+    auto counter2 = counter+1;
     auto const service_debug_info =
         CreateServiceDebugInfo(fbb, to_fbs_string(fbb, file_name), 0, 0);
+    counter++;
     // TODO
     auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
     auto const tracks = CreateTrackRules(
@@ -128,10 +135,13 @@ void create_stations_routes_services_fbs(
             utl::to_vec(begin(tracks_v), end(tracks_v),
                         [&](fbs64::Offset<Track> const& t) { return t; })));
     tracks_rules_v.push_back(tracks);
-    auto const st1 = std::string("123");
+    //TODO entfehrnen
+    tracks_rules_v.push_back(tracks);
+    auto st1 = std::string("1");
+    auto const st2 = std::string("test1");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
     auto const service = CreateService(
-        fbb, route, to_fbs_string(fbb, st1),
+        fbb, route, fbb.CreateString(st1),
         fbb.CreateVector(
             utl::to_vec(begin(sections_v), end(sections_v),
                         [&](fbs64::Offset<Section> const& s) { return s; })),
@@ -140,7 +150,7 @@ void create_stations_routes_services_fbs(
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
-        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));
+        0, service_debug_info, false, 0, fbb.CreateString(st1));
     services.emplace(ele.key_sj_, service);
   }
 }
