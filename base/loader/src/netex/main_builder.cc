@@ -59,16 +59,16 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       get_service_times(ttpt, start_time, times_v);
     }
-    auto routes = std::vector<route>{};
+    auto routes_v = std::vector<routes>{};
     auto const routes_d = routes_data{sj.second.keys_ttpt_,
                                    it_sjp->second.direction_,
                                    traffic_days.first,
                                    it_sjp->second.stop_point_map_,
                                    timezone,
                                    b.stations_map_};
-    get_ttpts(routes_d, routes);
+    get_ttpts(routes_d, routes_v);
     sjp.times_v_ = times_v;
-    sjp.routes_ = ttpt_v;
+    sjp.routes_ = routes_v;
     sjp_m.push_back(sjp);
   }
 }
@@ -86,7 +86,7 @@ void create_stations_routes_services_fbs(
     auto stations_v = std::vector<fbs64::Offset<Station>>{};
     auto sections_v = std::vector<fbs64::Offset<Section>>{};
     auto tracks_v = std::vector<fbs64::Offset<Track>>{};
-    for (auto const& sta : ele.ttpt_index_) {
+    for (auto const& sta : ele.routes_) {
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
       /*if(fbs_stations.lower_bound(sta.st_dir_.stop_point_id_) != end(fbs_stations)) {

@@ -38,7 +38,7 @@ struct build {
 };
 struct service_journey_parse {
   std::vector<int> times_v_;
-  std::vector<route> routes_;
+  std::vector<routes> routes_;
   std::vector<fbs64::Offset<Attribute>> a_v_;
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;

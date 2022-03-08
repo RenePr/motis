@@ -63,7 +63,7 @@ std::pair<std::string, std::string> get_valid_day_bits(
   return pair;
 }
 
-void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes) {
+void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
   for (auto const& ttpt : routes_d.keys_ttpt_) {
     auto route = routes{};
     auto const it_sp =
@@ -71,8 +71,8 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes) {
     utl::verify(it_sp != end(routes_d.stop_point_map_),
                 "missing time_table_passing_time: {}", ttpt.stop_point_ref_);
     auto const key_sp = std::string(it_sp->second.id_);
-    auto const it = routes_d.s_d_m_.lower_bound(key_sp);
-    utl::verify(it != end(routes_d.s_d_m_), "missing scheduled_stop_point: {}",
+    auto const it = routes_d.stations_map_.lower_bound(key_sp);
+    utl::verify(it != end(routes_d.stations_map_), "missing scheduled_stop_point: {}",
                 key_sp);
     route.schedulep_point_ref_ = it->first;
     auto st_dir = it->second;
@@ -88,7 +88,7 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes) {
     } else {
       route.quay_ = begin(it->second.quays_)->data();
     }
-    routes.push_back(route);
+    routes_v.push_back(route);
   }
 }
 

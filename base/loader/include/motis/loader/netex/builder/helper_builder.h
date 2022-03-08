@@ -44,7 +44,7 @@ struct routes {
   std::string quay_;
   std::string schedulep_point_ref_;
 };
-struct ttpt_need {
+struct routes_data {
   std::vector<time_table_passing_time> keys_ttpt_;
   std::string direction_;
   std::string traffic_days_;
@@ -55,7 +55,7 @@ struct ttpt_need {
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&);
 // vector, normalerweise nur 1 eintrag.
-void get_ttpts(ttpt_need const&, std::vector<ttpt_index>&);
+void get_ttpts(routes_data const&, std::vector<routes>&);
 std::pair<std::string, std::string> get_valid_day_bits(
     std::map<std::string, ids> const&, std::vector<std::string> const&);
 // 3 const noch ok oder auch über struct?
@@ -71,7 +71,7 @@ void get_attribute_fbs(std::vector<std::string> const&,
                        fbs64::FlatBufferBuilder&);
 void get_service_times(time_table_passing_time const&, std::string const&,
                        std::vector<int>&);
-void get_section_fbs(build_sec const&, fbs64::Offset<Section>&,
+void get_section_fbs(section const&, fbs64::Offset<Section>&,
                      fbs64::FlatBufferBuilder&);
 void get_station_dir_fbs(stations_direction const&, fbs64::Offset<Station>&,
                          fbs64::Offset<Direction>&, fbs64::FlatBufferBuilder&);
