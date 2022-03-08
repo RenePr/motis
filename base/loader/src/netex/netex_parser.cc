@@ -84,9 +84,9 @@ void netex_parser::parse(fs::path const& p,
       auto const b =
           build{l_m,      d_m,  stations_m,
                 days_m, season_m, sjp_m, sj_m, z.current_file_name()};
-      auto sjpp = std::vector<service_journey_parse>{};
-      build_fbs(b, sjpp, fbb);
-      auto services = std::map<std::string, fbs64::Offset<Service>>{};
+      auto sjpp = std::vector<section_route>{};
+      build_fbs(b, sjpp,fbb);
+      //auto services = std::map<std::string, fbs64::Offset<Service>>{};
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);

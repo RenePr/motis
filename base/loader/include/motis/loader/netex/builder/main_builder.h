@@ -36,7 +36,7 @@ struct build {
 
   std::string_view file_;
 };
-struct service_journey_parse {
+struct section_route {
   std::vector<int> times_v_;
   std::vector<routes> routes_;
   std::vector<fbs64::Offset<Attribute>> a_v_;
@@ -45,10 +45,11 @@ struct service_journey_parse {
   std::string key_sj_;
 };
 
-void build_fbs(build const&, std::vector<service_journey_parse>&,
+void build_fbs(build const&, std::vector<section_route>&,
                fbs64::FlatBufferBuilder&);
 void create_stations_routes_services_fbs(
-    std::vector<service_journey_parse> const&, std::string const&,
+    std::vector<section_route> const&,
+    std::string const&,
     std::map<std::string, fbs64::Offset<Station>>&,
     std::vector<fbs64::Offset<Route>>&,
     std::map<std::string, fbs64::Offset<Service>>&, fbs64::FlatBufferBuilder&);

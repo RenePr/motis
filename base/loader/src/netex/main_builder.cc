@@ -13,13 +13,13 @@ namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
 
-void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
+void build_fbs(build const& b, std::vector<section_route>& sjp_m,
                fbs64::FlatBufferBuilder& fbb) {
   // TODO wichtig
   //  s_m ,s_p_m und p_m zusammenkonvertieren zu 1 !!
   for (auto const& sj : b.sj_m_) {
     // std::cout << sj.second.key_sjp_ << sj.first << std::endl;
-    auto sjp = service_journey_parse{};
+    auto sjp = section_route{};
     sjp.key_sj_ = sj.second.key_sj_;
     auto const it_sjp = b.sjp_m_.lower_bound(sj.second.key_sjp_);
     utl::verify(it_sjp != end(b.sjp_m_), "missing service_journey_pattern: {}",
@@ -73,7 +73,7 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
   }
 }
 void create_stations_routes_services_fbs(
-    std::vector<service_journey_parse> const& sjpp,
+    std::vector<section_route> const& sjpp,
     std::string const& file_name,
     std::map<std::string, fbs64::Offset<Station>>& fbs_stations,
     std::vector<fbs64::Offset<Route>>& fbs_routes,
