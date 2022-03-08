@@ -63,32 +63,32 @@ std::pair<std::string, std::string> get_valid_day_bits(
   return pair;
 }
 
-void get_ttpts(ttpt_need const& ttpt_need, std::vector<ttpt_index>& ttpt_v) {
-  for (auto const& ttpt : ttpt_need.keys_ttpt_) {
-    auto ttpt_i = ttpt_index{};
+void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes) {
+  for (auto const& ttpt : routes_d.keys_ttpt_) {
+    auto route = routes{};
     auto const it_sp =
-        ttpt_need.stop_point_map_.lower_bound(ttpt.stop_point_ref_);
-    utl::verify(it_sp != end(ttpt_need.stop_point_map_),
+        routes_d.stop_point_map_.lower_bound(ttpt.stop_point_ref_);
+    utl::verify(it_sp != end(routes_d.stop_point_map_),
                 "missing time_table_passing_time: {}", ttpt.stop_point_ref_);
     auto const key_sp = std::string(it_sp->second.id_);
-    auto const it = ttpt_need.s_d_m_.lower_bound(key_sp);
-    utl::verify(it != end(ttpt_need.s_d_m_), "missing scheduled_stop_point: {}",
+    auto const it = routes_d.s_d_m_.lower_bound(key_sp);
+    utl::verify(it != end(routes_d.s_d_m_), "missing scheduled_stop_point: {}",
                 key_sp);
-    ttpt_i.schedulep_point_ref_ = it->first;
+    route.schedulep_point_ref_ = it->first;
     auto st_dir = it->second;
-    st_dir.timezone_ = ttpt_need.timezone_;
-    st_dir.direction_ = ttpt_need.direction_;
+    st_dir.timezone_ = routes_d.timezone_;
+    st_dir.direction_ = routes_d.direction_;
     // TODO direction
-    ttpt_i.st_dir_ =st_dir;
-    ttpt_i.in_allowed_ = it_sp->second.in_allowed_;
-    ttpt_i.out_allowed_ = it_sp->second.out_allowed_;
+    route.st_dir_ =st_dir;
+    route.in_allowed_ = it_sp->second.in_allowed_;
+    route.out_allowed_ = it_sp->second.out_allowed_;
     //  TODO is uint8_t richtig?
     if (it->second.quays_.size() == 0) {
-      ttpt_i.quay_ = ttpt_need.traffic_days_;
+      route.quay_ = routes_d.traffic_days_;
     } else {
-      ttpt_i.quay_ = begin(it->second.quays_)->data();
+      route.quay_ = begin(it->second.quays_)->data();
     }
-    ttpt_v.push_back(ttpt_i);
+    routes.push_back(route);
   }
 }
 
@@ -161,7 +161,7 @@ void get_service_times(time_table_passing_time const& ttpt,
     times_v.push_back(time2);
   }
 }
-void get_section_fbs(build_sec const& sec, fbs64::Offset<Section>& section,
+void get_section_fbs(section const& sec, fbs64::Offset<Section>& section,
                      fbs64::FlatBufferBuilder& fbb) {
   section = CreateSection(
       fbb, sec.category_, sec.provider_, 0, to_fbs_string(fbb, sec.line_id),

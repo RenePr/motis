@@ -17,16 +17,7 @@ namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
 
-struct station_dir {
-  std::map<std::string, stop_point_in_journey_pattern> s_p_m_;
-  std::map<std::string, scheduled_points> s_m_;
-  std::map<std::string, line> l_m_;
-  std::pair<std::string, std::string> traffic_days;
-  std::string stop_point_ref_;
-  std::string direction_;
-  fbs64::Offset<Timezone> timezone_;
-};
-struct build_sec {
+struct section {
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;
   std::vector<fbs64::Offset<Attribute>> a_v_;
@@ -46,7 +37,7 @@ struct stations_direction {
   std::string stop_point_id_;
 };
 
-struct ttpt_index {
+struct routes {
   stations_direction st_dir_;
   uint8_t in_allowed_;
   uint8_t out_allowed_;
@@ -59,7 +50,7 @@ struct ttpt_need {
   std::string traffic_days_;
   std::map<std::string, stop_point_in_journey_pattern> stop_point_map_;
   fbs64::Offset<Timezone> timezone_;
-  std::map<std::string, stations_direction> s_d_m_;
+  std::map<std::string, stations_direction> stations_map_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&);

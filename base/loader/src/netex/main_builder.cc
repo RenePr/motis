@@ -59,16 +59,16 @@ void build_fbs(build const& b, std::vector<service_journey_parse>& sjp_m,
     for (auto const& ttpt : sj.second.keys_ttpt_) {
       get_service_times(ttpt, start_time, times_v);
     }
-    auto ttpt_v = std::vector<ttpt_index>{};
-    auto const ttpt_ne = ttpt_need{sj.second.keys_ttpt_,
+    auto routes = std::vector<route>{};
+    auto const routes_d = routes_data{sj.second.keys_ttpt_,
                                    it_sjp->second.direction_,
                                    traffic_days.first,
                                    it_sjp->second.stop_point_map_,
                                    timezone,
-                                   b.s_d_m_};
-    get_ttpts(ttpt_ne, ttpt_v);
+                                   b.stations_map_};
+    get_ttpts(routes_d, routes);
     sjp.times_v_ = times_v;
-    sjp.ttpt_index_ = ttpt_v;
+    sjp.routes_ = ttpt_v;
     sjp_m.push_back(sjp);
   }
 }
@@ -95,11 +95,11 @@ void create_stations_routes_services_fbs(
       }*/
       get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
       stations_v.push_back(station);
-      in_allowed_v.push_back(reinterpret_cast<uint8_t>(sta.in_allowed_));
-      out_allowed_v.push_back(reinterpret_cast<uint8_t>(sta.out_allowed_));
+      in_allowed_v.push_back(static_cast<uint8_t>(sta.in_allowed_));
+      out_allowed_v.push_back(static_cast<uint8_t>(sta.out_allowed_));
       fbs_stations.emplace(sta.st_dir_.stop_point_id_, station);
       // TODO Line_id
-      auto const sec = build_sec{ele.category_, ele.provider_, ele.a_v_,
+      auto const sec = section{ele.category_, ele.provider_, ele.a_v_,
                                  std::string(""), direction};
       auto section = fbs64::Offset<Section>{};
       get_section_fbs(sec, section, fbb);

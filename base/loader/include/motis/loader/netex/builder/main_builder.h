@@ -27,7 +27,7 @@ namespace motis::loader::netex {
 struct build {
   std::map<std::string, line> l_m_;
   std::map<std::string, direction> d_m_;
-  std::map<std::string, stations_direction> s_d_m_;
+  std::map<std::string, stations_direction> stations_map_;
 
   std::map<std::string, ids> days_m_;
   std::map<std::string, season> seasons_m_;
@@ -38,7 +38,7 @@ struct build {
 };
 struct service_journey_parse {
   std::vector<int> times_v_;
-  std::vector<ttpt_index> ttpt_index_;
+  std::vector<route> routes_;
   std::vector<fbs64::Offset<Attribute>> a_v_;
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;
