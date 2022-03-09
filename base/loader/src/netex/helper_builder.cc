@@ -8,6 +8,7 @@
 #include "motis/schedule-format/Schedule_generated.h"
 
 #include "motis/loader/netex/days/days.h"
+#include "motis/core/common/date_time_util.h"
 #include "motis/loader/util.h"
 #include "utl/get_or_create.h"
 
@@ -18,7 +19,7 @@ int time_realtive_to_0_season(std::string const& start) {
   if (std::string_view(start) == "") {
     return 0;
   } else {
-    auto const sec = time(NULL);
+    /*auto const sec = time(NULL);
     auto const timeinfo = localtime(&sec);
     auto tm_start = *timeinfo;
     auto is_start = std::istringstream(std::string(start));
@@ -29,7 +30,14 @@ int time_realtive_to_0_season(std::string const& start) {
     tm_0.tm_min = 0;
     tm_0.tm_hour = 0;
     auto const t_0 = std::mktime(&tm_0);
-    return std::difftime(t_start, t_0);
+    return std::difftime(t_start, t_0)*/
+
+    auto const year = std::stoi(start.substr(0, 4));
+    auto const mon = std::stoi(start.substr(5,2));
+    auto const day = std::stoi(start.substr(8,2));
+    auto const sec2 = to_unix_time(year, mon, day);
+    std::cout << "Year: " << year << " Month: " << mon << " Day: " << day << " Sek: " << sec2 << std::endl;
+    return sec2 / 60;
   }
 }
 // TODO anpassen

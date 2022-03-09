@@ -16,9 +16,7 @@ namespace motis::loader::netex {
 void build_fbs(build const& b, std::vector<section_route>& sjp_m,
                fbs64::FlatBufferBuilder& fbb) {
   // TODO wichtig
-  //  s_m ,s_p_m und p_m zusammenkonvertieren zu 1 !!
   for (auto const& sj : b.sj_m_) {
-    // std::cout << sj.second.key_sjp_ << sj.first << std::endl;
     auto sjp = section_route{};
     sjp.key_sj_ = sj.second.key_sj_;
     auto const it_sjp = b.sjp_m_.lower_bound(sj.second.key_sjp_);
@@ -41,12 +39,20 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto const day_type = sj.second.keys_day_.front();
     auto const it_sea = b.seasons_m_.lower_bound(day_type);
     utl::verify(it_sea != end(b.seasons_m_), "missing seasons: {}", day_type);
-    auto const ttpt_start = begin(sj.second.keys_ttpt_);
-    auto const ttpt_stop = end(sj.second.keys_ttpt_);
-    auto const dep_time = ttpt_start->dep_time_;
-    auto const minutes_a_m_f_d = time_realtive_to_0_season(dep_time);
-    auto const arr_time = ttpt_start->arr_time_;
-    auto const minutes_a_m_l_d = time_realtive_to_0_season(arr_time);
+    auto const it_days = b.days_m_.lower_bound(day_type);
+    utl::verify(it_days != end(b.days_m_), "missing daytypes: {}", day_type);
+    auto const uic_id = it_days->second.uic_id_;
+    auto const it_uic = b.days_m_.at(it_days->first).uic_.lower_bound(uic_id);
+    utl::verify(it_uic != end(b.days_m_.at(it_days->first).uic_), "missing uic: {}", uic_id);
+    //auto const ttpt_start = begin(sj.second.keys_ttpt_);
+    //auto const ttpt_stop = end(sj.second.keys_ttpt_);
+    // auto const dep_time = ttpt_start->dep_time_;
+    auto from_time = std::string(it_uic->second.from_date_);
+    auto const minutes_a_m_f_d = time_realtive_to_0_season(from_time);
+    //auto const arr_time = ttpt_start->arr_time_;
+    auto to_time = std::string(it_uic->second.to_date_);
+    auto const minutes_a_m_l_d = time_realtive_to_0_season(to_time);
+
     auto const season =
         CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d,
                      it_sea->second.minutes_after_midnight_first_day_,

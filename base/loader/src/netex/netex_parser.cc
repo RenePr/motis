@@ -62,6 +62,9 @@ void netex_parser::parse(fs::path const& p,
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
     try {
+      /*
+       * --import.data_dir C:\Users\rpten\Downloads --import.paths schedule:C:\Users\rpten\Downloads\20211029_fahrplaene_gesamtdeutschland.zip --dataset.write_serialized=false
+       */
       xml::xml_document d;
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
