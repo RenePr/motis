@@ -172,19 +172,23 @@ void create_rule_service(
     fbs64::FlatBufferBuilder& fbb) {
   auto rule_service_v = std::vector<fbs64::Offset<Rule>>{};
   for (auto const& sji : sji_v) {
-    auto const from_service = services.lower_bound(sji.from_journey_)->second;
-    auto const to_service = services.lower_bound(sji.to_journey_)->second;
+    auto const it_from_service = services.lower_bound(sji.from_journey_);
+    utl::verify(it_from_service != end(services), "missing from services: {}", services.lower_bound(sji.from_journey_)->second);
+    auto const it_to_service = services.lower_bound(sji.to_journey_);
+    utl::verify(it_to_service != end(services), "missing to services: {}", services.lower_bound(sji.to_journey_)->second);
     // TODO check if scheduledpointref in sji
-    auto const from_stop = fbs_stations.lower_bound(sji.from_station_)->second;
-    auto const to_stop = fbs_stations.lower_bound(sji.to_station_)->second;
+    auto const it_from_stop = fbs_stations.lower_bound(sji.from_station_);
+    utl::verify(it_from_stop != end(fbs_stations), "missing from stations: {}", services.lower_bound(sji.from_station_)->second);
+    auto const it_to_stop = fbs_stations.lower_bound(sji.to_station_);
+    utl::verify(it_to_stop != end(fbs_stations), "missing to stations: {}", services.lower_bound(sji.to_station_)->second);
     // TODO dayoffset1,dayoffset2, day_switch
     auto rule = fbs64::Offset<Rule>{};
     if (sji.stay_seated_) {
-      rule = CreateRule(fbb, static_cast<RuleType>(0.0), from_service,
-                        to_service, from_stop, to_stop, 0, 0, false);
+      rule = CreateRule(fbb, static_cast<RuleType>(0.0), it_from_service->second,
+                        it_to_service->second, it_from_stop->second, it_to_stop->second, 0, 0, false);
     } else {
-      rule = CreateRule(fbb, static_cast<RuleType>(1.0), from_service,
-                        to_service, from_stop, to_stop, 0, 0, false);
+      rule = CreateRule(fbb, static_cast<RuleType>(1.0), it_from_service->second,
+                        it_to_service->second, it_from_stop->second, it_to_stop->second, 0, 0, false);
     }
     rule_service_v.push_back(rule);
   }
