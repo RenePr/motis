@@ -35,6 +35,7 @@ struct build {
   std::map<std::string, service_journey> sj_m_;
 
   std::string_view file_;
+  time_t intervall_start_;
 };
 struct section_route {
   std::vector<int> times_v_;
@@ -43,6 +44,8 @@ struct section_route {
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;
   std::string key_sj_;
+  //TODO checen doppelt in routes_data ebenfalls
+  std::string traffic_days_;
 };
 
 void build_fbs(build const&, std::vector<section_route>&,

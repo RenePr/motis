@@ -1,9 +1,12 @@
 #include "motis/loader/netex/builder/helper_builder.h"
 
 #include <iostream>
+#include <chrono>
 #include <map>
 #include <sstream>
 #include "time.h"
+
+#include "boost/date_time/gregorian/gregorian_types.hpp"
 
 #include "motis/schedule-format/Schedule_generated.h"
 
@@ -15,7 +18,7 @@
 namespace fbs64 = flatbuffers64;
 
 namespace motis::loader::netex {
-int time_realtive_to_0_season(std::string const& start) {
+int time_realtive_to_0_season(std::string const& start, time_t const& intervall_start) {
   if (std::string_view(start) == "") {
     return 0;
   } else {
@@ -31,13 +34,18 @@ int time_realtive_to_0_season(std::string const& start) {
     tm_0.tm_hour = 0;
     auto const t_0 = std::mktime(&tm_0);
     return std::difftime(t_start, t_0)*/
+    //TODO parse<int>?
 
     auto const year = std::stoi(start.substr(0, 4));
     auto const mon = std::stoi(start.substr(5,2));
     auto const day = std::stoi(start.substr(8,2));
-    auto const sec2 = to_unix_time(year, mon, day);
-    std::cout << "Year: " << year << " Month: " << mon << " Day: " << day << " Sek: " << sec2 << std::endl;
-    return sec2 / 60;
+    boost::gregorian::date sec(year, mon, day);
+    //TODO automatisch siehe netex_parser Inverval() start
+    boost::gregorian::date invervall_s(2021, 10, 15);
+    //TODO warum +1 muss aber so sonst bitset error
+    auto const end = (sec- invervall_s).days();
+    std::cout << "Year: " << year << " Month: " << mon << " Day: " << day << " Sek: " << end<< std::endl;
+    return end;
   }
 }
 // TODO anpassen
@@ -62,6 +70,7 @@ std::pair<std::string, std::string> get_valid_day_bits(
   auto pair = std::pair<std::string, std::string>{};
   for (auto const& dt : keys) {
     auto const it = days_map.lower_bound(dt);
+    utl::verify(it != end(days_map), "missing days_types: {}", dt);
     auto const key_uic = std::string(it->second.uic_id_);
     auto const valid_day_bits =
         std::string(it->second.uic_.at(key_uic).valid_day_bits_);

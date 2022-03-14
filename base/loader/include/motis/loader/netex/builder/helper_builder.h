@@ -53,7 +53,7 @@ struct routes_data {
   std::map<std::string, stations_direction> stations_map_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
-int time_realtive_to_0_season(std::string const&);
+int time_realtive_to_0_season(std::string const&, time_t const&);
 // vector, normalerweise nur 1 eintrag.
 void get_ttpts(routes_data const&, std::vector<routes>&);
 std::pair<std::string, std::string> get_valid_day_bits(

@@ -15,6 +15,7 @@
 
 #include "utl/get_or_create.h"
 #include "utl/verify.h"
+#include "boost/date_time/gregorian/gregorian_types.hpp"
 
 #include "motis/core/common/date_time_util.h"
 #include "motis/core/common/logging.h"
@@ -53,11 +54,16 @@ void netex_parser::parse(fs::path const& p,
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
   auto interval = Interval{0, 0};
+  //auto const interval = Interval{static_cast<uint64_t>(t0), static_cast<uint64_t>(t2)};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
   auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
+  //TODO nur 1 jahr geht?!?
+  auto t1 = to_unix_time(2021, 10, 15);
+  auto t2 = to_unix_time(2022, 10, 15);
+  interval = Interval(t1, t2);
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
@@ -69,6 +75,17 @@ void netex_parser::parse(fs::path const& p,
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
       //utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
+      /*
+       *
+       paths=osm:data/switzerland-latest.osm.pbf
+       [osrm]
+profiles=motis/osrm-profiles/car.lua
+profiles=motis/osrm-profiles/bike.lua
+profiles=motis/osrm-profiles/bus.lua
+
+      [ppr]
+          profile=motis/ppr-profiles/default.json
+       */
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto s_p_m = std::map<std::string, stop_point>{};
@@ -86,10 +103,10 @@ void netex_parser::parse(fs::path const& p,
       auto const stations_m = get_stations(s_m, s_p_m, p_m);
       auto const b =
           build{l_m,      d_m,  stations_m,
-                days_m, season_m, sjp_m, sj_m, z.current_file_name()};
+                days_m, season_m, sjp_m, sj_m, z.current_file_name(), t1};
       auto sjpp = std::vector<section_route>{};
       build_fbs(b, sjpp,fbb);
-      //auto services = std::map<std::string, fbs64::Offset<Service>>{};
+      auto services = std::map<std::string, fbs64::Offset<Service>>{};
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);
@@ -106,9 +123,7 @@ void netex_parser::parse(fs::path const& p,
   }
   /* <FromDate>2021-10-15T00:00:00</FromDate>
 <ToDate>2021-12-11T00:00:00</ToDate>*/
-  auto t1 = to_unix_time(2020, 10, 15);
-  auto t2 = to_unix_time(2022, 12, 11);
-  interval = Interval(t1, t2);
+
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(values(output_services)),
       fbb.CreateVector(values(fbs_stations)), fbb.CreateVector(fbs_routes),

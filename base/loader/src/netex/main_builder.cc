@@ -44,21 +44,18 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto const uic_id = it_days->second.uic_id_;
     auto const it_uic = b.days_m_.at(it_days->first).uic_.lower_bound(uic_id);
     utl::verify(it_uic != end(b.days_m_.at(it_days->first).uic_), "missing uic: {}", uic_id);
-    //auto const ttpt_start = begin(sj.second.keys_ttpt_);
-    //auto const ttpt_stop = end(sj.second.keys_ttpt_);
-    // auto const dep_time = ttpt_start->dep_time_;
     auto from_time = std::string(it_uic->second.from_date_);
-    auto const minutes_a_m_f_d = time_realtive_to_0_season(from_time);
-    //auto const arr_time = ttpt_start->arr_time_;
+    auto const minutes_a_m_f_d = time_realtive_to_0_season(from_time, b.intervall_start_);
     auto to_time = std::string(it_uic->second.to_date_);
-    auto const minutes_a_m_l_d = time_realtive_to_0_season(to_time);
-
+    //TODO season minutes_a_m_l_d - 1 um bitset error zu verhindern aber warum?
+    auto const minutes_a_m_l_d = time_realtive_to_0_season(to_time, b.intervall_start_);
+    std::cout << minutes_a_m_l_d - minutes_a_m_f_d  << std::endl;
     auto const season =
-        CreateSeason(fbb, 60, minutes_a_m_f_d, minutes_a_m_l_d,
+        CreateSeason(fbb, 120, minutes_a_m_f_d, minutes_a_m_l_d,
                      it_sea->second.minutes_after_midnight_first_day_,
                      it_sea->second.minutes_after_midnight_last_day_);
     //  TODO generell offset = winterzeit unterschied zu gmt so korrekt
-    auto const timezone = CreateTimezone(fbb, 120, season);
+    auto const timezone = CreateTimezone(fbb, 60, season);
     //  TODO times_v und ttpt_v zusammen oder getrennt?
     auto times_v = std::vector<int>{};
     auto start_time = begin(sj.second.keys_ttpt_)->dep_time_;
@@ -73,6 +70,7 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
                                    timezone,
                                    b.stations_map_};
     get_ttpts(routes_d, routes_v);
+    sjp.traffic_days_ = traffic_days.first;
     sjp.times_v_ = times_v;
     sjp.routes_ = routes_v;
     sjp_m.push_back(sjp);
@@ -114,6 +112,7 @@ void create_stations_routes_services_fbs(
       auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
                                      to_fbs_string(fbb, test));
       tracks_v.push_back(track);
+
     }
     auto const route = CreateRoute(
         fbb,
@@ -143,11 +142,12 @@ void create_stations_routes_services_fbs(
     tracks_rules_v.push_back(tracks);
     //TODO entfehrnen
     tracks_rules_v.push_back(tracks);
-    auto st1 = std::string("1");
-    auto const st2 = std::string("test1");
+    auto const st2 = std::string(ele.traffic_days_);
+    auto const st1 = std::string("0");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
+    std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
     auto const service = CreateService(
-        fbb, route, fbb.CreateString(st1),
+        fbb, route, fbb.CreateString(st2),
         fbb.CreateVector(
             utl::to_vec(begin(sections_v), end(sections_v),
                         [&](fbs64::Offset<Section> const& s) { return s; })),
