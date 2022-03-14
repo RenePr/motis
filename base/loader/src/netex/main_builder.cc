@@ -45,15 +45,19 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto const it_uic = b.days_m_.at(it_days->first).uic_.lower_bound(uic_id);
     utl::verify(it_uic != end(b.days_m_.at(it_days->first).uic_), "missing uic: {}", uic_id);
     auto from_time = std::string(it_uic->second.from_date_);
-    auto const minutes_a_m_f_d = time_realtive_to_0_season(from_time, b.intervall_start_);
+    auto const day_i_f = time_realtive_to_0_season(from_time, b.intervall_start_);
     auto to_time = std::string(it_uic->second.to_date_);
     //TODO season minutes_a_m_l_d - 1 um bitset error zu verhindern aber warum?
-    auto const minutes_a_m_l_d = time_realtive_to_0_season(to_time, b.intervall_start_);
-    std::cout << minutes_a_m_l_d - minutes_a_m_f_d  << std::endl;
+    auto const day_i_l = time_realtive_to_0_season(to_time, b.intervall_start_);
+    std::cout << day_i_l - day_i_f  << std::endl;
+    auto const s_time = begin(sj.second.keys_ttpt_)->dep_time_;
+    auto const minutes_after_midnight_first_day = time_realtive_to_0(s_time, std::string("00:00:00"));
+    auto const e_time = end(sj.second.keys_ttpt_)->arr_time_;
+    auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));
     auto const season =
-        CreateSeason(fbb, 120, minutes_a_m_f_d, minutes_a_m_l_d,
-                     it_sea->second.minutes_after_midnight_first_day_,
-                     it_sea->second.minutes_after_midnight_last_day_);
+        CreateSeason(fbb, 120, day_i_f, day_i_l,
+                     minutes_after_midnight_first_day,
+                     minutes_after_midnight_last_day);
     //  TODO generell offset = winterzeit unterschied zu gmt so korrekt
     auto const timezone = CreateTimezone(fbb, 60, season);
     //  TODO times_v und ttpt_v zusammen oder getrennt?
