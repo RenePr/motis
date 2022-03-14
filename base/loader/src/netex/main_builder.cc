@@ -47,12 +47,17 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto from_time = std::string(it_uic->second.from_date_);
     auto const day_i_f = time_realtive_to_0_season(from_time, b.intervall_start_);
     auto to_time = std::string(it_uic->second.to_date_);
-    //TODO season minutes_a_m_l_d - 1 um bitset error zu verhindern aber warum?
     auto const day_i_l = time_realtive_to_0_season(to_time, b.intervall_start_);
     std::cout << day_i_l - day_i_f  << std::endl;
-    auto const s_time = begin(sj.second.keys_ttpt_)->dep_time_;
+    auto s_time = std::string("");
+    if(!begin(sj.second.keys_ttpt_)->dep_time_.empty()) {
+      s_time =  begin(sj.second.keys_ttpt_)->dep_time_;
+    }
     auto const minutes_after_midnight_first_day = time_realtive_to_0(s_time, std::string("00:00:00"));
-    auto const e_time = end(sj.second.keys_ttpt_)->arr_time_;
+    auto e_time = std::string("");
+    if(!end(sj.second.keys_ttpt_)->arr_time_.empty()){
+      e_time = end(sj.second.keys_ttpt_)->arr_time_;
+    }
     auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));
     auto const season =
         CreateSeason(fbb, 120, day_i_f, day_i_l,

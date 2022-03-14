@@ -11,11 +11,13 @@
 #include "motis/schedule-format/Schedule_generated.h"
 
 #include "motis/loader/netex/days/days.h"
+#include "motis/core/common/logging.h"
 #include "motis/core/common/date_time_util.h"
 #include "motis/loader/util.h"
 #include "utl/get_or_create.h"
 
 namespace fbs64 = flatbuffers64;
+using namespace motis::logging;
 
 namespace motis::loader::netex {
 int time_realtive_to_0_season(std::string const& start, time_t const& intervall_start) {
@@ -39,6 +41,9 @@ int time_realtive_to_0_season(std::string const& start, time_t const& intervall_
     auto const year = std::stoi(start.substr(0, 4));
     auto const mon = std::stoi(start.substr(5,2));
     auto const day = std::stoi(start.substr(8,2));
+    if(day == 0 || mon == 0 || year == 0) {
+      LOG(info) << "Can't parse datum from Uic";
+    }
     boost::gregorian::date sec(year, mon, day);
     //TODO automatisch siehe netex_parser Inverval() start
     boost::gregorian::date invervall_s(2021, 10, 15);

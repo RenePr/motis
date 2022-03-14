@@ -93,6 +93,7 @@ std::map<std::string, season> get_season_times(
     utl::verify(it_uic != end(ele.second.uic_),
                 "missing time_table_passing_time: {}", ele.second.uic_id_);
     auto const vdb = std::string(it_uic->second.valid_day_bits_);
+    //TODO
     auto const valid_day_bits = vdb.c_str();
     auto start = -1;
     auto end = -1;
