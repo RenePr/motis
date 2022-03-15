@@ -155,7 +155,7 @@ void create_stations_routes_services_fbs(
     auto const st2 = std::string(ele.traffic_days_);
     auto const st1 = std::string("0");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
-    /*std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
+    std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
     auto const service = CreateService(
         fbb, route, fbb.CreateString(st2),
         fbb.CreateVector(
@@ -167,7 +167,7 @@ void create_stations_routes_services_fbs(
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
         0, service_debug_info, false, 0, fbb.CreateString(st1));
-    services.emplace(ele.key_sj_, service);*/
+    services.emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(
