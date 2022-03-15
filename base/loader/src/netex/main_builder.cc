@@ -55,11 +55,12 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     }
     auto const minutes_after_midnight_first_day = time_realtive_to_0(s_time, std::string("00:00:00"));
     auto e_time = std::string("");
-    if(!end(sj.second.keys_ttpt_)->arr_time_.empty()){
+    if(end(sj.second.keys_ttpt_)->arr_time_.empty()){
       e_time = end(sj.second.keys_ttpt_)->arr_time_;
+      std::cout << "Here?2.14" << std::endl;
     }
-    auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));
-    auto const season =
+    std::cout << "Here?2.2" << std::endl;
+    auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));auto const season =
         CreateSeason(fbb, 120, day_i_f, day_i_l,
                      minutes_after_midnight_first_day,
                      minutes_after_midnight_last_day);
@@ -154,7 +155,7 @@ void create_stations_routes_services_fbs(
     auto const st2 = std::string(ele.traffic_days_);
     auto const st1 = std::string("0");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
-    std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
+    /*std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
     auto const service = CreateService(
         fbb, route, fbb.CreateString(st2),
         fbb.CreateVector(
@@ -166,7 +167,7 @@ void create_stations_routes_services_fbs(
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
         0, service_debug_info, false, 0, fbb.CreateString(st1));
-    services.emplace(ele.key_sj_, service);
+    services.emplace(ele.key_sj_, service);*/
   }
 }
 void create_rule_service(
@@ -178,14 +179,14 @@ void create_rule_service(
   auto rule_service_v = std::vector<fbs64::Offset<Rule>>{};
   for (auto const& sji : sji_v) {
     auto const it_from_service = services.lower_bound(sji.from_journey_);
-    utl::verify(it_from_service != end(services), "missing from services: {}", services.lower_bound(sji.from_journey_)->second);
+    utl::verify(it_from_service != end(services), "missing from services: {}", sji.from_journey_);
     auto const it_to_service = services.lower_bound(sji.to_journey_);
-    utl::verify(it_to_service != end(services), "missing to services: {}", services.lower_bound(sji.to_journey_)->second);
+    utl::verify(it_to_service != end(services), "missing to services: {}", sji.to_journey_);
     // TODO check if scheduledpointref in sji
     auto const it_from_stop = fbs_stations.lower_bound(sji.from_station_);
-    utl::verify(it_from_stop != end(fbs_stations), "missing from stations: {}", services.lower_bound(sji.from_station_)->second);
+    utl::verify(it_from_stop != end(fbs_stations), "missing from stations: {}", sji.from_station_);
     auto const it_to_stop = fbs_stations.lower_bound(sji.to_station_);
-    utl::verify(it_to_stop != end(fbs_stations), "missing to stations: {}", services.lower_bound(sji.to_station_)->second);
+    utl::verify(it_to_stop != end(fbs_stations), "missing to stations: {}",sji.to_station_);
     // TODO dayoffset1,dayoffset2, day_switch
     auto rule = fbs64::Offset<Rule>{};
     if (sji.stay_seated_) {

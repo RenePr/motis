@@ -1,7 +1,6 @@
 #include "motis/loader/netex/builder/helper_builder.h"
 
 #include <iostream>
-#include <chrono>
 #include <map>
 #include <sstream>
 #include "time.h"
@@ -55,12 +54,14 @@ int time_realtive_to_0_season(std::string const& start, time_t const& intervall_
 }
 // TODO anpassen
 int time_realtive_to_0(std::string const& now_time, std::string const& start) {
+  //TODO to parse_string
   if (std::string_view(now_time) == std::string_view(std::string("")) ||
       std::string_view(start) == std::string_view(std::string(""))) {
     return 0;
   }
-  auto const sec = time(NULL);
-  auto const timeinfo = localtime(&sec);
+  auto raw = time_t{};
+  auto sec = time(&raw);
+  auto timeinfo = localtime(&sec);
   auto tm_start = *timeinfo;
   auto ti_start = std::istringstream(std::string(start));
   ti_start >> std::get_time(&tm_start, "%H:%M:%S");
