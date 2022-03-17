@@ -48,7 +48,6 @@ int time_realtive_to_0_season(std::string const& start, time_t const& intervall_
     boost::gregorian::date invervall_s(2021, 10, 15);
     //TODO warum +1 muss aber so sonst bitset error
     auto const end = (sec- invervall_s).days();
-    std::cout << "Year: " << year << " Month: " << mon << " Day: " << day << " Sek: " << end<< std::endl;
     return end;
   }
 }

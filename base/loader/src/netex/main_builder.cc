@@ -49,16 +49,11 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto to_time = std::string(it_uic->second.to_date_);
     auto const day_i_l = time_realtive_to_0_season(to_time, b.intervall_start_);
     std::cout << day_i_l - day_i_f  << std::endl;
-    auto s_time = std::string("");
-    if(!begin(sj.second.keys_ttpt_)->dep_time_.empty()) {
-      s_time =  begin(sj.second.keys_ttpt_)->dep_time_;
-    }
+    auto s_time = sj.second.keys_ttpt_.front().dep_time_;
     auto const minutes_after_midnight_first_day = time_realtive_to_0(s_time, std::string("00:00:00"));
-    auto e_time = std::string("");
-    if(end(sj.second.keys_ttpt_)->arr_time_.empty()){
-      e_time = end(sj.second.keys_ttpt_)->arr_time_;
-    }
-    auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));auto const season =
+    auto e_time = sj.second.keys_ttpt_.back().arr_time_;
+    auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));
+    auto const season =
         CreateSeason(fbb, 120, day_i_f, day_i_l,
                      minutes_after_midnight_first_day,
                      minutes_after_midnight_last_day);
@@ -99,73 +94,77 @@ void create_stations_routes_services_fbs(
     auto sections_v = std::vector<fbs64::Offset<Section>>{};
     auto tracks_v = std::vector<fbs64::Offset<Track>>{};
     for (auto const& sta : ele.routes_) {
+      std::cout << "Here?" << std::endl;
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
-      if(fbs_stations.lower_bound(sta.st_dir_.stop_point_id_) == end(fbs_stations)) {
-        std::cout << "Here?";
-        continue;
+      //TODO so richtig? checken
+      auto it = fbs_stations.lower_bound(sta.st_dir_.stop_point_id_);
+      if(fbs_stations.size() != 0) {
+        if (it == fbs_stations.end()) {
+          continue;
+        }
       }
-      get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
-      stations_v.push_back(station);
-      in_allowed_v.push_back(static_cast<uint8_t>(sta.in_allowed_));
-      out_allowed_v.push_back(static_cast<uint8_t>(sta.out_allowed_));
-      fbs_stations.emplace(sta.st_dir_.stop_point_id_, station);
-      // TODO Line_id
-      auto const sec = section{ele.category_, ele.provider_, ele.a_v_,
+        get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
+        stations_v.push_back(station);
+        in_allowed_v.push_back(static_cast<uint8_t>(sta.in_allowed_));
+        out_allowed_v.push_back(static_cast<uint8_t>(sta.out_allowed_));
+        fbs_stations.emplace(sta.st_dir_.stop_point_id_, station);
+        // TODO Line_id
+        auto const sec = section{ele.category_, ele.provider_, ele.a_v_,
                                  std::string(""), direction};
-      auto section = fbs64::Offset<Section>{};
-      get_section_fbs(sec, section, fbb);
-      sections_v.push_back(section);
-      auto const test = std::string("");
-      auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
-                                     to_fbs_string(fbb, test));
-      tracks_v.push_back(track);
+        auto section = fbs64::Offset<Section>{};
+        get_section_fbs(sec, section, fbb);
+        sections_v.push_back(section);
+        auto const test = std::string("");
+        auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
+                                       to_fbs_string(fbb, test));
+        tracks_v.push_back(track);
+        std::cout << sta.st_dir_.stop_point_id_ << std::endl;
 
     }
-    auto const route = CreateRoute(
-        fbb,
-        fbb.CreateVector(
-            utl::to_vec(begin(stations_v), end(stations_v),
-                        [&](fbs64::Offset<Station> const& s) { return s; })),
-        fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
-                                     [](uint8_t const& i) { return i; })),
-        fbb.CreateVector(utl::to_vec(begin(out_allowed_v), end(out_allowed_v),
-                                     [](uint8_t const& o) { return o; })));
-    fbs_routes.push_back(route);
-    // TODO line from to
-    auto counter2 = counter+1;
-    auto const service_debug_info =
-        CreateServiceDebugInfo(fbb, to_fbs_string(fbb, file_name), 0, 0);
-    counter++;
-    // TODO
-    auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
-    auto const tracks = CreateTrackRules(
-        fbb,
-        fbb.CreateVector(
-            utl::to_vec(begin(tracks_v), end(tracks_v),
-                        [&](fbs64::Offset<Track> const& t) { return t; })),
-        fbb.CreateVector(
-            utl::to_vec(begin(tracks_v), end(tracks_v),
-                        [&](fbs64::Offset<Track> const& t) { return t; })));
-    tracks_rules_v.push_back(tracks);
-    //TODO entfehrnen
-    tracks_rules_v.push_back(tracks);
-    auto const st2 = std::string(ele.traffic_days_);
-    auto const st1 = std::string("0");
-    // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
-    std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
-    auto const service = CreateService(
-        fbb, route, fbb.CreateString(st2),
-        fbb.CreateVector(
-            utl::to_vec(begin(sections_v), end(sections_v),
-                        [&](fbs64::Offset<Section> const& s) { return s; })),
-        fbb.CreateVector(
-            utl::to_vec(begin(tracks_rules_v), end(tracks_rules_v),
-                        [&](fbs64::Offset<TrackRules> const& t) { return t; })),
-        fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
-                                     [](int const& t) { return t; })),
-        0, service_debug_info, false, 0, fbb.CreateString(st1));
-    services.emplace(ele.key_sj_, service);
+      auto const route = CreateRoute(
+          fbb,
+          fbb.CreateVector(
+              utl::to_vec(begin(stations_v), end(stations_v),
+                          [&](fbs64::Offset<Station> const& s) { return s; })),
+          fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
+                                       [](uint8_t const& i) { return i; })),
+          fbb.CreateVector(utl::to_vec(begin(out_allowed_v), end(out_allowed_v),
+                                       [](uint8_t const& o) { return o; })));
+      fbs_routes.push_back(route);
+      // TODO line from to
+      auto counter2 = counter + 1;
+      auto const service_debug_info =
+          CreateServiceDebugInfo(fbb, to_fbs_string(fbb, file_name), 0, 0);
+      counter++;
+      // TODO
+      auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
+      auto const tracks = CreateTrackRules(
+          fbb,
+          fbb.CreateVector(
+              utl::to_vec(begin(tracks_v), end(tracks_v),
+                          [&](fbs64::Offset<Track> const& t) { return t; })),
+          fbb.CreateVector(
+              utl::to_vec(begin(tracks_v), end(tracks_v),
+                          [&](fbs64::Offset<Track> const& t) { return t; })));
+      tracks_rules_v.push_back(tracks);
+      // TODO entfehrnen
+      tracks_rules_v.push_back(tracks);
+      auto const st2 = std::string(ele.traffic_days_);
+      auto const st1 = std::string("0");
+      // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
+      auto const service = CreateService(
+          fbb, route, fbb.CreateString(st2),
+          fbb.CreateVector(
+              utl::to_vec(begin(sections_v), end(sections_v),
+                          [&](fbs64::Offset<Section> const& s) { return s; })),
+          fbb.CreateVector(utl::to_vec(
+              begin(tracks_rules_v), end(tracks_rules_v),
+              [&](fbs64::Offset<TrackRules> const& t) { return t; })),
+          fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
+                                       [](int const& t) { return t; })),
+          counter, service_debug_info, false, counter, fbb.CreateString(st1));
+      services.emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(

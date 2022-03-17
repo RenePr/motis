@@ -54,7 +54,6 @@ void netex_parser::parse(fs::path const& p,
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
   auto interval = Interval{0, 0};
-  //auto const interval = Interval{static_cast<uint64_t>(t0), static_cast<uint64_t>(t2)};
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
   auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
@@ -68,24 +67,10 @@ void netex_parser::parse(fs::path const& p,
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
     try {
-      /*
-       * --import.data_dir C:\Users\rpten\Downloads --import.paths schedule:C:\Users\rpten\Downloads\20211029_fahrplaene_gesamtdeutschland.zip --dataset.write_serialized=false
-       */
       xml::xml_document d;
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
       //utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
-      /*
-       *
-       paths=osm:data/switzerland-latest.osm.pbf
-       [osrm]
-profiles=motis/osrm-profiles/car.lua
-profiles=motis/osrm-profiles/bike.lua
-profiles=motis/osrm-profiles/bus.lua
-
-      [ppr]
-          profile=motis/ppr-profiles/default.json
-       */
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto s_p_m = std::map<std::string, stop_point>{};
@@ -121,8 +106,6 @@ profiles=motis/osrm-profiles/bus.lua
       LOG(error) << "unable to parse message";
     }
   }
-  /* <FromDate>2021-10-15T00:00:00</FromDate>
-<ToDate>2021-12-11T00:00:00</ToDate>*/
 
   fbb.Finish(CreateSchedule(
       fbb, fbb.CreateVector(values(output_services)),
