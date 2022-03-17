@@ -758,10 +758,10 @@ schedule_ptr build_graph(std::vector<Schedule const*> const& fbs_schedules,
   if (fbs_schedules.size() == 1 && opt.dataset_prefix_.empty()) {
     sched->prefixes_.emplace_back();  // dont force prefix for single
   } else {
-    /*utl::verify(std::set<std::string>{begin(opt.dataset_prefix_),
+    utl::verify(std::set<std::string>{begin(opt.dataset_prefix_),
                                       end(opt.dataset_prefix_)}
                         .size() == fbs_schedules.size(),
-                "graph_builder: some prefixes are missing or non-unique");*/
+                "graph_builder: some prefixes are missing or non-unique");
     sched->prefixes_ = mcd::to_vec(
         opt.dataset_prefix_,
         [](auto const& s) -> mcd::string { return s.empty() ? s : s + "_"; });
@@ -843,6 +843,8 @@ schedule_ptr build_graph(std::vector<Schedule const*> const& fbs_schedules,
   LOG(info) << builder.lcon_count_ << " light connections";
   LOG(info) << builder.next_route_index_ << " routes";
   LOG(info) << sched->trip_mem_.size() << " trips";
+  //RAUS löschen
+  LOG(info) << builder.stations_.size() << " stations";
   if (opt.expand_trips_) {
     LOG(info) << sched->expanded_trips_.index_size() - 1 << " expanded routes";
     LOG(info) << sched->expanded_trips_.data_size() << " expanded trips";

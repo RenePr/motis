@@ -57,9 +57,7 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto e_time = std::string("");
     if(end(sj.second.keys_ttpt_)->arr_time_.empty()){
       e_time = end(sj.second.keys_ttpt_)->arr_time_;
-      std::cout << "Here?2.14" << std::endl;
     }
-    std::cout << "Here?2.2" << std::endl;
     auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));auto const season =
         CreateSeason(fbb, 120, day_i_f, day_i_l,
                      minutes_after_midnight_first_day,
@@ -103,10 +101,9 @@ void create_stations_routes_services_fbs(
     for (auto const& sta : ele.routes_) {
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
-      /*if(fbs_stations.lower_bound(sta.st_dir_.stop_point_id_) != end(fbs_stations)) {
-        std::cout << "Here?";
+      if(fbs_stations.count(sta.st_dir_.stop_point_id_) < 0) {
         continue;
-      }*/
+      }
       get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
       stations_v.push_back(station);
       in_allowed_v.push_back(static_cast<uint8_t>(sta.in_allowed_));
@@ -141,6 +138,12 @@ void create_stations_routes_services_fbs(
     counter++;
     // TODO
     auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
+    if(tracks_v.size() == 0) {
+      auto const test = std::string("");
+      auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
+                                     to_fbs_string(fbb, test));
+      tracks_v.push_back(track);
+    }
     auto const tracks = CreateTrackRules(
         fbb,
         fbb.CreateVector(
@@ -155,7 +158,6 @@ void create_stations_routes_services_fbs(
     auto const st2 = std::string(ele.traffic_days_);
     auto const st1 = std::string("0");
     // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
-    std::cout << "Länge: " << ele.traffic_days_.length() << std::endl;
     auto const service = CreateService(
         fbb, route, fbb.CreateString(st2),
         fbb.CreateVector(
@@ -166,7 +168,7 @@ void create_stations_routes_services_fbs(
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
-        0, service_debug_info, false, 0, fbb.CreateString(st1));
+        counter, service_debug_info, false, counter, fbb.CreateString(st1));
     services.emplace(ele.key_sj_, service);
   }
 }

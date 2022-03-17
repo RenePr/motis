@@ -110,10 +110,11 @@ profiles=motis/osrm-profiles/bus.lua
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);
-      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
-                          fbb);
+      /*create_rule_service(sji_v, output_services, fbs_stations, rule_services,
+                          fbb);*/
       std::cout << fbs_routes.size() << std::endl;
       std::cout << fbs_stations.size() << std::endl;
+      std::cout << "here?";
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
       std::cout << e.what();
