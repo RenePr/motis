@@ -122,49 +122,55 @@ void create_stations_routes_services_fbs(
         std::cout << sta.st_dir_.stop_point_id_ << std::endl;
 
     }
-      auto const route = CreateRoute(
-          fbb,
-          fbb.CreateVector(
-              utl::to_vec(begin(stations_v), end(stations_v),
-                          [&](fbs64::Offset<Station> const& s) { return s; })),
-          fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
-                                       [](uint8_t const& i) { return i; })),
-          fbb.CreateVector(utl::to_vec(begin(out_allowed_v), end(out_allowed_v),
-                                       [](uint8_t const& o) { return o; })));
-      fbs_routes.push_back(route);
-      // TODO line from to
-      auto counter2 = counter + 1;
-      auto const service_debug_info =
-          CreateServiceDebugInfo(fbb, to_fbs_string(fbb, file_name), 0, 0);
-      counter++;
-      // TODO
-      auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
-      auto const tracks = CreateTrackRules(
-          fbb,
-          fbb.CreateVector(
-              utl::to_vec(begin(tracks_v), end(tracks_v),
-                          [&](fbs64::Offset<Track> const& t) { return t; })),
-          fbb.CreateVector(
-              utl::to_vec(begin(tracks_v), end(tracks_v),
-                          [&](fbs64::Offset<Track> const& t) { return t; })));
-      tracks_rules_v.push_back(tracks);
-      // TODO entfehrnen
-      tracks_rules_v.push_back(tracks);
-      auto const st2 = std::string(ele.traffic_days_);
-      auto const st1 = std::string("0");
-      // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
-      auto const service = CreateService(
-          fbb, route, fbb.CreateString(st2),
-          fbb.CreateVector(
-              utl::to_vec(begin(sections_v), end(sections_v),
-                          [&](fbs64::Offset<Section> const& s) { return s; })),
-          fbb.CreateVector(utl::to_vec(
-              begin(tracks_rules_v), end(tracks_rules_v),
-              [&](fbs64::Offset<TrackRules> const& t) { return t; })),
-          fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
-                                       [](int const& t) { return t; })),
-          counter, service_debug_info, false, counter, fbb.CreateString(st1));
-      services.emplace(ele.key_sj_, service);
+    auto const route = CreateRoute(
+        fbb,
+        fbb.CreateVector(
+            utl::to_vec(begin(stations_v), end(stations_v),
+                        [&](fbs64::Offset<Station> const& s) { return s; })),
+        fbb.CreateVector(utl::to_vec(begin(in_allowed_v), end(in_allowed_v),
+                                     [](uint8_t const& i) { return i; })),
+        fbb.CreateVector(utl::to_vec(begin(out_allowed_v), end(out_allowed_v),
+                                     [](uint8_t const& o) { return o; })));
+    fbs_routes.push_back(route);
+    // TODO line from to
+    auto counter2 = counter+1;
+    auto const service_debug_info =
+        CreateServiceDebugInfo(fbb, to_fbs_string(fbb, file_name), 0, 0);
+    counter++;
+    // TODO
+    auto tracks_rules_v = std::vector<fbs64::Offset<TrackRules>>{};
+    if(tracks_v.size() == 0) {
+      auto const test = std::string("");
+      auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
+                                     to_fbs_string(fbb, test));
+      tracks_v.push_back(track);
+    }
+    auto const tracks = CreateTrackRules(
+        fbb,
+        fbb.CreateVector(
+            utl::to_vec(begin(tracks_v), end(tracks_v),
+                        [&](fbs64::Offset<Track> const& t) { return t; })),
+        fbb.CreateVector(
+            utl::to_vec(begin(tracks_v), end(tracks_v),
+                        [&](fbs64::Offset<Track> const& t) { return t; })));
+    tracks_rules_v.push_back(tracks);
+    //TODO entfehrnen
+    tracks_rules_v.push_back(tracks);
+    auto const st2 = std::string(ele.traffic_days_);
+    auto const st1 = std::string("0");
+    // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
+    auto const service = CreateService(
+        fbb, route, fbb.CreateString(st2),
+        fbb.CreateVector(
+            utl::to_vec(begin(sections_v), end(sections_v),
+                        [&](fbs64::Offset<Section> const& s) { return s; })),
+        fbb.CreateVector(
+            utl::to_vec(begin(tracks_rules_v), end(tracks_rules_v),
+                        [&](fbs64::Offset<TrackRules> const& t) { return t; })),
+        fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
+                                     [](int const& t) { return t; })),
+        counter, service_debug_info, false, counter, fbb.CreateString(st1));
+    services.emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(

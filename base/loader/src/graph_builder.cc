@@ -843,6 +843,7 @@ schedule_ptr build_graph(std::vector<Schedule const*> const& fbs_schedules,
   LOG(info) << builder.lcon_count_ << " light connections";
   LOG(info) << builder.next_route_index_ << " routes";
   LOG(info) << sched->trip_mem_.size() << " trips";
+  //RAUS löschen
   LOG(info) << builder.stations_.size() << " stations";
   if (opt.expand_trips_) {
     LOG(info) << sched->expanded_trips_.index_size() - 1 << " expanded routes";
