@@ -57,9 +57,7 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto e_time = std::string("");
     if(end(sj.second.keys_ttpt_)->arr_time_.empty()){
       e_time = end(sj.second.keys_ttpt_)->arr_time_;
-      std::cout << "Here?2.14" << std::endl;
     }
-    std::cout << "Here?2.2" << std::endl;
     auto const minutes_after_midnight_last_day = time_realtive_to_0(e_time, std::string("00:00:00"));auto const season =
         CreateSeason(fbb, 120, day_i_f, day_i_l,
                      minutes_after_midnight_first_day,
@@ -103,10 +101,10 @@ void create_stations_routes_services_fbs(
     for (auto const& sta : ele.routes_) {
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
-      /*if(fbs_stations.lower_bound(sta.st_dir_.stop_point_id_) != end(fbs_stations)) {
+      if(fbs_stations.lower_bound(sta.st_dir_.stop_point_id_) == end(fbs_stations)) {
         std::cout << "Here?";
         continue;
-      }*/
+      }
       get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
       stations_v.push_back(station);
       in_allowed_v.push_back(static_cast<uint8_t>(sta.in_allowed_));
