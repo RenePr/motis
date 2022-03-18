@@ -106,8 +106,8 @@ void create_stations_routes_services_fbs(
       }
         get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
         stations_v.push_back(station);
-        in_allowed_v.push_back(static_cast<uint8_t>(sta.in_allowed_));
-        out_allowed_v.push_back(static_cast<uint8_t>(sta.out_allowed_));
+        in_allowed_v.push_back(sta.in_allowed_ ? 1 : 0);
+        out_allowed_v.push_back(sta.out_allowed_ ? 1 : 0);
         fbs_stations.emplace(sta.st_dir_.stop_point_id_, station);
         // TODO Line_id
         auto const sec = section{ele.category_, ele.provider_, ele.a_v_,
@@ -170,7 +170,7 @@ void create_stations_routes_services_fbs(
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
         counter, service_debug_info, false, counter, fbb.CreateString(st1));
-    services.emplace(ele.key_sj_, service);
+    //services.emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(
