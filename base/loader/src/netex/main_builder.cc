@@ -196,7 +196,7 @@ void create_rule_service(
     }
     rule_service_v.push_back(rule);
   }
-  if (!rule_service_v.empty()) {
+  if (rule_service_v.size() != 0) {
     auto const rule_service = CreateRuleService(
         fbb, fbb.CreateVector(
                  utl::to_vec(begin(rule_service_v), end(rule_service_v),

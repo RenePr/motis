@@ -99,7 +99,6 @@ void netex_parser::parse(fs::path const& p,
                           fbb);
       std::cout << fbs_routes.size() << std::endl;
       std::cout << fbs_stations.size() << std::endl;
-      std::cout << "here?";
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
       std::cout << e.what();
