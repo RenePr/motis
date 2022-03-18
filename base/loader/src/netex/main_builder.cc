@@ -48,7 +48,6 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
     auto const day_i_f = time_realtive_to_0_season(from_time, b.intervall_start_);
     auto to_time = std::string(it_uic->second.to_date_);
     auto const day_i_l = time_realtive_to_0_season(to_time, b.intervall_start_);
-    std::cout << day_i_l - day_i_f  << std::endl;
     auto s_time = sj.second.keys_ttpt_.front().dep_time_;
     auto const minutes_after_midnight_first_day = time_realtive_to_0(s_time, std::string("00:00:00"));
     auto e_time = sj.second.keys_ttpt_.back().arr_time_;
@@ -94,7 +93,6 @@ void create_stations_routes_services_fbs(
     auto sections_v = std::vector<fbs64::Offset<Section>>{};
     auto tracks_v = std::vector<fbs64::Offset<Track>>{};
     for (auto const& sta : ele.routes_) {
-      std::cout << "Here?" << std::endl;
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
       //TODO so richtig? checken
@@ -117,10 +115,8 @@ void create_stations_routes_services_fbs(
         sections_v.push_back(section);
         auto const test = std::string("");
         auto const track = CreateTrack(fbb, to_fbs_string(fbb, test),
-                                       to_fbs_string(fbb, test));
+                                       to_fbs_string(fbb, sta.quay_));
         tracks_v.push_back(track);
-        std::cout << sta.st_dir_.stop_point_id_ << std::endl;
-
     }
     auto const route = CreateRoute(
         fbb,
@@ -158,7 +154,6 @@ void create_stations_routes_services_fbs(
     tracks_rules_v.push_back(tracks);
     auto const st2 = std::string(ele.traffic_days_);
     auto const st1 = std::string("0");
-    // TODO wenn ich das einkommentiere bekomme ich bei schedule: ERROR: bitset
     auto const service = CreateService(
         fbb, route, fbb.CreateString(st2),
         fbb.CreateVector(
@@ -170,7 +165,7 @@ void create_stations_routes_services_fbs(
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
         counter, service_debug_info, false, counter, fbb.CreateString(st1));
-    //services.emplace(ele.key_sj_, service);
+    services.emplace(ele.key_sj_, service);
   }
 }
 void create_rule_service(
