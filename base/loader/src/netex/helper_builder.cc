@@ -104,11 +104,12 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
     route.st_dir_ =st_dir;
     route.in_allowed_ = it_sp->second.in_allowed_;
     route.out_allowed_ = it_sp->second.out_allowed_;
-    //  TODO is uint8_t richtig?
     if (it->second.quays_.size() == 0) {
-      route.quay_ = routes_d.traffic_days_;
+      route.quay_ = std::string("");
     } else {
-      route.quay_ = begin(it->second.quays_)->data();
+      //TODO für alles
+      route.quay_ = it->second.quays_.front();
+      //route.quay_ = begin(it->second.quays_)->data();
     }
     routes_v.push_back(route);
   }
