@@ -45,8 +45,8 @@ int time_realtive_to_0_season(std::string const& start, time_t const& intervall_
     }
     boost::gregorian::date sec(year, mon, day);
     //TODO automatisch siehe netex_parser Inverval() start
-    boost::gregorian::date invervall_s(2021, 10, 15);
-    //TODO warum +1 muss aber so sonst bitset error
+    //boost::gregorian::date invervall_s(2021, 10, 15);
+    boost::gregorian::date invervall_s(year, 1, 1);
     auto const end = (sec- invervall_s).days();
     return end;
   }
@@ -100,7 +100,6 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
     auto st_dir = it->second;
     st_dir.timezone_ = routes_d.timezone_;
     st_dir.direction_ = routes_d.direction_;
-    // TODO direction
     route.st_dir_ =st_dir;
     route.in_allowed_ = it_sp->second.in_allowed_;
     route.out_allowed_ = it_sp->second.out_allowed_;
@@ -109,7 +108,6 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
     } else {
       //TODO für alles
       route.quay_ = it->second.quays_.front();
-      //route.quay_ = begin(it->second.quays_)->data();
     }
     routes_v.push_back(route);
   }
@@ -200,11 +198,11 @@ void get_station_dir_fbs(stations_direction const& s_d,
                          fbs64::FlatBufferBuilder& fbb) {
   // TODO interchange time, external ids vorerst leer
   auto test = std::vector<std::string>{};
-  auto const test1 = std::string("Ha");
+  auto const test1 = std::string("0");
   test.push_back(test1);
   station =  CreateStation(
       fbb, to_fbs_string(fbb, s_d.stop_point_id_), to_fbs_string(fbb, s_d.name_),
-      s_d.lat_, s_d.lng_, 1,
+      s_d.lat_, s_d.lng_, 0,
       fbb.CreateVector(utl::to_vec(
           begin(test), end(test),
           [&](std::string const& s) { return fbb.CreateString(s); })),
@@ -220,6 +218,7 @@ std::map<std::string, stations_direction> get_stations( std::map<std::string, sc
   if(s_m.size() == s_p_m.size()) {
     std::cout << "not equal" << std::endl;
   }
+  std::cout << s_p_m.size() << std::endl;
   for(auto const& p_a : p_m) {
     auto const it_s = s_m.lower_bound(p_a.second.scheduled_place_id_);
     utl::verify(it_s != end(s_m), "missing scheduled_point: {}", p_a.second.scheduled_place_id_);
@@ -231,15 +230,16 @@ std::map<std::string, stations_direction> get_stations( std::map<std::string, sc
     st.lng_ = it_s_p->second.lon_;
     st.timezone_name_ = it_s_p->second.timezone_;
     st.quays_ = it_s_p->second.quay_;
-    st.stop_point_id_ = it_s_p->first;
+    st.stop_point_id_ = p_a.second.stop_point_id_;
     st.id_ = it_s_p->first;
-    if(st.quays_.size() == 0) {
+    //TODO ?
+    /*if(st.quays_.size() == 0) {
       s_d_m.emplace(it_s->first, st);
     } else {
       std::stringstream stringStream;
       stringStream << st.id_ << counter;
       s_d_m.emplace(stringStream.str(), st);
-    }
+    }*/
     s_d_m.emplace(p_a.second.scheduled_place_id_, st);
     counter++;
   }
