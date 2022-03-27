@@ -9,9 +9,9 @@
 
 #include "motis/schedule-format/Schedule_generated.h"
 
-#include "motis/loader/netex/days/days.h"
-#include "motis/core/common/logging.h"
 #include "motis/core/common/date_time_util.h"
+#include "motis/core/common/logging.h"
+#include "motis/loader/netex/days/days.h"
 #include "motis/loader/util.h"
 #include "utl/get_or_create.h"
 
@@ -19,7 +19,8 @@ namespace fbs64 = flatbuffers64;
 using namespace motis::logging;
 
 namespace motis::loader::netex {
-int time_realtive_to_0_season(std::string const& start, time_t const& intervall_start) {
+int time_realtive_to_0_season(std::string const& start,
+                              time_t const& intervall_start) {
   if (std::string_view(start) == "") {
     return 0;
   } else {
@@ -35,25 +36,25 @@ int time_realtive_to_0_season(std::string const& start, time_t const& intervall_
     tm_0.tm_hour = 0;
     auto const t_0 = std::mktime(&tm_0);
     return std::difftime(t_start, t_0)*/
-    //TODO parse<int>?
+    // TODO parse<int>?
 
     auto const year = std::stoi(start.substr(0, 4));
-    auto const mon = std::stoi(start.substr(5,2));
-    auto const day = std::stoi(start.substr(8,2));
-    if(day == 0 || mon == 0 || year == 0) {
+    auto const mon = std::stoi(start.substr(5, 2));
+    auto const day = std::stoi(start.substr(8, 2));
+    if (day == 0 || mon == 0 || year == 0) {
       LOG(info) << "Can't parse datum from Uic";
     }
     boost::gregorian::date sec(year, mon, day);
-    //TODO automatisch siehe netex_parser Inverval() start
-    //boost::gregorian::date invervall_s(2021, 10, 15);
+    // TODO automatisch siehe netex_parser Inverval() start
+    // boost::gregorian::date invervall_s(2021, 10, 15);
     boost::gregorian::date invervall_s(year, 1, 1);
-    auto const end = (sec- invervall_s).days();
+    auto const end = (sec - invervall_s).days();
     return end;
   }
 }
 // TODO anpassen
 int time_realtive_to_0(std::string const& now_time, std::string const& start) {
-  //TODO to parse_string
+  // TODO to parse_string
   if (std::string_view(now_time) == std::string_view(std::string("")) ||
       std::string_view(start) == std::string_view(std::string(""))) {
     return 0;
@@ -94,19 +95,19 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
                 "missing time_table_passing_time: {}", ttpt.stop_point_ref_);
     auto const key_sp = std::string(it_sp->second.id_);
     auto const it = routes_d.stations_map_.lower_bound(key_sp);
-    utl::verify(it != end(routes_d.stations_map_), "missing scheduled_stop_point: {}",
-                key_sp);
+    utl::verify(it != end(routes_d.stations_map_),
+                "missing scheduled_stop_point: {}", key_sp);
     route.schedulep_point_ref_ = it->first;
     auto st_dir = it->second;
     st_dir.timezone_ = routes_d.timezone_;
     st_dir.direction_ = routes_d.direction_;
-    route.st_dir_ =st_dir;
+    route.st_dir_ = st_dir;
     route.in_allowed_ = it_sp->second.in_allowed_;
     route.out_allowed_ = it_sp->second.out_allowed_;
     if (it->second.quays_.size() == 0) {
       route.quay_ = std::string("");
     } else {
-      //TODO für alles
+      // TODO für alles
       route.quay_ = it->second.quays_.front();
     }
     routes_v.push_back(route);
@@ -157,6 +158,7 @@ void get_attribute_fbs(std::vector<std::string> const& keys_day,
   // for attribute
   auto const pair_day = get_valid_day_bits(days_map, keys_day);
   auto const valid_day_bits = pair_day.first;
+  // auto const test = std::string("2")
   attribute = utl::to_vec(
       begin(notice_assignment_ve), end(notice_assignment_ve),
       [&](fbs64::Offset<AttributeInfo> const& ai) {
@@ -200,9 +202,9 @@ void get_station_dir_fbs(stations_direction const& s_d,
   auto test = std::vector<std::string>{};
   auto const test1 = std::string("0");
   test.push_back(test1);
-  station =  CreateStation(
-      fbb, to_fbs_string(fbb, s_d.stop_point_id_), to_fbs_string(fbb, s_d.name_),
-      s_d.lat_, s_d.lng_, 0,
+  station = CreateStation(
+      fbb, to_fbs_string(fbb, s_d.stop_point_id_),
+      to_fbs_string(fbb, s_d.name_), s_d.lat_, s_d.lng_, 0,
       fbb.CreateVector(utl::to_vec(
           begin(test), end(test),
           [&](std::string const& s) { return fbb.CreateString(s); })),
@@ -210,20 +212,23 @@ void get_station_dir_fbs(stations_direction const& s_d,
   direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
 }
 auto counter = 0;
-std::map<std::string, stations_direction> get_stations( std::map<std::string, scheduled_points> const& s_m,
-                  std::map<std::string, stop_point> const& s_p_m,
-                  std::map<std::string, passenger_assignments> const& p_m) {
+std::map<std::string, stations_direction> get_stations(
+    std::map<std::string, scheduled_points> const& s_m,
+    std::map<std::string, stop_point> const& s_p_m,
+    std::map<std::string, passenger_assignments> const& p_m) {
   auto s_d_m = std::map<std::string, stations_direction>{};
-  //auto counter = 0;
-  if(s_m.size() == s_p_m.size()) {
+  // auto counter = 0;
+  if (s_m.size() == s_p_m.size()) {
     std::cout << "not equal" << std::endl;
   }
   std::cout << s_p_m.size() << std::endl;
-  for(auto const& p_a : p_m) {
+  for (auto const& p_a : p_m) {
     auto const it_s = s_m.lower_bound(p_a.second.scheduled_place_id_);
-    utl::verify(it_s != end(s_m), "missing scheduled_point: {}", p_a.second.scheduled_place_id_);
+    utl::verify(it_s != end(s_m), "missing scheduled_point: {}",
+                p_a.second.scheduled_place_id_);
     auto const it_s_p = s_p_m.lower_bound(p_a.second.stop_point_id_);
-    utl::verify(it_s_p != end(s_p_m), "missing stop_point: {}", p_a.second.stop_point_id_);
+    utl::verify(it_s_p != end(s_p_m), "missing stop_point: {}",
+                p_a.second.stop_point_id_);
     auto st = stations_direction{};
     st.name_ = it_s_p->second.name_;
     st.lat_ = it_s_p->second.lat_;
@@ -232,7 +237,7 @@ std::map<std::string, stations_direction> get_stations( std::map<std::string, sc
     st.quays_ = it_s_p->second.quay_;
     st.stop_point_id_ = p_a.second.stop_point_id_;
     st.id_ = it_s_p->first;
-    //TODO ?
+    // TODO ?
     /*if(st.quays_.size() == 0) {
       s_d_m.emplace(it_s->first, st);
     } else {

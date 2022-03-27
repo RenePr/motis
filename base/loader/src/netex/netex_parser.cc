@@ -13,9 +13,9 @@
 #include "boost/filesystem.hpp"
 #include "pugixml.hpp"
 
+#include "boost/date_time/gregorian/gregorian_types.hpp"
 #include "utl/get_or_create.h"
 #include "utl/verify.h"
-#include "boost/date_time/gregorian/gregorian_types.hpp"
 
 #include "motis/core/common/date_time_util.h"
 #include "motis/core/common/logging.h"
@@ -59,7 +59,7 @@ void netex_parser::parse(fs::path const& p,
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
   auto const dataset_name = "test";
   auto const hash = 123;
-  //TODO nur 1 jahr geht?!?
+  // TODO nur 1 jahr geht?!?
   auto t1 = to_unix_time(2021, 10, 15);
   auto t2 = to_unix_time(2022, 10, 15);
   interval = Interval(t1, t2);
@@ -70,7 +70,8 @@ void netex_parser::parse(fs::path const& p,
       xml::xml_document d;
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
-      //utl::verify(r, "netex parser: invalid xml in {}", z.current_file_name());
+      // utl::verify(r, "netex parser: invalid xml in {}",
+      // z.current_file_name());
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto s_p_m = std::map<std::string, stop_point>{};
@@ -86,17 +87,17 @@ void netex_parser::parse(fs::path const& p,
       auto const days_m = parse_daytypes_uicoperation(d);
       auto const season_m = get_season_times(days_m);
       auto const stations_m = get_stations(s_m, s_p_m, p_m);
-      auto const b =
-          build{l_m,      d_m,  stations_m,
-                days_m, season_m, sjp_m, sj_m, z.current_file_name(), t1};
+      auto const b = build{l_m,      d_m,   stations_m, days_m,
+                           season_m, sjp_m, sj_m,       z.current_file_name(),
+                           t1};
       auto sjpp = std::vector<section_route>{};
-      build_fbs(b, sjpp,fbb);
+      build_fbs(b, sjpp, fbb);
       auto services = std::map<std::string, fbs64::Offset<Service>>{};
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);
-      /*create_rule_service(sji_v, output_services, fbs_stations, rule_services,
-                          fbb);*/
+      create_rule_service(sji_v, output_services, fbs_stations, rule_services,
+                          fbb);
       std::cout << fbs_routes.size() << std::endl;
       std::cout << fbs_stations.size() << std::endl;
     } catch (std::exception const& e) {
