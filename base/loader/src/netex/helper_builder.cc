@@ -19,25 +19,11 @@ namespace fbs64 = flatbuffers64;
 using namespace motis::logging;
 
 namespace motis::loader::netex {
-int time_realtive_to_0_season(std::string const& start,
-                              time_t const& intervall_start) {
+int time_realtive_to_0_season(std::string const& start) {
   if (std::string_view(start) == "") {
     return 0;
   } else {
-    /*auto const sec = time(NULL);
-    auto const timeinfo = localtime(&sec);
-    auto tm_start = *timeinfo;
-    auto is_start = std::istringstream(std::string(start));
-    is_start >> std::get_time(&tm_start, "%H:%M:%S");
-    auto const t_start = std::mktime(&tm_start);
-    auto tm_0 = *timeinfo;
-    tm_0.tm_sec = 0;
-    tm_0.tm_min = 0;
-    tm_0.tm_hour = 0;
-    auto const t_0 = std::mktime(&tm_0);
-    return std::difftime(t_start, t_0)*/
     // TODO parse<int>?
-
     auto const year = std::stoi(start.substr(0, 4));
     auto const mon = std::stoi(start.substr(5, 2));
     auto const day = std::stoi(start.substr(8, 2));
@@ -45,9 +31,11 @@ int time_realtive_to_0_season(std::string const& start,
       LOG(info) << "Can't parse datum from Uic";
     }
     boost::gregorian::date sec(year, mon, day);
-    // TODO automatisch siehe netex_parser Inverval() start
-    // boost::gregorian::date invervall_s(2021, 10, 15);
-    boost::gregorian::date invervall_s(year, 1, 1);
+    // TODO Intervall oder so?
+    // boost::gregorian::date invervall_s(year, 1, 1);
+    boost::gregorian::date invervall_s(2021, 1, 1);
+    // + 1 um 01.01 noch mitzuzählen. sonst hat januar 30 tage in der
+    // Zählweise;(
     auto const end = (sec - invervall_s).days();
     return end;
   }
@@ -77,7 +65,7 @@ std::pair<std::string, std::string> get_valid_day_bits(
   for (auto const& dt : keys) {
     auto const it = days_map.lower_bound(dt);
     utl::verify(it != end(days_map), "missing days_types: {}", dt);
-    auto const key_uic = std::string(it->second.uic_id_);
+    auto const key_uic = it->second.uic_id_;
     auto const valid_day_bits =
         std::string(it->second.uic_.at(key_uic).valid_day_bits_);
     auto const from_date = std::string(it->second.uic_.at(key_uic).from_date_);
@@ -102,8 +90,8 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
     st_dir.timezone_ = routes_d.timezone_;
     st_dir.direction_ = routes_d.direction_;
     route.st_dir_ = st_dir;
-    route.in_allowed_ = it_sp->second.in_allowed_;
-    route.out_allowed_ = it_sp->second.out_allowed_;
+    route.in_allowed_ = it_sp->second.in_allowed_ ? 1 : 0;
+    route.out_allowed_ = it_sp->second.out_allowed_ ? 1 : 0;
     if (it->second.quays_.size() == 0) {
       route.quay_ = std::string("");
     } else {
@@ -143,9 +131,8 @@ void get_provider_operator_fbs(std::vector<std::string> const& lines,
   }
 }
 
-void get_attribute_fbs(std::vector<std::string> const& keys_day,
+void get_attribute_fbs(std::string const& traffic_days,
                        std::vector<notice_assignment> const& notice_assignments,
-                       std::map<std::string, ids> const& days_map,
                        std::vector<fbs64::Offset<Attribute>>& attribute,
                        fbs64::FlatBufferBuilder& fbb) {
   auto notice_assignment_ve = std::vector<fbs64::Offset<AttributeInfo>>{};
@@ -155,14 +142,10 @@ void get_attribute_fbs(std::vector<std::string> const& keys_day,
                             to_fbs_string(fbb, n_a.text_));
     notice_assignment_ve.push_back(attribute_info);
   }
-  // for attribute
-  auto const pair_day = get_valid_day_bits(days_map, keys_day);
-  auto const valid_day_bits = pair_day.first;
-  // auto const test = std::string("2")
   attribute = utl::to_vec(
       begin(notice_assignment_ve), end(notice_assignment_ve),
       [&](fbs64::Offset<AttributeInfo> const& ai) {
-        return CreateAttribute(fbb, ai, to_fbs_string(fbb, valid_day_bits));
+        return CreateAttribute(fbb, ai, to_fbs_string(fbb, traffic_days));
       });
 }
 void get_service_times(time_table_passing_time const& ttpt,

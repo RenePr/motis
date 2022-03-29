@@ -47,13 +47,12 @@ struct routes {
 struct routes_data {
   std::vector<time_table_passing_time> keys_ttpt_;
   std::string direction_;
-  std::string traffic_days_;
   std::map<std::string, stop_point_in_journey_pattern> stop_point_map_;
   fbs64::Offset<Timezone> timezone_;
   std::map<std::string, stations_direction> stations_map_;
 };
 int time_realtive_to_0(std::string const&, std::string const&);
-int time_realtive_to_0_season(std::string const&, time_t const&);
+int time_realtive_to_0_season(std::string const&);
 // vector, normalerweise nur 1 eintrag.
 void get_ttpts(routes_data const&, std::vector<routes>&);
 std::pair<std::string, std::string> get_valid_day_bits(
@@ -64,9 +63,8 @@ void get_provider_operator_fbs(std::vector<std::string> const&,
                                fbs64::Offset<Category>&,
                                fbs64::Offset<Provider>&, int&,
                                fbs64::FlatBufferBuilder&);
-void get_attribute_fbs(std::vector<std::string> const&,
+void get_attribute_fbs(std::string const&,
                        std::vector<notice_assignment> const&,
-                       std::map<std::string, ids> const&,
                        std::vector<fbs64::Offset<Attribute>>&,
                        fbs64::FlatBufferBuilder&);
 void get_service_times(time_table_passing_time const&, std::string const&,
@@ -75,8 +73,9 @@ void get_section_fbs(section const&, fbs64::Offset<Section>&,
                      fbs64::FlatBufferBuilder&);
 void get_station_dir_fbs(stations_direction const&, fbs64::Offset<Station>&,
                          fbs64::Offset<Direction>&, fbs64::FlatBufferBuilder&);
-std::map<std::string, stations_direction> get_stations( std::map<std::string, scheduled_points> const&,
-                  std::map<std::string, stop_point> const&,
-                  std::map<std::string, passenger_assignments> const&);
+std::map<std::string, stations_direction> get_stations(
+    std::map<std::string, scheduled_points> const&,
+    std::map<std::string, stop_point> const&,
+    std::map<std::string, passenger_assignments> const&);
 
 }  // namespace motis::loader::netex

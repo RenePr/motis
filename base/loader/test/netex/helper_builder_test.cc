@@ -30,8 +30,8 @@ using namespace motis::loader::netex;
 TEST(helper_builder_test, time_relative_to_0_season_empty) {
   try {
     auto const time = std::string("");
-    //auto const min = time_realtive_to_0_season(time);
-    //ASSERT_TRUE(min == 0);
+    auto const min = time_realtive_to_0_season(time);
+    ASSERT_TRUE(min == 0);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -39,9 +39,9 @@ TEST(helper_builder_test, time_relative_to_0_season_empty) {
 
 TEST(helper_builder_test, time_relative_to_0_season_same_time) {
   try {
-    auto const time = std::string("2022-02-05");
-    //auto const sec = time_realtive_to_0_season(time);
-    //ASSERT_TRUE(sec == 21661);
+    auto time = std::string("2022-02-05");
+    auto const sec = time_realtive_to_0_season(time);
+    ASSERT_TRUE(sec == 36);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -51,9 +51,9 @@ TEST(helper_builder_test, time_relative_to_0_season_same_wrong_format) {
   try {
     // TODO muss ich das noch anpassen?
     auto const time = std::string("06:01");
-    //auto const sec = time_realtive_to_0_season(time);
-    //std::cout << sec;
-    //ASSERT_TRUE(sec == 0);
+    // auto const sec = time_realtive_to_0_season(time);
+    // std::cout << sec;
+    // ASSERT_TRUE(sec == 0);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }

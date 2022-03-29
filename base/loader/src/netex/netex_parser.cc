@@ -53,16 +53,14 @@ void netex_parser::parse(fs::path const& p,
   auto output_services = std::map<std::string, fbs64::Offset<Service>>{};
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
-  auto interval = Interval{0, 0};
+  auto const t1 = to_unix_time(2021, 1, 1);
+  auto const t2 = to_unix_time(2023, 1, 1);
+  auto const interval = Interval(t1, t2);
   auto const footpaths = std::vector<fbs64::Offset<Footpath>>{};
   auto rule_services = std::vector<fbs64::Offset<RuleService>>{};
   auto const meta_stations = std::vector<fbs64::Offset<MetaStation>>{};
-  auto const dataset_name = "test";
+  auto const dataset_name = p.generic_string().c_str();
   auto const hash = 123;
-  // TODO nur 1 jahr geht?!?
-  auto t1 = to_unix_time(2021, 10, 15);
-  auto t2 = to_unix_time(2022, 10, 15);
-  interval = Interval(t1, t2);
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
     std::cout << z.current_file_name() << "\n";
