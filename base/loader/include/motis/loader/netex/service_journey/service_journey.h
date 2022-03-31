@@ -10,7 +10,6 @@ struct time_table_passing_time {
   std::string dep_time_;
   std::string arr_time_;
 };
-
 struct service_journey {
   std::string key_sjp_;
   std::string key_sj_;

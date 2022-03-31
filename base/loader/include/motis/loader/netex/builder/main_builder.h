@@ -44,15 +44,13 @@ struct section_route {
   fbs64::Offset<Category> category_;
   fbs64::Offset<Provider> provider_;
   std::string key_sj_;
-  //TODO checen doppelt in routes_data ebenfalls
   std::string traffic_days_;
 };
 
 void build_fbs(build const&, std::vector<section_route>&,
                fbs64::FlatBufferBuilder&);
 void create_stations_routes_services_fbs(
-    std::vector<section_route> const&,
-    std::string const&,
+    std::vector<section_route> const&, std::string const&,
     std::map<std::string, fbs64::Offset<Station>>&,
     std::vector<fbs64::Offset<Route>>&,
     std::map<std::string, fbs64::Offset<Service>>&, fbs64::FlatBufferBuilder&);

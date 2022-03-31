@@ -1,8 +1,6 @@
 #include "motis/loader/netex/builder/main_builder.h"
 
-#include <iostream>
 #include <map>
-#include <sstream>
 #include <vector>
 
 #include "motis/schedule-format/Schedule_generated.h"
@@ -15,32 +13,6 @@ namespace motis::loader::netex {
 
 void build_fbs(build const& b, std::vector<section_route>& sjp_m,
                fbs64::FlatBufferBuilder& fbb) {
-  // so vorher
-  /*auto const day_type = sj.second.keys_day_.front();
-  auto const it_sea = b.seasons_m_.lower_bound(day_type);
-  utl::verify(it_sea != end(b.seasons_m_), "missing seasons: {}", day_type);
-  auto const it_days = b.days_m_.lower_bound(day_type);
-  utl::verify(it_days != end(b.days_m_), "missing daytypes: {}", day_type);
-  auto const uic_id = it_days->second.uic_id_;
-  auto const it_uic = b.days_m_.at(it_days->first).uic_.lower_bound(uic_id);
-  utl::verify(it_uic != end(b.days_m_.at(it_days->first).uic_),
-              "missing uic: {}", uic_id);
-  auto from_time = std::string(it_uic->second.from_date_);
-  auto const day_i_f =
-      time_realtive_to_0_season(from_time, b.intervall_start_);
-  auto to_time = std::string(it_uic->second.to_date_);
-  auto const day_i_l = time_realtive_to_0_season(to_time, b.intervall_start_);
-  auto s_time = sj.second.keys_ttpt_.front().dep_time_;
-  auto const minutes_after_midnight_first_day =
-      time_realtive_to_0(s_time, std::string("00:00:00"));
-  auto e_time = sj.second.keys_ttpt_.back().arr_time_;
-  auto const minutes_after_midnight_last_day =
-      time_realtive_to_0(e_time, std::string("00:00:00"));
-  auto const season = CreateSeason(fbb, 120, day_i_f, day_i_l,
-                                   minutes_after_midnight_first_day,
-                                   minutes_after_midnight_last_day);
-  //  TODO generell offset = winterzeit unterschied zu gmt so korrekt
-  auto const timezone = CreateTimezone(fbb, 60, season);*/
   for (auto const& sj : b.sj_m_) {
     auto sjp = section_route{};
     sjp.key_sj_ = sj.second.key_sj_;
@@ -85,7 +57,6 @@ void build_fbs(build const& b, std::vector<section_route>& sjp_m,
                                      minutes_after_midnight_last_day);
     //  TODO generell offset = winterzeit unterschied zu gmt so korrekt
     auto const timezone = CreateTimezone(fbb, 60, season);
-    //  TODO times_v und ttpt_v zusammen oder getrennt?
     auto times_v = std::vector<int>{};
     auto start_time = sj.second.keys_ttpt_.front().dep_time_;
     for (auto const& ttpt : sj.second.keys_ttpt_) {
@@ -117,13 +88,6 @@ void create_stations_routes_services_fbs(
     for (auto const& sta : ele.routes_) {
       auto station = fbs64::Offset<Station>{};
       auto direction = fbs64::Offset<Direction>{};
-      // TODO so richtig? checken
-      /*if (fbs_stations.size() != 0) {
-        auto it = fbs_stations.lower_bound(sta.st_dir_.stop_point_id_);
-        if (it == end(fbs_stations)) {
-          continue;
-        }
-      }*/
       get_station_dir_fbs(sta.st_dir_, station, direction, fbb);
       stations_v.push_back(station);
       in_allowed_v.push_back(sta.in_allowed_);
@@ -172,13 +136,12 @@ void create_stations_routes_services_fbs(
             utl::to_vec(begin(tracks_v), end(tracks_v),
                         [&](fbs64::Offset<Track> const& t) { return t; })));
     tracks_rules_v.push_back(tracks);
+    auto const st1 = std::string("%d", counter);
     auto st2 = ele.traffic_days_;
-    auto const st1 = std::string("0");
+    // bitfield ist nur 512 bits groß, wird in graphbilder nicht überprüft
     if (st2.size() > 512) {
       st2 = std::string("0");
-      std::cout << "here?" << std::endl;
     }
-    auto const st3 = std::string("101010");
     auto const service = CreateService(
         fbb, route, to_fbs_string(fbb, st2),
         fbb.CreateVector(
@@ -189,7 +152,7 @@ void create_stations_routes_services_fbs(
                         [&](fbs64::Offset<TrackRules> const& t) { return t; })),
         fbb.CreateVector(utl::to_vec(begin(ele.times_v_), end(ele.times_v_),
                                      [](int const& t) { return t; })),
-        counter, service_debug_info, false, 0, to_fbs_string(fbb, st1));
+        0, service_debug_info, false, 0, to_fbs_string(fbb, st1));
     services.emplace(ele.key_sj_, service);
   }
 }
@@ -232,7 +195,6 @@ void create_rule_service(
                  utl::to_vec(begin(rule_service_v), end(rule_service_v),
                              [&](fbs64::Offset<Rule> const& r) { return r; })));
     rule_services.push_back(rule_service);
-    std::cout << "Here?" << std::endl;
   }
 }
 }  // namespace motis::loader::netex

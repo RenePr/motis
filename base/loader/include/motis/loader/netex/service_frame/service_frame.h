@@ -20,18 +20,15 @@ struct line {
   Operator_Authority operator_;
   std::string id_;
 };
-
 struct direction {
   std::string name_;
   std::string short_name_;
 };
-
 struct passenger_assignments {
   std::string scheduled_place_id_;
   std::string stop_point_id_;
   std::string quay_id_;
 };
-
 struct stop_point {
   std::string key_;
   std::string value_;
@@ -42,14 +39,12 @@ struct stop_point {
 
   std::vector<std::string> quay_;
 };
-
 struct scheduled_points {
   std::string short_name_;
   std::string public_code_;
   std::string stop_type_;
   stop_point stop_point_;
 };
-
 struct notice {
   std::string text_;
   std::string code_;

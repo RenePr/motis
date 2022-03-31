@@ -53,11 +53,9 @@ struct routes_data {
 };
 int time_realtive_to_0(std::string const&, std::string const&);
 int time_realtive_to_0_season(std::string const&);
-// vector, normalerweise nur 1 eintrag.
 void get_ttpts(routes_data const&, std::vector<routes>&);
 std::pair<std::string, std::string> get_valid_day_bits(
     std::map<std::string, ids> const&, std::vector<std::string> const&);
-// 3 const noch ok oder auch über struct?
 void get_provider_operator_fbs(std::vector<std::string> const&,
                                std::map<std::string, line> const&,
                                fbs64::Offset<Category>&,
@@ -77,5 +75,4 @@ std::map<std::string, stations_direction> get_stations(
     std::map<std::string, scheduled_points> const&,
     std::map<std::string, stop_point> const&,
     std::map<std::string, passenger_assignments> const&);
-
 }  // namespace motis::loader::netex

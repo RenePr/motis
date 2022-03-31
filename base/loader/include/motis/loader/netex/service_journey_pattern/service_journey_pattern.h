@@ -13,14 +13,12 @@ struct stop_point_in_journey_pattern {
   bool in_allowed_;
   bool out_allowed_;
 };
-
 struct notice_assignment {
   std::string text_;
   std::string public_code_;
   std::string start_point_in_journey_pattern_;
   std::string stop_point_in_journey_pattern_;
 };
-
 struct service_journey_pattern {
   std::vector<notice_assignment> notice_assignments_;
   std::vector<std::string> lines_;
@@ -28,4 +26,5 @@ struct service_journey_pattern {
   int name_;
   std::string direction_;
 };
+
 }  // namespace motis::loader::netex

@@ -41,7 +41,8 @@ TEST(helper_builder_test, time_relative_to_0_season_same_time) {
   try {
     auto time = std::string("2022-02-05");
     auto const sec = time_realtive_to_0_season(time);
-    ASSERT_TRUE(sec == 36);
+    std::cout << sec << std::endl;
+    ASSERT_TRUE(sec == 400);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -49,11 +50,9 @@ TEST(helper_builder_test, time_relative_to_0_season_same_time) {
 
 TEST(helper_builder_test, time_relative_to_0_season_same_wrong_format) {
   try {
-    // TODO muss ich das noch anpassen?
-    auto const time = std::string("06:01");
-    // auto const sec = time_realtive_to_0_season(time);
-    // std::cout << sec;
-    // ASSERT_TRUE(sec == 0);
+    auto const time = std::string("06:00");
+    auto const sec = time_realtive_to_0_season(time);
+    ASSERT_TRUE(sec == 0);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -63,8 +62,8 @@ TEST(helper_builder_test, time_relative_to_0) {
   try {
     auto const time = std::string("06:01:00");
     auto const start_time = std::string("06:00:00");
-    auto const sec = time_realtive_to_0(time, start_time);
-    ASSERT_TRUE(sec == 60);
+    auto const min = time_realtive_to_0(time, start_time);
+    ASSERT_TRUE(min == 1);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
@@ -86,11 +85,13 @@ TEST(helper_builder_test, get_service_times) {
 
     ASSERT_TRUE(times_v.at(0) == -1);
     ASSERT_TRUE(times_v.at(1) == 0);
-    ASSERT_TRUE(times_v.at(2) == 240);
-    ASSERT_TRUE(times_v.at(3) == 240);
-    ASSERT_TRUE(times_v.at(4) == 540);
+    ASSERT_TRUE(times_v.at(2) == 4);
+    ASSERT_TRUE(times_v.at(3) == 4);
+    ASSERT_TRUE(times_v.at(4) == 9);
     ASSERT_TRUE(times_v.at(5) == -1);
   } catch (std::exception& e) {
     std::cout << e.what() << std::endl;
   }
 }
+
+TEST(helper_builder_test, t) {}

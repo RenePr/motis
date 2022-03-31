@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <map>
-#include <sstream>
 #include "time.h"
 
 #include "boost/date_time/gregorian/gregorian_types.hpp"
@@ -13,12 +12,12 @@
 #include "motis/core/common/logging.h"
 #include "motis/loader/netex/days/days.h"
 #include "motis/loader/util.h"
-#include "utl/get_or_create.h"
 
 namespace fbs64 = flatbuffers64;
 using namespace motis::logging;
 
 namespace motis::loader::netex {
+
 int time_realtive_to_0_season(std::string const& start) {
   if (std::string_view(start) == "") {
     return 0;
@@ -31,16 +30,12 @@ int time_realtive_to_0_season(std::string const& start) {
       LOG(info) << "Can't parse datum from Uic";
     }
     boost::gregorian::date sec(year, mon, day);
-    // TODO Intervall oder so?
-    // boost::gregorian::date invervall_s(year, 1, 1);
+    // TODO Intervall noch manuell eintragen
     boost::gregorian::date invervall_s(2021, 1, 1);
-    // + 1 um 01.01 noch mitzuzählen. sonst hat januar 30 tage in der
-    // Zählweise;(
     auto const end = (sec - invervall_s).days();
     return end;
   }
 }
-// TODO anpassen
 int time_realtive_to_0(std::string const& now_time, std::string const& start) {
   // TODO to parse_string
   if (std::string_view(now_time) == std::string_view(std::string("")) ||
@@ -56,7 +51,7 @@ int time_realtive_to_0(std::string const& now_time, std::string const& start) {
   auto tm_t = *timeinfo;
   auto ti = std::istringstream(std::string(now_time));
   ti >> std::get_time(&tm_t, "%H:%M:%S");
-  return std::difftime(mktime(&tm_t), mktime(&tm_start));
+  return (std::difftime(mktime(&tm_t), mktime(&tm_start)) / 60);
 }
 std::pair<std::string, std::string> get_valid_day_bits(
     std::map<std::string, ids> const& days_map,
@@ -93,7 +88,7 @@ void get_ttpts(routes_data const& routes_d, std::vector<routes>& routes_v) {
     route.in_allowed_ = it_sp->second.in_allowed_ ? 1 : 0;
     route.out_allowed_ = it_sp->second.out_allowed_ ? 1 : 0;
     if (it->second.quays_.size() == 0) {
-      route.quay_ = std::string("");
+      route.quay_ = it->second.quays_.front();
     } else {
       // TODO für alles
       route.quay_ = it->second.quays_.front();
@@ -142,11 +137,13 @@ void get_attribute_fbs(std::string const& traffic_days,
                             to_fbs_string(fbb, n_a.text_));
     notice_assignment_ve.push_back(attribute_info);
   }
-  attribute = utl::to_vec(
-      begin(notice_assignment_ve), end(notice_assignment_ve),
-      [&](fbs64::Offset<AttributeInfo> const& ai) {
-        return CreateAttribute(fbb, ai, to_fbs_string(fbb, traffic_days));
-      });
+  // TODO traffic days nicht gleich den aktuellen traffic days
+  auto const st1 = std::string("0");
+  attribute =
+      utl::to_vec(begin(notice_assignment_ve), end(notice_assignment_ve),
+                  [&](fbs64::Offset<AttributeInfo> const& ai) {
+                    return CreateAttribute(fbb, ai, to_fbs_string(fbb, st1));
+                  });
 }
 void get_service_times(time_table_passing_time const& ttpt,
                        std::string const& start_time,
@@ -194,17 +191,11 @@ void get_station_dir_fbs(stations_direction const& s_d,
       s_d.timezone_, to_fbs_string(fbb, s_d.timezone_name_));
   direction = CreateDirection(fbb, station, to_fbs_string(fbb, s_d.direction_));
 }
-auto counter = 0;
 std::map<std::string, stations_direction> get_stations(
     std::map<std::string, scheduled_points> const& s_m,
     std::map<std::string, stop_point> const& s_p_m,
     std::map<std::string, passenger_assignments> const& p_m) {
   auto s_d_m = std::map<std::string, stations_direction>{};
-  // auto counter = 0;
-  if (s_m.size() == s_p_m.size()) {
-    std::cout << "not equal" << std::endl;
-  }
-  std::cout << s_p_m.size() << std::endl;
   for (auto const& p_a : p_m) {
     auto const it_s = s_m.lower_bound(p_a.second.scheduled_place_id_);
     utl::verify(it_s != end(s_m), "missing scheduled_point: {}",
@@ -220,16 +211,7 @@ std::map<std::string, stations_direction> get_stations(
     st.quays_ = it_s_p->second.quay_;
     st.stop_point_id_ = p_a.second.stop_point_id_;
     st.id_ = it_s_p->first;
-    // TODO ?
-    /*if(st.quays_.size() == 0) {
-      s_d_m.emplace(it_s->first, st);
-    } else {
-      std::stringstream stringStream;
-      stringStream << st.id_ << counter;
-      s_d_m.emplace(stringStream.str(), st);
-    }*/
     s_d_m.emplace(p_a.second.scheduled_place_id_, st);
-    counter++;
   }
   return s_d_m;
 }

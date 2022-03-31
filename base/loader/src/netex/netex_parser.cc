@@ -53,6 +53,8 @@ void netex_parser::parse(fs::path const& p,
   auto output_services = std::map<std::string, fbs64::Offset<Service>>{};
   auto fbs_stations = std::map<std::string, fbs64::Offset<Station>>{};
   auto fbs_routes = std::vector<fbs64::Offset<Route>>{};
+  // TODO time_realtive_to_0_season in helper_builder.cc ändern falls hier
+  // geändert wird, nur t1
   auto const t1 = to_unix_time(2021, 1, 1);
   auto const t2 = to_unix_time(2023, 1, 1);
   auto const interval = Interval(t1, t2);
@@ -63,13 +65,13 @@ void netex_parser::parse(fs::path const& p,
   auto const hash = 123;
   auto const z = zip_reader{p.generic_string().c_str()};
   for (auto file = z.read(); file.has_value(); file = z.read()) {
-    std::cout << z.current_file_name() << "\n";
+    LOG(info) << z.current_file_name();
+    // std::cout << z.current_file_name() << "\n";
     try {
       xml::xml_document d;
       auto const r = d.load_buffer(reinterpret_cast<void const*>(file->data()),
                                    file->size());
       // utl::verify(r, "netex parser: invalid xml in {}",
-      // z.current_file_name());
       auto l_m = std::map<std::string, line>{};
       auto s_m = std::map<std::string, scheduled_points>{};
       auto s_p_m = std::map<std::string, stop_point>{};
@@ -90,14 +92,11 @@ void netex_parser::parse(fs::path const& p,
                            t1};
       auto sjpp = std::vector<section_route>{};
       build_fbs(b, sjpp, fbb);
-      auto services = std::map<std::string, fbs64::Offset<Service>>{};
       create_stations_routes_services_fbs(
           sjpp, std::string(z.current_file_name()), fbs_stations, fbs_routes,
           output_services, fbb);
       create_rule_service(sji_v, output_services, fbs_stations, rule_services,
                           fbb);
-      std::cout << fbs_routes.size() << std::endl;
-      std::cout << fbs_stations.size() << std::endl;
     } catch (std::exception const& e) {
       LOG(error) << "unable to parse message: " << e.what();
       std::cout << e.what();
